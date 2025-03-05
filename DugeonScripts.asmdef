@@ -1,0 +1,17 @@
+{
+    "name": "DugeonScripts",
+    "rootNamespace": "Dugeon",
+    "references": [
+        "GUID:d1bdda9793c604e9bb9c60ef25b0d0f7",
+        "GUID:613783dc1674e844b87788ea74ede0f6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

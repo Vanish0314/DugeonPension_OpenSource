@@ -2,6 +2,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityGameFramework.Runtime;
+using System.Diagnostics;
+using static UnityGameFramework.Runtime.DebuggerComponent;
+using GameFramework;
+
+
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -29,8 +36,8 @@ public class VisualGrid : MonoBehaviour
 {
     private void Awake() 
     {
-        var bg = new GameObject("BackGround");
-        var bt = new GameObject("Buildings");
+        var bg = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
+        var bt = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
         bg.transform.parent = transform;
         bt.transform.parent = transform;
         
@@ -67,10 +74,8 @@ public class LogicalGrid : MonoBehaviour
     private Vector3 OriginPoint => gridProperties.originPoint;
     private Vector3 offset => new Vector3(gridProperties.cellSize/2,gridProperties.cellSize/2,0);
 
-    private void InitializeGrid()
-    {
-        grid.Resize(gridProperties.width,gridProperties.height);
-    }
+    private void InitializeGrid() => grid ??= new Map2D<LogiaclCell>(gridProperties.width, gridProperties.height);
+    
     public void OnResize(GridProperties properties)
     {
         gridProperties = properties;
@@ -118,6 +123,17 @@ public class LogicalGrid : MonoBehaviour
                 }
             }
         }
+    }
+
+    [DugeonGridWindow("SayHello")]
+    private static void SayHello()
+    {
+        GameFrameworkLog.Info("Hello, World!");
+    }
+    [DugeonGridWindow("FindPath")]
+    private static void FindPath()
+    {
+
     }
 #endif
 
@@ -251,8 +267,6 @@ public class LogicalGrid : MonoBehaviour
 
 public class GridSystem : MonoBehaviour
 {
-    
-
     [SerializeField] private GridProperties properties;
     [SerializeField] private VisualGrid m_VisualGrid;
     [SerializeField] private LogicalGrid m_LogicalGrid;
@@ -273,7 +287,6 @@ public class GridSystem : MonoBehaviour
         m_VisualGrid.OnResize(properties);
         m_LogicalGrid.OnResize(properties);
     }
-
 
 }
 
