@@ -9,11 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 550d8b24a67a24565b8bebbd5c879323, type: 3}
-  m_Name: Gound
+  m_Script: {fileID: 11500000, guid: 0857b2a53377458ebec6c4b1179e3c5a, type: 3}
+  m_Name: GoapGenerator
   m_EditorClassIdentifier: 
-  m_DefaultSprite: {fileID: 863645357, guid: f4c078fd0fc7146179ae6b97624077f2, type: 3}
-  m_DefaultGameObject: {fileID: 0}
-  m_DefaultColliderType: 0
-  m_TilingRules: []
-  tileType: 0
+  nameSpace: Dungeon.GOAP
+  scripts:
+    goals: []
+    actions: []
+    worldSensors: []
+    worldKeys: []
+    targetSensors: []
+    targetKeys: []
+    multiSensors: []

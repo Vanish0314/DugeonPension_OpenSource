@@ -155,8 +155,10 @@ namespace Dungeon.GridSystem
         [DugeonGridWindow("FindPath")]
         private static void FindPath()
         {
+            Log.Info("[LogicalGrid] FindPath Start. From {0}, {1} to {2}, {3}", 1, 1, 10, 10);
+
             var go = GameObject.Find("GridSystem");
-            var path = go.GetComponent<LogicalGrid>().FindPath_AStar(new Vector2Int(0, 0), new Vector2Int(10, 10));
+            var path = go.GetComponent<LogicalGrid>().FindPath_AStar(new Vector2Int(1, 1), new Vector2Int(10, 10));
             foreach (var node in path.path)
             {
                 GameFrameworkLog.Info(node.ToString());
@@ -166,6 +168,9 @@ namespace Dungeon.GridSystem
                 var a =new Vector2Int((int)gridProperties.originPoint.x, (int)gridProperties.originPoint.y);
                 GridSystem.Instance.SetTile(new Vector2Int(node.x + a.x, node.y + a.y),tileDesc);
             }
+
+            if(path.path.Count == 0)
+                Log.Info("[LogicalGrid] No path found. From {0}, {1} to {2}, {3}", 1, 1, 10, 10);
         }
 
 #endif

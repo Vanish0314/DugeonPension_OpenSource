@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Dungeon.Common;
+using UnityGameFramework.Runtime;
 
 
 namespace Dungeon.GridSystem
@@ -14,6 +15,7 @@ namespace Dungeon.GridSystem
 
             m_VisualGrid = gameObject.GetOrAddComponent<VisualGrid>();
             m_LogicalGrid = gameObject.GetOrAddComponent<LogicalGrid>();
+
         }
         private void Start()
         {
