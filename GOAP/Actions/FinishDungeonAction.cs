@@ -8,23 +8,24 @@ using UnityEngine;
 
 namespace Dungeon
 {
-    public class FinishDungeonAction : GoapActionBase<FinishDungeonAction.Data,FinishDungeonAction.Properties>
+    public class FinishDungeonAction : GoapActionBase<FinishDungeonAction.Data,FinishDungeonAction.Props>
     {
         public override IActionRunState Perform(IMonoAgent agent, Data data, IActionContext context)
         {
-            throw new NotImplementedException();
+            agent.LowLevelSystem.MoveTo(new Vector2Int(10,10));
+            return ActionRunState.Continue;
         }
 
 
         [Serializable]
-        public class Properties : IActionProperties
+        public class Props : IActionProperties
         {
             public float Cost { get; set; }
         }
         [Serializable]
         public class Data : IActionData
         {
-            public ITarget Target { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public ITarget Target { get ; set; }
         }
     }
 }

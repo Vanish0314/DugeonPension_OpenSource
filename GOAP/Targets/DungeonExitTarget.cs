@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
+using GameFramework;
 using UnityEngine;
 
 namespace Dungeon.GOAP.Targets
@@ -19,7 +20,8 @@ namespace Dungeon.GOAP.Targets
 
         public bool IsValid()
         {
-            throw new System.NotImplementedException();
+            GameFrameworkLog.Warning("DungeonExitTarget.IsValid() is not implemented");
+            return true;
         }
     }
 }

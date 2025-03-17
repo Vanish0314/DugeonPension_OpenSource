@@ -25,10 +25,13 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
             builder.AddAction<FinishDungeonAction>()
                 .SetTargetKey<DungeonExitTargetKey>()
                 .AddEffect<HeroIsAtDungeonExit>(EffectType.Increase)
-                .SetProperties(new FinishDungeonAction.Properties());
+                .SetProperties(new FinishDungeonAction.Props());
 
             builder.AddTargetSensor<DugeonExitTargetSensor>()
                 .SetTargetKey<DungeonExitTargetKey>();
+
+            builder.AddWorldSensor<HeroIsAtDungeonExitSensor>()
+                .SetKey<HeroIsAtDungeonExit>();
 
             return builder.Build();
         }
