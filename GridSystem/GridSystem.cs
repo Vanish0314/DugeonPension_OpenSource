@@ -81,6 +81,10 @@ namespace Dungeon.GridSystem
             m_LogicalGrid.SetTile(gridPos , tileDesc.type == TileType.Wall ? GridCellReachableType.UnReachable : GridCellReachableType.Reachabel);
         }
 
+        public Vector3 GetDungeonExitWorldPosition()
+        {
+            return Vector3.zero;
+        }
         public Vector3 GrideToWorldPosition(Vector2Int gridPos) => m_LogicalGrid.GridToWorldPosition(gridPos.x, gridPos.y);
         public Vector2Int WorldToGridPosition(Vector3 worldPosition) => m_LogicalGrid.WorldToGridPosition(worldPosition);
 

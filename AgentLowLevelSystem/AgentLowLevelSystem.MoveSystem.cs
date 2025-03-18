@@ -1,9 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using CrashKonijn.Agent.Core;
 using Dungeon.GridSystem;
 using GameFramework;
 using UnityEngine;
+using UnityEngine.UI;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Dungeon.AgentLowLevelSystem
 {
@@ -64,7 +70,7 @@ namespace Dungeon.AgentLowLevelSystem
         {
             MoveTo(target.Position);
         }
-
+#if UNITY_EDITOR
         private void OnDrawGizmos() {
             if(!enableAgentMoveDebug)
                 return;
@@ -82,7 +88,14 @@ namespace Dungeon.AgentLowLevelSystem
                 Gizmos.DrawLine(lastPos, wayPoint);
                 lastPos = wayPoint;
             }
+
+            Gizmos.color = Color.green;
+            var labelStyle = new GUIStyle();
+            var goal = m_MoveWayPoints.Last();
+            Gizmos.DrawCube(goal, Vector3.one * 1f);
+            Handles.Label(goal, $"({goal.x},{goal.y})", labelStyle);
         }
+#endif
     }
 
 }

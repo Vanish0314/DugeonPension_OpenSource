@@ -17,7 +17,7 @@ namespace Dungeon.GOAP.Sensors.Targets
 
         public override ITarget Sense(ITarget target)
         {
-            return new DungeonExitTarget(GridSystem.GridSystem.Instance.GrideToWorldPosition(new Vector2Int(20, 20)));
+            return new DungeonExitTarget(GridSystem.GridSystem.Instance.GetDungeonExitWorldPosition());
         }
 
     }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
 using Dungeon.GOAP.Goals;
+using Dungeon.GOAP.Sensors.Targets;
 using UnityEngine;
 
 namespace Dungeon
@@ -12,8 +13,7 @@ namespace Dungeon
     {
         public override IActionRunState Perform(IMonoAgent agent, Data data, IActionContext context)
         {
-            agent.LowLevelSystem.MoveTo(new Vector3(5,5));
-            return ActionRunState.Continue;
+            return ActionRunState.Completed;
         }
 
 

@@ -158,7 +158,7 @@ namespace Dungeon.GridSystem
             Log.Info("[LogicalGrid] FindPath Start. From {0}, {1} to {2}, {3}", 1, 1, 20, 20);
 
             var go = GameObject.Find("GridSystem");
-            var path = go.GetComponent<LogicalGrid>().FindPath_AStar(new Vector2Int(1, 1), new Vector2Int(20, 20));
+            var path = go.GetComponent<LogicalGrid>().FindPath_AStar(new Vector2Int(5, 5), GridSystem.Instance.WorldToGridPosition(Vector3.zero));
             foreach (var node in path.path)
             {
                 GameFrameworkLog.Info(node.ToString());
