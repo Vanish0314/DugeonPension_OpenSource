@@ -31,7 +31,7 @@ namespace Dungeon.GridSystem
         private GridProperties gridProperties;
         private Map2D<LogicalCell> grid;
         private Vector3 originPoint => gridProperties.originPoint;
-        private Vector3 gridOriginPoint => GridToWorldPosition(0, 0);
+        public Vector3 GridDownLeftOriginPoint => GridToWorldPosition(0, 0);
         private Vector3 offset => new Vector3(gridProperties.cellSize / 2, gridProperties.cellSize / 2, 0);
 
         private void InitializeGrid()
@@ -80,9 +80,9 @@ namespace Dungeon.GridSystem
                     var gridX = x - bounds.xMin;
                     var gridY = y - bounds.yMin;
 
-                    if (tile is IDugeonTile dugeonTile)
+                    if (tile is IDungeonTile dungeonTile)
                     {
-                        if (dugeonTile.TileType == TileType.Wall)
+                        if (dungeonTile.TileType == TileType.Wall)
                             grid.Set(gridX, gridY, new LogicalCell(GridCellReachableType.UnReachable));
                         else
                             grid.Set(gridX, gridY, new LogicalCell(GridCellReachableType.Reachabel));
@@ -147,18 +147,18 @@ namespace Dungeon.GridSystem
             }
         }
 
-        [DugeonGridWindow("SayHello")]
+        [DungeonGridWindow("SayHello")]
         private static void SayHello()
         {
             GameFrameworkLog.Info("Hello, World!");
         }
-        [DugeonGridWindow("FindPath")]
+        [DungeonGridWindow("FindPath")]
         private static void FindPath()
         {
-            Log.Info("[LogicalGrid] FindPath Start. From {0}, {1} to {2}, {3}", 1, 1, 10, 10);
+            Log.Info("[LogicalGrid] FindPath Start. From {0}, {1} to {2}, {3}", 1, 1, 20, 20);
 
             var go = GameObject.Find("GridSystem");
-            var path = go.GetComponent<LogicalGrid>().FindPath_AStar(new Vector2Int(1, 1), new Vector2Int(10, 10));
+            var path = go.GetComponent<LogicalGrid>().FindPath_AStar(new Vector2Int(1, 1), new Vector2Int(20, 20));
             foreach (var node in path.path)
             {
                 GameFrameworkLog.Info(node.ToString());
@@ -170,7 +170,7 @@ namespace Dungeon.GridSystem
             }
 
             if(path.path.Count == 0)
-                Log.Info("[LogicalGrid] No path found. From {0}, {1} to {2}, {3}", 1, 1, 10, 10);
+                Log.Info("[LogicalGrid] No path found. From {0}, {1} to {2}, {3}", 1, 1, 20, 20);
         }
 
 #endif
@@ -194,7 +194,13 @@ namespace Dungeon.GridSystem
             return new Vector3(x * gridProperties.cellSize + gridProperties.originPoint.x, y * gridProperties.cellSize + gridProperties.originPoint.y, 0) + offset;
         }
 
-        public GridPath FindPath_AStar(Vector2Int from, Vector2Int to)
+        /// <summary>
+        /// return in grid coordinate
+        /// </summary>
+        /// <param name="fromPosInGridCoord"></param>
+        /// <param name="toPosInGridCoord"></param>
+        /// <returns></returns>
+        public GridPath FindPath_AStar(Vector2Int fromPosInGridCoord, Vector2Int toPosInGridCoord)
         {
             GridPath path = new();
             path.path = new Stack<Vector2Int>();
@@ -205,15 +211,15 @@ namespace Dungeon.GridSystem
             Dictionary<Vector2Int, int> hCosts = new();
             Dictionary<Vector2Int, Vector2Int> cameFrom = new();
 
-            openList.Add(from);
-            gCosts[from] = 0;
-            hCosts[from] = GetHeuristic(from, to);
+            openList.Add(fromPosInGridCoord);
+            gCosts[fromPosInGridCoord] = 0;
+            hCosts[fromPosInGridCoord] = GetHeuristic(fromPosInGridCoord, toPosInGridCoord);
 
             while (openList.Count > 0)
             {
                 Vector2Int current = GetLowestFNode(openList, gCosts, hCosts);
 
-                if (current == to)
+                if (current == toPosInGridCoord)
                 {
                     Vector2Int pathNode = current;
                     while (cameFrom.TryGetValue(pathNode, out var parent))
@@ -221,7 +227,7 @@ namespace Dungeon.GridSystem
                         path.path.Push(pathNode);
                         pathNode = parent;
                     }
-                    path.path.Push(from);
+                    path.path.Push(fromPosInGridCoord);
                     
                     return path;
                 }
@@ -248,11 +254,11 @@ namespace Dungeon.GridSystem
 
                     cameFrom[neighbor] = current;
                     gCosts[neighbor] = tentativeG;
-                    hCosts[neighbor] = GetHeuristic(neighbor, to);
+                    hCosts[neighbor] = GetHeuristic(neighbor, toPosInGridCoord);
                 }
             }
 
-            Log.Info("[LogicalGrid] No path found from {0}, {1} to {2}, {3}", from.x, from.y, to.x, to.y);
+            Log.Info("[LogicalGrid] No path found from {0}, {1} to {2}, {3}", fromPosInGridCoord.x, fromPosInGridCoord.y, toPosInGridCoord.x, toPosInGridCoord.y);
             return path;
         }
 

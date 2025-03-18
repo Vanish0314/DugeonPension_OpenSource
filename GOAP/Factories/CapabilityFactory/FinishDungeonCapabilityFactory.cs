@@ -27,7 +27,7 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
                 .AddEffect<HeroIsAtDungeonExit>(EffectType.Increase)
                 .SetProperties(new FinishDungeonAction.Props());
 
-            builder.AddTargetSensor<DugeonExitTargetSensor>()
+            builder.AddTargetSensor<DungeonExitTargetSensor>()
                 .SetTargetKey<DungeonExitTargetKey>();
 
             builder.AddWorldSensor<HeroIsAtDungeonExitSensor>()

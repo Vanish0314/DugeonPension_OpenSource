@@ -5,14 +5,14 @@ using UnityEngine;
 namespace Dungeon.GridSystem
 {
     [CreateAssetMenu(menuName = "Tiles/Dungeon Rule Tile")]
-    public class DungeonRuleTile : RuleTile,IDugeonTile
+    public class DungeonRuleTile : RuleTile,IDungeonTile
     {
         [SerializeField] private TileType tileType;
 
-        TileType IDugeonTile.TileType { get => tileType; set => tileType = value; }
+        TileType IDungeonTile.TileType { get => tileType; set => tileType = value; }
     }
 
-    public interface IDugeonTile
+    public interface IDungeonTile
     {
         public TileType TileType { get; set; }
     }

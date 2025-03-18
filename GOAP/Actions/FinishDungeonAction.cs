@@ -12,7 +12,7 @@ namespace Dungeon
     {
         public override IActionRunState Perform(IMonoAgent agent, Data data, IActionContext context)
         {
-            agent.LowLevelSystem.MoveTo(new Vector2Int(10,10));
+            agent.LowLevelSystem.MoveTo(new Vector3(5,5));
             return ActionRunState.Continue;
         }
 

@@ -3,36 +3,34 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using GameFramework;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityGameFramework.Runtime;
 
-namespace Dungeon
+namespace Dungeon.AgentLowLevelSystem
 {
-    public class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem
+    public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem
     {
-        public void MoveTo(Vector2Int targetPositionWorldCoord)
+        private Rigidbody2D m_AgentRigdbody;
+
+        private void Start()
         {
-            GameFrameworkLog.Info("AgentLowLevelSystem.MoveTo()");
-            throw new System.NotImplementedException();
+            m_AgentRigdbody = GetComponent<Rigidbody2D>();
+
+            InitSystem();
+        }
+        private void InitSystem()
+        {
+            
+        }
+        private void Update()
+        {
+            UpdateSystem();
         }
 
-        public void TargetChanged(ITarget target, bool inRange)
+        private void UpdateSystem()
         {
-            throw new System.NotImplementedException();
+            UpdateMoveSystem();
         }
-
-        public void TargetInRange(ITarget target)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void TargetLost()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void TargetNotInRange(ITarget target)
-        {
-            throw new System.NotImplementedException();
-        }
+        
     }
 }
