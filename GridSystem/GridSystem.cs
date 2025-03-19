@@ -5,12 +5,15 @@ using UnityGameFramework.Runtime;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Dungeon.DungeonGameEntry;
+using Dungeon.BlackBoardSystem;
+using GameFramework;
 
 
 namespace Dungeon.GridSystem
 {
     [RequireComponent(typeof(Grid))]
-    public class GridSystem : MonoSingletonLasy<GridSystem>
+    public class GridSystem : MonoSingletonLasy<GridSystem>, IBlackBoardWriter
     {
         private void Awake()
         {
@@ -19,6 +22,7 @@ namespace Dungeon.GridSystem
             m_VisualGrid = gameObject.GetOrAddComponent<VisualGrid>();
             m_LogicalGrid = gameObject.GetOrAddComponent<LogicalGrid>();
 
+            m_DungeonExitWorldPositionVector3Key = DungeonGameEntry.DungeonGameEntry.WorldBlackboard.GetBlackboard().GetOrRegisterKey(DungeonGameEntry.DungeonGameWorldBlackboardEnum.DungeonExitWorldPositionVector3);
         }
         private void Start()
         {
@@ -29,6 +33,14 @@ namespace Dungeon.GridSystem
             InitPosition(transform);
 
             InitGrid();
+        }
+        private void OnEnable()
+        {
+            DungeonGameEntry.DungeonGameEntry.WorldBlackboard.RegisterExpert(this);
+        }
+        private void OnDisable()
+        {
+            DungeonGameEntry.DungeonGameEntry.WorldBlackboard.DeregisterExpert(this);
         }
         private bool CheckEssentials() => groundTile && wallTile;
 
@@ -75,15 +87,17 @@ namespace Dungeon.GridSystem
         {
             m_VisualGrid.SetTile(gridPos, tileDesc);
 
-            if(tileDesc.type == TileType.Debug) // TEMP
+            if (tileDesc.type == TileType.Debug) // TEMP
                 return;
 
-            m_LogicalGrid.SetTile(gridPos , tileDesc.type == TileType.Wall ? GridCellReachableType.UnReachable : GridCellReachableType.Reachabel);
+            m_LogicalGrid.SetTile(gridPos, tileDesc.type == TileType.Wall ? GridCellReachableType.UnReachable : GridCellReachableType.Reachabel);
         }
 
         public Vector3 GetDungeonExitWorldPosition()
         {
-            return Vector3.zero;
+            DungeonGameEntry.DungeonGameEntry.WorldBlackboard.TryGetValue<Vector3>(m_DungeonExitWorldPositionVector3Key,out var exit);
+
+            return exit;
         }
         public Vector3 GrideToWorldPosition(Vector2Int gridPos) => m_LogicalGrid.GridToWorldPosition(gridPos.x, gridPos.y);
         public Vector2Int WorldToGridPosition(Vector3 worldPosition) => m_LogicalGrid.WorldToGridPosition(worldPosition);
@@ -101,7 +115,7 @@ namespace Dungeon.GridSystem
             // TODO(vanish): This is so stupid
             var temp = new Stack<Vector3>();
             var offset = m_LogicalGrid.GridDownLeftOriginPoint;
-            foreach(var wayPoint in path.path)
+            foreach (var wayPoint in path.path)
                 temp.Push(new Vector3(wayPoint.x, wayPoint.y, 0) + offset);
 
             var result = new Stack<Vector3>();
@@ -115,7 +129,7 @@ namespace Dungeon.GridSystem
             return FindPath(new Vector2(
                 fromPosInWorldCoord.x,
                 fromPosInWorldCoord.y
-            ), new Vector2( 
+            ), new Vector2(
                 toPosInWorldCoord.x,
                 toPosInWorldCoord.y
             ));
@@ -131,6 +145,22 @@ namespace Dungeon.GridSystem
             ));
         }
         public GridProperties GetGridProperties() => properties;
+
+        public int GetInsistence(Blackboard blackboard)
+        {
+            return (int)InsistenceLevel.Dictator;
+        }
+
+        public void Execute(Blackboard blackboard)
+        {
+            GameFrameworkLog.Info("Execute");
+            if (Random.Range(0, 100) < 1)
+            {
+                var randonVec3 = new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), 0);
+                DungeonGameEntry.DungeonGameEntry.WorldBlackboard.GetBlackboard().SetValue(m_DungeonExitWorldPositionVector3Key, randonVec3);
+            }
+
+        }
         #endregion
         [SerializeField] private DungeonRuleTile groundTile;
         [SerializeField] private DungeonRuleTile wallTile;
@@ -140,6 +170,8 @@ namespace Dungeon.GridSystem
         [SerializeField] private VisualGrid m_VisualGrid;
         [SerializeField] private LogicalGrid m_LogicalGrid;
         private Grid m_Grid;
+
+        private BlackboardKey m_DungeonExitWorldPositionVector3Key;
 
     }
 }

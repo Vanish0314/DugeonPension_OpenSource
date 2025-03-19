@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Dungeon.GOAP.Keys.WorldKeys
 {
-    public class HeroIsAtDungeonExitWorldKey : WorldKeyBase
+    public class MonstersInDungeonLocalKey : WorldKeyBase
     {
     }
 }

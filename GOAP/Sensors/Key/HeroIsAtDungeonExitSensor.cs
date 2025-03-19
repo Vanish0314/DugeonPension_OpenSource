@@ -5,16 +5,13 @@ using CrashKonijn.Goap.Runtime;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.GOAP.Sensors.Key
 {
     public class HeroIsAtDungeonExitSensor : GlobalWorldSensorBase
     {
-        public Vector2Int exitPos = new Vector2Int(0, 0);
-
         public override void Created()
         {
-            GameFrameworkLog.Warning("HeroIsAtDungeonExitSensor Created,but not implemented");
-            exitPos = new Vector2Int(0, 0);
+
         }
 
         public override SenseValue Sense()

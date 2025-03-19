@@ -40,7 +40,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         public void MoveTo(Vector3 targetPositionWorldCoord)
         {
-            GameFrameworkLog.Info("AgentLowLevelSystem.MoveTo()");
+            GameFrameworkLog.Info("[AgentLowLevelSystem] AgentLowLevelSystem.MoveTo()");
 
             m_MoveWayPoints = GridSystem.GridSystem.Instance.FindPath(transform.position,targetPositionWorldCoord);
         }
