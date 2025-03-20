@@ -1,6 +1,8 @@
 using System;
+using Dungeon.AgentLowLevelSystem;
+using Dungeon.BlackBoardSystem;
+using GameFramework;
 using UnityEngine;
-using UnityGameFramework.Runtime;
 
 namespace Dungeon.Vision2D
 {
@@ -15,9 +17,13 @@ namespace Dungeon.Vision2D
 
             var layer = LayerMask.NameToLayer("Vision");
             if (layer == -1)
-                Log.Error("Vision layer not found. Please create a layer named 'Vision' in the project settings.");
+                GameFrameworkLog.Error("[Vision] Vision layer not found. Please create a layer named 'Vision' in the project settings.");
             else
                 gameObject.layer = layer;
+
+            m_Blackboard = transform.parent.GetComponent<BlackboardController>().GetBlackboard();
+            if (m_Blackboard == null)
+                GameFrameworkLog.Error("[Vision] Vision must be a child of a GameObject with a BlackboardController component.");
         }
 
         public void RegenerateCollider()
@@ -34,22 +40,38 @@ namespace Dungeon.Vision2D
             polyCollider.SetPath(0, vertices2D);
         }
 
-        public void OnTriggerEnter(Collider other)
-        {
-            if (other.GetComponent<IVisible>() == null)
-                return;
+        // public void OnTriggerEnter(Collider other)
+        // {
+        //     dynamic visible = other.GetComponent<IVisible>();
+        //     if(visible == null)
+        //         return;
             
-            OnVisionEnter?.Invoke(other.GetComponent<IVisible>()); 
-        }
-        public void OnTriggerExit(Collider other)
-        {
-            if (other.GetComponent<IVisible>() == null)
-                return;
+        //     var key = m_Blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(visible.GetType().Name));
+        //     m_Blackboard.TryGetValue(key, out int count);
+        //     m_Blackboard.SetValue(key,++count);
             
-            OnVisionExit?.Invoke(other.GetComponent<IVisible>()); 
-        }
+        //     OnVisionEnter?.Invoke(other.GetComponent<IVisible>()); 
+        // }
+        // public void OnTriggerExit(Collider other)
+        // {
+        //     dynamic visible = other.GetComponent<IVisible>();
+        //     if(visible == null)
+        //         return;
+            
+        //     var key = m_Blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(visible.GetType().Name));
+        //     m_Blackboard.TryGetValue(key, out int count);
+        //     m_Blackboard.SetValue(key,--count);
+
+        //     #if UNITY_EDITOR
+        //     if(count < 0)
+        //         GameFrameworkLog.Error("[Vision] Count of " + visible.GetType().Name + " in Vision is less than 0.");
+        //     #endif
+            
+        //     OnVisionEnter?.Invoke(other.GetComponent<IVisible>());  
+        // }
         public event Action<IVisible> OnVisionEnter;
         public event Action<IVisible> OnVisionExit;
+        private Blackboard m_Blackboard;
 
         [HideInInspector] public MeshFilter meshFilter;
         [HideInInspector] public PolygonCollider2D polyCollider;

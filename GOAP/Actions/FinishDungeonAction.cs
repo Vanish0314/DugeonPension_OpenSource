@@ -7,7 +7,7 @@ using Dungeon.GOAP.Goals;
 using Dungeon.GOAP.Sensors.Target;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.GOAP.Action
 {
     public class FinishDungeonAction : GoapActionBase<FinishDungeonAction.Data,FinishDungeonAction.Props>
     {

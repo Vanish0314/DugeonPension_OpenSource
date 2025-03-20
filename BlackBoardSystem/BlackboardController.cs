@@ -15,6 +15,7 @@ namespace Dungeon.BlackBoardSystem
         void Awake()
         {
             blackboardData.SetValuesOnBlackboard(blackboard);
+            blackboard.Debug();
         }
 
         public Blackboard GetBlackboard() => blackboard;
@@ -54,8 +55,6 @@ namespace Dungeon.BlackBoardSystem
             {
                 action();
             }
-
-            blackboard.Debug();
         }
     }
 }

@@ -20,6 +20,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         private Stack<Vector3> m_MoveWayPoints = new ();
 
+        private void InitMoveSystem(){}
         private void UpdateMoveSystem()
         {
             if (m_MoveWayPoints.Count > 0)

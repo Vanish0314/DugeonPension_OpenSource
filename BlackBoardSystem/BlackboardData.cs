@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Dungeon.BlackBoardSystem
 {
-    [CreateAssetMenu(fileName = "New Blackboard Data", menuName = "BlacbboardSystem/Blackboard Data")]
+    [CreateAssetMenu(fileName = "New Blackboard Data", menuName = "BlackboardSystem/Blackboard Data")]
     public class BlackboardData : ScriptableObject
     {
         public List<BlackboardEntryData> entries = new();

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
+using Dungeon.GOAP.Action;
 using Dungeon.GOAP.Goals;
 using Dungeon.GOAP.Keys.WorldKeys;
 using Dungeon.GOAP.Sensors.Key;

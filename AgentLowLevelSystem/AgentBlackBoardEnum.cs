@@ -1,11 +1,17 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
+using Dungeon.DungeonActor;
+using GameFramework;
 using UnityEngine;
 
 namespace Dungeon.AgentLowLevelSystem
 {
     public static class AgentBlackBoardEnum
     {
+        #region 自身
         public static readonly string MonstersInDungeon = "MonstersInDungeon";
         public static readonly string CurrentHP = "CurrentHP";
         public static readonly string CurrentMP = "CurrentMP";
@@ -13,5 +19,97 @@ namespace Dungeon.AgentLowLevelSystem
         public static readonly string MP_MAX = "MP_MAX";
         public static readonly string CurrentSan = "CurrentSan";
         public static readonly string San_MAX = "San_MAX";
+        #endregion
+
+        #region 环境感知
+
+        #region 视野
+        /// <summary>
+        /// For runtime performance, we won't check whether it is valid 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>Name like : "NumOfIVisibleInVision"</returns>
+        public static string GetNameOfIVisibleCountInVision<T>() where T : IVisible
+        {
+            #if UNITY_EDITOR
+            var leafTypes = HeroAgentVisionSensor<IVisible>.GetLeafTypesImplementingInterface<IVisible>();
+
+            bool flag = true;
+            foreach (var leafType in leafTypes)
+            {
+                if (leafType == typeof(T))
+                    flag = false;
+            }
+
+            if(flag)
+            {
+                GameFrameworkLog.Error("[AgentBlackBoardEnum] 传入对象为非叶子类型");
+            }
+            #endif
+
+            var builder = new StringBuilder(30);
+            builder.Append("NumOf").Append(typeof(T).Name).Append("InVision");
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="typeName">the leaf type name</param>
+        /// <returns>Name like : "NumOfIVisibleInVision"</returns>
+        public static string GetNameOfIVisibleCountInVision(string typeName)
+        {
+            #if UNITY_EDITOR
+            var leafTypes = HeroAgentVisionSensor<IVisible>.GetLeafTypesImplementingInterface<IVisible>();
+            
+            bool flag = true;
+            foreach (var leafType in leafTypes)
+            {
+                if (leafType.Name == typeName)
+                    flag = false;
+            }
+
+            if(flag)
+                GameFrameworkLog.Error("[AgentBlackBoardEnum] 传入对象为非叶子类型");
+            #endif
+
+            var builder = new StringBuilder(30);
+            builder.Append("NumOf").Append(typeName).Append("InVision");
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// For runtime performance, we won't check whether it is valid 
+        /// </summary>
+        /// <returns>Name like : "NumOfIDungeonBehaviorInMemory"</returns>
+        public static string GetNameOfIVisibleCountInAgentBrainMemory<T>() where T : IVisible
+        {
+            #if UNITY_EDITOR
+
+            var leafTypes = HeroAgentVisionSensor<IVisible>.GetLeafTypesImplementingInterface<IVisible>();
+
+            bool flag = true;
+            foreach (var leafType in leafTypes)
+            {
+                if (leafType == typeof(T))
+                    flag = false;
+            }
+
+            if(flag)
+            {
+                GameFrameworkLog.Error("[AgentBlackBoardEnum] 传入对象为非叶子类型");
+            }
+            #endif
+
+            var builder = new StringBuilder(40);
+            builder.Append("NumOf").Append(typeof(T).Name).Append("InMemory");
+
+            return builder.ToString();
+        }
+        #endregion
+        
+        #endregion
     }
 }
