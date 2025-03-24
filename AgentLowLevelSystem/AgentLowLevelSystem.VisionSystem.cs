@@ -11,6 +11,9 @@ namespace Dungeon.AgentLowLevelSystem
         private Viewer m_Viewer;
         private Vision m_Vision;
 
+        public Viewer GetViewer() => m_Viewer;
+        public Vision GetVision() => m_Vision;
+
         private void InitVisionSystem()
         {
             m_Viewer ??= GetComponent<Viewer>();

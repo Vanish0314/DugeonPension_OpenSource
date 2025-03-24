@@ -20,12 +20,12 @@ namespace Dungeon.AgentLowLevelSystem
         private Rigidbody2D m_AgentRigdbody;
         private BoxCollider2D m_AgentCollider;
         private Animator m_AgentAnimator;
-        private BlackboardController m_BlackboardController;
+        private BlackboardController m_BlackboardController = new ();
         private BlackBoardSystem.Blackboard m_blackboard => m_BlackboardController.GetBlackboard();
 
         public BlackboardController GetBlackboard() => m_BlackboardController;
 
-        private void Start()
+        private void Awake()
         {
             m_AgentRigdbody ??= GetComponent<Rigidbody2D>();
 
@@ -35,6 +35,7 @@ namespace Dungeon.AgentLowLevelSystem
         {
             InitMoveSystem();
             InitVisionSystem();
+            InitDNDSystem();
         }
         private void Update()
         {

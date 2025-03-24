@@ -153,9 +153,9 @@ namespace Dungeon.GridSystem
 
         public void Execute(Blackboard blackboard)
         {
-            GameFrameworkLog.Info("Execute");
             if (Random.Range(0, 100) < 1)
             {
+                GameFrameworkLog.Info("[GridSystem] Execute change dungeon exit position");
                 var randonVec3 = new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), 0);
                 DungeonGameEntry.DungeonGameEntry.WorldBlackboard.GetBlackboard().SetValue(m_DungeonExitWorldPositionVector3Key, randonVec3);
             }

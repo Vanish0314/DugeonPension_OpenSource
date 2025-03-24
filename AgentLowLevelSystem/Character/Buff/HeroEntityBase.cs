@@ -4,6 +4,7 @@ using CrashKonijn.Agent.Runtime;
 using CrashKonijn.Goap.Runtime;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.Character.Hero;
+using Dungeon.Vision2D;
 using UnityEngine;
 
 namespace Dungeon.Character.Hero
@@ -12,13 +13,15 @@ namespace Dungeon.Character.Hero
     [RequireComponent(typeof(AgentHighLevelSystem))]
     [RequireComponent(typeof(GoapActionProvider))]
     [RequireComponent(typeof(AgentBehaviour))]
-    public partial class Hero : MonoBehaviour,IHero
+    public partial class HeroEntityBase : DungeonVisitorEntity
     {
-        void Awake()
+        void Start()
         {
             InitICharacter();
 
             InitGOAP();
+
+            InitViewer();
         }
 
         void Update()

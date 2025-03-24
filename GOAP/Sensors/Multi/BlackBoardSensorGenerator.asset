@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   agentBlackboardSensorName: AgentBlackboardSensor_AutoGen
   nameSpace: Dungeon.GOAP.Sensors.Multi
+  visibleClassName: IVisible
   visibleLeafClasses:
-  - IVisible
-  - IFuck
+  - Chair
+  - Fuck
+  - Table
+  - Torch

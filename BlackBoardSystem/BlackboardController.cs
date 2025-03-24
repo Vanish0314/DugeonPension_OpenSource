@@ -1,4 +1,5 @@
 using Dungeon.Common;
+using GameFramework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,10 +16,11 @@ namespace Dungeon.BlackBoardSystem
         void Awake()
         {
             blackboardData.SetValuesOnBlackboard(blackboard);
-            blackboard.Debug();
+            GameFrameworkLog.Info(blackboard.Debug());
         }
 
         public Blackboard GetBlackboard() => blackboard;
+        public BlackboardData GetBlackboardData() => blackboardData;
         public bool TryGetValue<T>(string keyName,out T value)
         {
             if (blackboard.CheckIfKeyExists(keyName))

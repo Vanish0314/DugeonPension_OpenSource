@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
-using Dungeon.DungeonActor;
+using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 
@@ -31,8 +32,8 @@ namespace Dungeon.AgentLowLevelSystem
         /// <returns>Name like : "NumOfIVisibleInVision"</returns>
         public static string GetNameOfIVisibleCountInVision<T>() where T : IVisible
         {
-            #if UNITY_EDITOR
-            var leafTypes = HeroAgentVisionSensor<IVisible>.GetLeafTypesImplementingInterface<IVisible>();
+#if UNITY_EDITOR
+            var leafTypes = GetLeafTypesImplementingInterface<IVisible>();
 
             bool flag = true;
             foreach (var leafType in leafTypes)
@@ -41,11 +42,11 @@ namespace Dungeon.AgentLowLevelSystem
                     flag = false;
             }
 
-            if(flag)
+            if (flag)
             {
                 GameFrameworkLog.Error("[AgentBlackBoardEnum] 传入对象为非叶子类型");
             }
-            #endif
+#endif
 
             var builder = new StringBuilder(30);
             builder.Append("NumOf").Append(typeof(T).Name).Append("InVision");
@@ -60,9 +61,9 @@ namespace Dungeon.AgentLowLevelSystem
         /// <returns>Name like : "NumOfIVisibleInVision"</returns>
         public static string GetNameOfIVisibleCountInVision(string typeName)
         {
-            #if UNITY_EDITOR
-            var leafTypes = HeroAgentVisionSensor<IVisible>.GetLeafTypesImplementingInterface<IVisible>();
-            
+#if UNITY_EDITOR
+            var leafTypes = GetLeafTypesImplementingInterface<IVisible>();
+
             bool flag = true;
             foreach (var leafType in leafTypes)
             {
@@ -70,9 +71,9 @@ namespace Dungeon.AgentLowLevelSystem
                     flag = false;
             }
 
-            if(flag)
+            if (flag)
                 GameFrameworkLog.Error("[AgentBlackBoardEnum] 传入对象为非叶子类型");
-            #endif
+#endif
 
             var builder = new StringBuilder(30);
             builder.Append("NumOf").Append(typeName).Append("InVision");
@@ -86,9 +87,9 @@ namespace Dungeon.AgentLowLevelSystem
         /// <returns>Name like : "NumOfIDungeonBehaviorInMemory"</returns>
         public static string GetNameOfIVisibleCountInAgentBrainMemory<T>() where T : IVisible
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
 
-            var leafTypes = HeroAgentVisionSensor<IVisible>.GetLeafTypesImplementingInterface<IVisible>();
+            var leafTypes = GetLeafTypesImplementingInterface<IVisible>();
 
             bool flag = true;
             foreach (var leafType in leafTypes)
@@ -97,11 +98,11 @@ namespace Dungeon.AgentLowLevelSystem
                     flag = false;
             }
 
-            if(flag)
+            if (flag)
             {
                 GameFrameworkLog.Error("[AgentBlackBoardEnum] 传入对象为非叶子类型");
             }
-            #endif
+#endif
 
             var builder = new StringBuilder(40);
             builder.Append("NumOf").Append(typeof(T).Name).Append("InMemory");
@@ -109,7 +110,21 @@ namespace Dungeon.AgentLowLevelSystem
             return builder.ToString();
         }
         #endregion
-        
+
         #endregion
+
+
+        public static List<Type> GetLeafTypesImplementingInterface<TInterface>()
+        {
+            var allTypes = AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => typeof(TInterface).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                .ToList();
+
+            var baseTypes = new HashSet<Type>(allTypes.SelectMany(t => t.BaseType != null ? new[] { t.BaseType } : Array.Empty<Type>()));
+
+            return allTypes.Where(t => !baseTypes.Contains(t)).ToList();
+        }
     }
 }

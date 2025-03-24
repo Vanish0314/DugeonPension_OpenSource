@@ -1,22 +1,66 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.DungeonActor;
+using Dungeon.DungeonEntity;
+using GameFramework;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
-namespace Dungeon
+namespace Dungeon.Vision2D
 {
-    public interface IVisiter : IDungeonBehavior
+    /// <summary>
+    /// 继承VisibleEntity而非此接口
+    /// </summary>
+    public interface IVisible
     {
-
+        public VisitInformation OnVisited(VisitInformation visitInfo);
+        public VisitInformation OnUnvisited(VisitInformation visitInfo);
     }
-    public interface IVisible : IDungeonBehavior
+
+    [RequireComponent(typeof(Collider2D))]
+    public abstract class DungeonVisibleEntity : DungeonEntity.DungeonEntity, IVisible
     {
-        public VisitData OnVisited(IVisiter visiter);
-        public VisitData OnUnvisited();
+        /// <summary>
+        /// Should be called by visitor entity.
+        /// </summary>
+        /// <param name="visiter"></param>
+        /// <returns></returns>
+        public abstract VisitInformation OnUnvisited(VisitInformation visiter);
+
+        /// <summary>
+        /// Should be called by visitor entity.
+        /// </summary>
+        /// <param name="visiter"></param>
+        /// <returns></returns>
+        public abstract VisitInformation OnVisited(VisitInformation visiter);
     }
 
-    public struct VisitData
+    [RequireComponent(typeof(Viewer))]
+    public abstract class DungeonVisitorEntity : DungeonEntity.DungeonEntity, IVisible
     {
-        public string name;
+        /// <summary>
+        /// Init mViewer and mVision.
+        /// should be called by subclass
+        /// </summary>
+        public abstract void InitViewer();
+
+        public abstract VisitInformation OnUnvisited(VisitInformation visiter);
+
+        public abstract VisitInformation OnVisited(VisitInformation visiter);
+
+        protected Viewer mViewer;
+        protected Vision mVision;
+    }
+
+
+    public struct VisitInformation
+    {
+        public GameObject visiter;
+        public GameObject visited;
+
+        public VisitInformation(GameObject visiter, GameObject visited)
+        {
+            this.visiter = visiter;
+            this.visited = visited;
+        }
     }
 }

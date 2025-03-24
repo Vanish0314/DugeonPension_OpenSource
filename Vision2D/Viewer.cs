@@ -293,6 +293,8 @@ namespace Dungeon.Vision2D
             return Mathf.Sin(Vector3.Angle(direction, p1_target) * Mathf.Deg2Rad) * p1_target.magnitude;
         }
 
+        public Vision GetVision() => vision;
+
 
         public float radius = 20;
         public LayerMask blockLayerMask;

@@ -5,10 +5,11 @@ using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 using Dungeon.DungeonGameEntry;
 using Dungeon.GOAP.Enums;
+using Dungeon.Vision2D;
 
 namespace Dungeon.Character.Hero
 {
-    public partial class Hero : MonoBehaviour,IHero
+    public partial class HeroEntityBase : DungeonVisitorEntity
     {
         private void InitGOAP()
         {

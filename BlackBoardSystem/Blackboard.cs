@@ -77,8 +77,10 @@ namespace Dungeon.BlackBoardSystem
 
         public void ClearActions() => PassedActions.Clear();
 
-        public void Debug()
+        public string Debug()
         {
+            StringBuilder builder = new();
+            
             foreach (var entry in entries)
             {
                 var entryType = entry.Value.GetType();
@@ -88,9 +90,11 @@ namespace Dungeon.BlackBoardSystem
                     var valueProperty = entryType.GetProperty("Value");
                     if (valueProperty == null) continue;
                     var value = valueProperty.GetValue(entry.Value);
-                    GameFrameworkLog.Info($"Key: {entry.Key}, Value: {value}");
+                    builder.AppendLine($"Key: {entry.Key}, Value: {value}");
                 }
             }
+
+            return builder.ToString();
         }
 
         public bool TryGetValue<T>(BlackboardKey key, out T value)

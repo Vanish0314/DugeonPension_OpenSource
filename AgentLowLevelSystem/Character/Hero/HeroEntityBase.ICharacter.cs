@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using Dungeon.Character.Hero;
 using Dungeon.Character.Struct;
+using Dungeon.Vision2D;
 using UnityEngine;
 
 namespace Dungeon.Character.Hero
 {
-    public partial class Hero : MonoBehaviour, IHero
+    public partial class HeroEntityBase : DungeonVisitorEntity
     {
         private void InitICharacter(){}
 
