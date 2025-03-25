@@ -15,8 +15,7 @@ namespace Dungeon.BlackBoardSystem
 
         void Awake()
         {
-            blackboardData.SetValuesOnBlackboard(blackboard);
-            GameFrameworkLog.Info(blackboard.Debug());
+            blackboardData?.SetValuesOnBlackboard(blackboard);
         }
 
         public Blackboard GetBlackboard() => blackboard;

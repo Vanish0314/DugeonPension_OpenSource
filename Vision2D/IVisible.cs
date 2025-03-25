@@ -57,7 +57,7 @@ namespace Dungeon.Vision2D
         public GameObject visiter;
         public GameObject visited;
 
-        public VisitInformation(GameObject visiter, GameObject visited)
+        public VisitInformation(GameObject visiter, GameObject visited = null)
         {
             this.visiter = visiter;
             this.visited = visited;

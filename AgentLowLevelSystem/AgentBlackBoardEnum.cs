@@ -85,6 +85,7 @@ namespace Dungeon.AgentLowLevelSystem
         /// For runtime performance, we won't check whether it is valid 
         /// </summary>
         /// <returns>Name like : "NumOfIDungeonBehaviorInMemory"</returns>
+        [Obsolete("Don't use for that it's not considered fully")]
         public static string GetNameOfIVisibleCountInAgentBrainMemory<T>() where T : IVisible
         {
 #if UNITY_EDITOR
@@ -110,6 +111,14 @@ namespace Dungeon.AgentLowLevelSystem
             return builder.ToString();
         }
         #endregion
+
+#region Transform
+        [Obsolete("Don't use for that it's not considered fully")]
+        public static string GetNameOfIVisibleTransformInVision<T>()
+        {
+            throw new NotImplementedException();
+        }
+#endregion
 
         #endregion
 

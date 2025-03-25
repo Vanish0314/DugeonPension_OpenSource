@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.GOAP.Goals
 {
-    public class TrapNearByLocalKey:WorldKeyBase{}
-    
+    public class LightDungeonRoomGoal : GoalBase
+    {
+    }
 }

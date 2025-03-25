@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.GOAP.Goals
 {
-    public class TorchInRoomLocalKey : WorldKeyBase
+    public class EliminateThreatGoal : GoalBase
     {
-        
     }
 }

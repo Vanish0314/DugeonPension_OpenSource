@@ -1,21 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.GOAP.Goals
 {
-    public class AliveGoal : MonoBehaviour
+    public class AliveGoal : GoalBase
     {
-        // Start is called before the first frame update
-        void Start()
-        {
-        
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-        
-        }
     }
 }

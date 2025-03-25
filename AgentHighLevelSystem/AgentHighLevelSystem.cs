@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Runtime;
+using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
+using Dungeon.GOAP.Action;
 using Dungeon.GOAP.Enums;
 using Dungeon.GOAP.Goals;
 using UnityEngine;
@@ -23,10 +25,8 @@ namespace Dungeon
             if (provider.AgentTypeBehaviour == null)
                 provider.AgentType = goap.GetAgentType(AgentTypeIDs.Hero);
         }
-
-        private void Start()
-        {
-            provider.RequestGoal<FinishDungeonGoal>();
+        private void Start() {
+            provider.RequestGoal<EliminateThreatGoal,FinishDungeonGoal>();
         }
     }
 }

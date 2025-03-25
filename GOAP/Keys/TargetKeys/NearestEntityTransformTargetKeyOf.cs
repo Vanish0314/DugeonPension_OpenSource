@@ -5,7 +5,8 @@ using UnityEngine;
 
 namespace Dungeon.GOAP.Keys.TargetKey
 {
-    public class DungeonExitTargetKey : TargetKeyBase
+    public class NearestEntityTransformTargetKeyOf<TEntity> : TargetKeyBase 
+        where TEntity : DungeonEntity.DungeonEntity
     {
     }
 }
