@@ -12,6 +12,7 @@ namespace Dungeon
 {
     public class AgentHighLevelSystem : MonoBehaviour
     {
+        
         private AgentBehaviour agent;
         private GoapActionProvider provider;
         private GoapBehaviour goap;
