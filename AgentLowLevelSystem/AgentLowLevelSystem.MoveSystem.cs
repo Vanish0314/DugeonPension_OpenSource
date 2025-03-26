@@ -25,8 +25,11 @@ namespace Dungeon.AgentLowLevelSystem
         {
             if (m_MoveWayPoints.Count > 0)
             {
-                if(Vector3.Magnitude(m_MoveWayPoints.Peek() - transform.position) < 0.5f)
+                if(Vector3.Magnitude(m_MoveWayPoints.Peek() - transform.position) < 0.2f)
+                {
                     m_MoveWayPoints.Pop();
+                    return;
+                }
 
                 var nextMove = m_MoveWayPoints.Peek();
                 var dir = (nextMove - transform.position).normalized;

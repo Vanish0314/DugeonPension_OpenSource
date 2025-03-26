@@ -26,11 +26,17 @@ namespace Dungeon.AgentLowLevelSystem
             Physics2D.OverlapCircleNonAlloc(transform.position, m_Viewer.radius, colliders);
             foreach (Collider2D collider in colliders)
             {
+                if (collider == null)
+                    break;
+
                 if (collider.GetComponent<Torch>() != null)
                 {
                     RaycastHit2D hit = Physics2D.Raycast(transform.position, collider.transform.position - transform.position,
-                        m_Viewer.radius, m_Viewer.blockLayerMask);
+                        (collider.transform.position - transform.position).magnitude, m_Viewer.blockLayerMask);
                     if (hit.collider != null)
+                        continue;
+
+                    if (collider.GetComponent<Torch>().IsLightining())
                         continue;
 
                     torchTransform = collider.transform;
@@ -57,10 +63,10 @@ namespace Dungeon.AgentLowLevelSystem
                         (collider.transform.position - transform.position).magnitude, m_Viewer.blockLayerMask);
                     if (hit.collider != null)
                         continue;
-                    
+
                     var visit = collider.GetComponent<IVisible>().OnVisited(new VisitInformation(gameObject));
 
-                    if(visit.visited == null)
+                    if (visit.visited == null)
                         continue;
 
                     GameFrameworkLog.Warning("[AgentLowLevelSystem.TEMP] 临时方法额外进行了一次检查，可能导致没被看见的陷阱被认为是可见的");
@@ -72,6 +78,69 @@ namespace Dungeon.AgentLowLevelSystem
 
             trapTransform = null;
             return false;
+        }
+
+        public bool GetNearestTreasureChest(out Transform treasureChestTransform)
+        {
+            Collider2D[] colliders = new Collider2D[10];
+            Physics2D.OverlapCircleNonAlloc(transform.position, m_Viewer.radius, colliders);
+            foreach (Collider2D collider in colliders)
+            {
+                if (collider == null)
+                    break;
+
+                if (collider.GetComponent<DungeonTreasureChest>() != null)
+                {
+                    RaycastHit2D hit = Physics2D.Raycast(transform.position, collider.transform.position - transform.position,
+                        (collider.transform.position - transform.position).magnitude, m_Viewer.blockLayerMask);
+                    if (hit.collider != null)
+                        continue;
+
+                    var visit = collider.GetComponent<IVisible>().OnVisited(new VisitInformation(gameObject));
+
+                    if (visit.visited == null)
+                        continue;
+
+                    GameFrameworkLog.Warning("[AgentLowLevelSystem.TEMP] 临时方法额外进行了一次检查，可能导致没被看见的宝箱被认为是可见的");
+
+                    treasureChestTransform = collider.transform;
+                    return true;
+                }
+            }
+
+            treasureChestTransform = null;
+            return false;
+        }
+
+        public void GetNearestMonster(out Transform monsterTransform)
+        {
+            Collider2D[] colliders = new Collider2D[10];
+            Physics2D.OverlapCircleNonAlloc(transform.position, m_Viewer.radius, colliders);
+            foreach (Collider2D collider in colliders)
+            {
+                if (collider == null)
+                    break;
+
+                if (collider.GetComponent<DungeonMonster>() != null)
+                {
+                    RaycastHit2D hit = Physics2D.Raycast(transform.position, collider.transform.position - transform.position,
+                        (collider.transform.position - transform.position).magnitude, m_Viewer.blockLayerMask);
+                    if (hit.collider != null)
+                        continue;
+
+                    var visit = collider.GetComponent<IVisible>().OnVisited(new VisitInformation(gameObject));
+
+                    if (visit.visited == null)
+                        continue;
+
+                    GameFrameworkLog.Warning("[AgentLowLevelSystem.TEMP] 临时方法额外进行了一次检查，可能导致没被看见的怪物被认为是可见的");
+
+                    monsterTransform = collider.transform;
+                    return;
+                }
+            }
+
+            monsterTransform = null;
         }
 
     }

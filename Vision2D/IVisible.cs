@@ -16,7 +16,7 @@ namespace Dungeon.Vision2D
         public VisitInformation OnUnvisited(VisitInformation visitInfo);
     }
 
-    [RequireComponent(typeof(Collider2D))]
+    [RequireComponent(typeof(Collider2D),typeof(SpriteRenderer))]
     public abstract class DungeonVisibleEntity : DungeonEntity.DungeonEntity, IVisible
     {
         /// <summary>

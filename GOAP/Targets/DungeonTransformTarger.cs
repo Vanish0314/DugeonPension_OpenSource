@@ -5,11 +5,11 @@ using UnityEngine;
 
 namespace Dungeon.GOAP.Target
 {
-    public class DungeonTransformTarger : ITarget
+    public class DungeonTransformTarget : ITarget
     {
         public Transform transform;
 
-        public DungeonTransformTarger(Transform entityTransform)
+        public DungeonTransformTarget(Transform entityTransform)
         {
             this.transform = entityTransform;
         }

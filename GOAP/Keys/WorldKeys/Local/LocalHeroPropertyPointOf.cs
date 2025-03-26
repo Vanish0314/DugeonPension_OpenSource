@@ -1,21 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.GOAP.Keys.WorldKeys.Local
 {
-    public class LocalHeroAttributePointOf : MonoBehaviour
+    public class LocalHeroPropertyPointOf<T> : WorldKeyBase where T : IProperty
     {
-        // Start is called before the first frame update
-        void Start()
-        {
-        
-        }
 
-        // Update is called once per frame
-        void Update()
-        {
-        
-        }
     }
+
+    public interface IProperty{}
+    public interface IHealthPointProperty : IProperty{}
+    public interface IMagicPointProperty : IProperty{}
 }

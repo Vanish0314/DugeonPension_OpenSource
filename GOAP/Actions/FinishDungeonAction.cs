@@ -9,9 +9,12 @@ using UnityEngine;
 
 namespace Dungeon.GOAP.Action
 {
-    public class FinishDungeonAction : GoapActionBase<FinishDungeonAction.Data,FinishDungeonAction.Props>
+    public class FinishDungeonAction : GoapActionBase<ActionDataWithTransform,FinishDungeonAction.Props>
     {
-        public override IActionRunState Perform(IMonoAgent agent, Data data, IActionContext context)
+        public override bool IsInRange(IMonoAgent agent, float distance, IActionData data, IComponentReference references)
+        => IsInRangeDefault(distance);
+
+        public override IActionRunState Perform(IMonoAgent agent, ActionDataWithTransform data, IActionContext context)
         {
             return ActionRunState.Completed;
         }
@@ -21,11 +24,6 @@ namespace Dungeon.GOAP.Action
         public class Props : IActionProperties
         {
             public float Cost { get; set; }
-        }
-        [Serializable]
-        public class Data : IActionData
-        {
-            public ITarget Target { get ; set; }
         }
     }
 }

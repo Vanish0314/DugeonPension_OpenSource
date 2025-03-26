@@ -4,13 +4,13 @@ using CrashKonijn.Goap.Runtime;
 using Dungeon.DungeonEntity;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.GOAP.Keys.WorldKeys.Local
 {
     /// <summary>
     /// 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LocalNearByCountOf<T> : WorldKeyBase where T : IDungeonEntity
+    public class LocalNearByEntityCountOf<T> : WorldKeyBase where T : IDungeonEntity
     {
     }
 }

@@ -83,7 +83,10 @@ namespace Dungeon.Vision2D
 
 #if UNITY_EDITOR
                 if (count < 0)
+                {
                     GameFrameworkLog.Error($"[Vision] Count of {visible.GetType().Name} in Vision is less than 0.");
+                    m_Blackboard.SetValue(key, 0);
+                }
 #endif
 
                 OnLoseVisionOf?.Invoke(other.gameObject);
@@ -93,7 +96,7 @@ namespace Dungeon.Vision2D
         public event Action<GameObject> OnLoseVisionOf;
 
         private Blackboard m_Blackboard;
-        private HashSet<GameObject> memorizedVisibleObjects = new ();
+        private HashSet<GameObject> memorizedVisibleObjects = new();
 
         [HideInInspector] public MeshFilter meshFilter;
         [HideInInspector] public PolygonCollider2D polyCollider;

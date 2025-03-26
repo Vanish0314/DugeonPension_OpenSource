@@ -17,7 +17,7 @@ namespace Dungeon.GOAP.Sensors.Target
 
         public override ITarget Sense(IActionReceiver agent, IComponentReference references, ITarget existingTarget)
         {
-            if (existingTarget is DungeonTransformTarger target)
+            if (existingTarget is DungeonTransformTarget target)
             {
                 if (target.transform != null)
                     return target;
@@ -27,9 +27,9 @@ namespace Dungeon.GOAP.Sensors.Target
 
             lowLevel.GetNearestTrap(out Transform nearestTrap);
             if (nearestTrap == null)
-                return new DungeonTransformTarger(null);
+                return new DungeonTransformTarget(null);
             else
-                return new DungeonTransformTarger(nearestTrap);
+                return new DungeonTransformTarget(nearestTrap);
         }
 
         public override void Update()

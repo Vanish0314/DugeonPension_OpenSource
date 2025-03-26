@@ -4,6 +4,7 @@ using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
 using Dungeon.AgentLowLevelSystem;
+using Dungeon.GOAP.Keys.WorldKeys.Local;
 using GameFramework;
 using UnityEngine;
 
@@ -38,7 +39,11 @@ namespace Dungeon
 #endif
 
             var key = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentHP);
-            blackboard.TryGetValue<int>(key, out var value);
+            var hasValue = blackboard.TryGetValue<int>(key, out var value);
+            if (!hasValue)
+            {
+                blackboard.SetValue(key, 100);
+            }
             return value;
         }
         private SenseValue SenseMP(IActionReceiver agent, IComponentReference references)
@@ -52,7 +57,11 @@ namespace Dungeon
 #endif
 
             var key = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentMP);
-            blackboard.TryGetValue<int>(key, out var value);
+            var hasValue = blackboard.TryGetValue<int>(key, out var value);
+            if (!hasValue)
+            {
+                blackboard.SetValue(key, 100);
+            }
             return value;
         }
     }
