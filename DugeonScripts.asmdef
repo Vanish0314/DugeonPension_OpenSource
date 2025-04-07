@@ -1,0 +1,29 @@
+{
+    "name": "DungeonScripts",
+    "rootNamespace": "Dungeon",
+    "references": [
+        "GUID:d1bdda9793c604e9bb9c60ef25b0d0f7",
+        "GUID:613783dc1674e844b87788ea74ede0f6",
+        "GUID:1492f7fc38ce464dae5c20df05fd22e3",
+        "GUID:e52adf591423434e8c16eeb452c84a82",
+        "GUID:6eb7f39de256eea4bb8708df2c32e1ba",
+        "GUID:0d347051544a4880a72466503e27985a",
+        "GUID:4d9088d80ac84f52b9b07421f95af69c",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:8087d854c1f812e4b9a74437dfc524e0",
+        "GUID:4307f53044263cf4b835bd812fc161a4",
+        "GUID:4a1cb1490dc4df8409b2580d6b44e75e",
+        "GUID:3e8495bfd2df0ff4ca1f5b0f360e50a7",
+        "GUID:1dbcca72f42070548a895178556c5bc3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
