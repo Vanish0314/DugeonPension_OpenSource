@@ -4,7 +4,7 @@ using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
 using Dungeon.AgentLowLevelSystem;
-using Dungeon.GOAP.Keys.WorldKeys.Local;
+using Dungeon.GOAP.Keys.WorldKey.Local;
 using GameFramework;
 using UnityEngine;
 

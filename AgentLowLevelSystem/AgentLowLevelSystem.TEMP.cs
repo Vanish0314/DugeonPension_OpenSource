@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
+using Dungeon.DungeonEntity.InteractiveObject;
 using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Torch;
 using Dungeon.DungeonEntity.Trap;
 using Dungeon.Vision2D;
 using GameFramework;

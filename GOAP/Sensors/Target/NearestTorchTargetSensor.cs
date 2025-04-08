@@ -3,13 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.DungeonEntity;
-using Dungeon.DungeonEntity.Torch;
 using Dungeon.GOAP.Target;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensors.Target
+namespace Dungeon.GOAP.Sensor.Target
 {
     public class NearestTorchTargetSensor : LocalTargetSensorBase
     {

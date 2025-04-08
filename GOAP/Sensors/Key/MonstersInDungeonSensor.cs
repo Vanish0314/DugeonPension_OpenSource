@@ -8,7 +8,7 @@ using Dungeon.BlackBoardSystem;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensors.Key
+namespace Dungeon.GOAP.Sensor.Key
 {
     public class MonstersInDungeonSensor : LocalWorldSensorBase
     {

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.Torch;
+using Dungeon.DungeonEntity.InteractiveObject;
 using Dungeon.GOAP.Target;
 using Dungeon.Vision2D;
 using GameFramework;

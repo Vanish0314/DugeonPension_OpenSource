@@ -2,17 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
+using Dungeon.DungeonEntity.InteractiveObject;
 using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Torch;
 using Dungeon.DungeonEntity.Trap;
 using Dungeon.GOAP.Action;
 using Dungeon.GOAP.Goals;
 using Dungeon.GOAP.Keys.TargetKey;
-using Dungeon.GOAP.Keys.WorldKeys;
-using Dungeon.GOAP.Keys.WorldKeys.Local;
-using Dungeon.GOAP.Sensors.Key;
-using Dungeon.GOAP.Sensors.Multi;
-using Dungeon.GOAP.Sensors.Target;
+using Dungeon.GOAP.Keys.WorldKey;
+using Dungeon.GOAP.Keys.WorldKey.Local;
+using Dungeon.GOAP.Sensor;
+using Dungeon.GOAP.Sensor.Key;
+using Dungeon.GOAP.Sensor.Multi;
+using Dungeon.GOAP.Sensor.Target;
 using Dungeon.GOAP.Targets;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
@@ -36,7 +37,7 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
 
             builder.AddGoal<EliminateThreatGoal>()
                 .SetBaseCost(20)
-                .AddCondition<LocalNearByEntityCountOf<SpikeTrap>>(Comparison.SmallerThanOrEqual , 0)
+                .AddCondition<LocalNearByEntityCountOf<StandardTrap>>(Comparison.SmallerThanOrEqual , 0)
                 .AddCondition<LocalNearByEntityCountOf<DungeonMonsterBase>>(Comparison.SmallerThanOrEqual, 0);
 
             builder.AddGoal<LightDungeonRoomGoal>()
@@ -58,9 +59,9 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
                 .SetBaseCost(10);
 
             builder.AddAction<DisarmTrapAciton>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<SpikeTrap>>()
-                .AddEffect<LocalNearByEntityCountOf<SpikeTrap>>(EffectType.Decrease)
-                .AddCondition<LocalNearByEntityCountOf<SpikeTrap>>(Comparison.GreaterThan, 0)
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardTrap>>()
+                .AddEffect<LocalNearByEntityCountOf<StandardTrap>>(EffectType.Decrease)
+                .AddCondition<LocalNearByEntityCountOf<StandardTrap>>(Comparison.GreaterThan, 0)
                 .SetBaseCost(10);
 
             builder.AddAction<LightTorchAction>()
@@ -100,7 +101,7 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
             builder.AddTargetSensor<DungeonExitTargetSensor>()
                 .SetTargetKey<DungeonExitTargetKey>();
             builder.AddTargetSensor<NearestTrapTargetSensor>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<SpikeTrap>>();
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardTrap>>();
             builder.AddTargetSensor<NearestTorchTargetSensor>()
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<Torch>>();
             builder.AddTargetSensor<NearestChestTargetSensor>()

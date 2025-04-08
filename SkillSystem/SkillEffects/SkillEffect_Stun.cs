@@ -9,9 +9,9 @@ namespace Dungeon.SkillSystem.SkillEffect
     public class SkillEffect_Stun : SkillEffectBase
     {
         [SerializeField,LabelText("僵直持续时间")] float duration;
-        public override void Fuck(ICombatable target, SkillDeployMethod deployDesc)
+        public override void Fuck(SkillCalculator calculator)
         {
-            target.Stun(duration);
+            calculator.GiveEffect_Stun(duration);
         }
     }
 }

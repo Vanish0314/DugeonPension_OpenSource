@@ -13,7 +13,7 @@ namespace Dungeon.GOAP.Action
     public class DisarmTrapAciton : GoapActionBase<ActionDataWithTransform>
     {
         public override bool IsInRange(IMonoAgent agent, float distance, IActionData data, IComponentReference references)
-        => IsInRangeDefault(distance);
+        => distance <= 1.5f;
 
         public override IActionRunState Perform(IMonoAgent agent, ActionDataWithTransform data, IActionContext context)
         {

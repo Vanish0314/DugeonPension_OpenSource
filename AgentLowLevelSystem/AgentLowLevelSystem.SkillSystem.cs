@@ -29,7 +29,7 @@ namespace Dungeon.AgentLowLevelSystem
             var skillData = SkillData.GetFromSkillDesc(skillDesc);
             var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, m_SkillShooter, targetPosOrDirection);
 
-            var skill = new Skill(skillData, method);
+            var skill = new Skill(skillData, method, this);
 
             m_SkillShooter.Fire(skill);
         }
@@ -125,17 +125,21 @@ namespace Dungeon.AgentLowLevelSystem
             }
         }
 
+
         public void Stun(float duration)
         {
+            m_StunTween?.Kill();
+
             m_IsStunned = true;
             this.SendMessage("OnStunned");
 
-            DOVirtual.DelayedCall(duration, () =>
+            m_StunTween = DOVirtual.DelayedCall(duration, () =>
             {
                 m_IsStunned = false;
                 this.SendMessage("OnStunnedEnd");
             });
         }
+
 
         private void UpdateCombatorData()
         {
@@ -165,7 +169,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         private CombatorData m_combatorData;
         private SkillShooter m_SkillShooter;
-
+        private Tween m_StunTween;
         private bool m_IsStunned;
     }
 

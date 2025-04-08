@@ -16,9 +16,9 @@ namespace Dungeon
         public int MaxHp{get;set;}
         public int Mp{get;set;}
         public int MaxMp{get;set;}
-        public CombatorData BasicInfo{get;set;}
-
         public float AttackSpeed{get;set;}
+        public CombatorData BasicInfo{get;set;}
+        
         public GameObject GetGameObject();
         public void TakeSkill(Skill skill);
 
@@ -42,6 +42,11 @@ namespace Dungeon
         /// 0代表无法攻击，1代表正常攻击速度,2代表双倍攻击速度...
         /// </summary>
         public float attackSpeed;
+
+        /// <summary>
+        /// 物理属性抗性
+        /// </summary>
+        public int physicalResistance;
 
         /// <summary>
         /// 火属性抗性

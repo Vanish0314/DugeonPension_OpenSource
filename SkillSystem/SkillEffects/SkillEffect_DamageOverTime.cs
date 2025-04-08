@@ -11,19 +11,9 @@ namespace Dungeon.SkillSystem.SkillEffect
     {
         public Damage damagePerSecond;
         public float duration;
-        public override void Fuck(ICombatable target,SkillDeployMethod deployDesc)
+        public override void Fuck(SkillCalculator calculator)
         {
-            Task.Run(async () =>
-            {
-                GameFrameworkLog.Warning("[SKillEffect_DamageOverTime] 在多线程中调用了线程不安全的函数");
-                while (duration > 0)
-                {
-
-                    target.Hp -= damagePerSecond.Claculate(target);
-                    await Task.Delay(1000);
-                    duration -= 1;
-                }
-            });
+            calculator.GiveEffect_DamageOverTime(damagePerSecond, duration);
         }
     }
 }

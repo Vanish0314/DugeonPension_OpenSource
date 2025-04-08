@@ -4,7 +4,7 @@ using CrashKonijn.Goap.Runtime;
 using Dungeon.DungeonEntity;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Keys.WorldKeys.Local
+namespace Dungeon.GOAP.Keys.WorldKey.Local
 {
     /// <summary>
     /// 

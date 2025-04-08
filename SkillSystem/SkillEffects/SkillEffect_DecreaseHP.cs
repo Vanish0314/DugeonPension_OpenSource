@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon.SkillSystem.SkillEffect;
+using Sirenix.Reflection.Editor;
 using UnityEngine;
 
 namespace Dungeon.SkillSystem.SkillEffect
@@ -9,9 +10,9 @@ namespace Dungeon.SkillSystem.SkillEffect
     public class SkillEffect_DecreaseHP : SkillEffectBase
     {
         public Damage damage;
-        public override void Fuck(ICombatable target,SkillDeployMethod deployDesc)
+        public override void Fuck(SkillCalculator calculator)
         {
-            target.Hp -= damage.Claculate(target);
+            calculator.AddBaseDamage(damage);
         }
     }
 }

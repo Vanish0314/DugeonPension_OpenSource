@@ -4,7 +4,7 @@ using CrashKonijn.Agent.Core;
 using Dungeon.Vision2D;
 using UnityEngine;
 
-namespace Dungeon
+namespace Dungeon.DungeonEntity.InteractiveObject
 {
     public class DungeonTreasureChest : DungeonVisibleEntity
     {

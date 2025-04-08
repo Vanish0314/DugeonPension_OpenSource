@@ -1,34 +1,77 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Security.Cryptography;
 using System.Text;
 using Codice.Client.Common;
+using DG.Tweening;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.DungeonEntity;
+using Dungeon.SkillSystem;
 using Dungeon.Vision2D;
 using GameFramework;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditorInternal;
+using UnityEditor.Callbacks;
+
 
 #endif
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Dungeon.DungeonEntity.Trap
 {
-    [RequireComponent(typeof(BoxCollider2D),typeof(Rigidbody2D))]
+    [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
     public class DungeonTrapBuildingCollier : MonoBehaviour
     {
         private DungeonTrapBase trap;
         private BoxCollider2D box;
 
-        public void Init(Vector2Int size, DungeonTrapBase trapBase, bool isTrigger)
+        public void Init(Vector2Int size, DungeonTrapBase trapBase, Sprite sprite, bool isTrigger)
         {
+#if UNITY_EDITOR
+            if (LayerMask.NameToLayer("Trap") == -1)
+                GameFrameworkLog.Error("[DungeonTrapBuildingCollier] No Collider Layer named 'Trap'");
+            if (LayerMask.NameToLayer("DungeonStaticInteractiveEntity") == -1)
+                GameFrameworkLog.Error("[DungeonTrapBuildingCollier] No Collider Layer named 'DungeonStaticInteractiveEntity'");
+#endif
+            trap = trapBase;
+            gameObject.layer = LayerMask.NameToLayer(isTrigger ? "Trap" : "DungeonStaticInteractiveEntity");
+
             box = GetComponent<BoxCollider2D>();
             box.size = size;
-            box.offset = (Vector2)size / 2;
+            box.offset = (Vector2)size / 2f - Vector2.one / 2f;
             box.isTrigger = isTrigger;
+
+            var rb = GetComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Static;
+
+            Transform spriteTransform = transform.Find("SpriteRenderer");
+            GameObject spriteObj;
+            SpriteRenderer sr;
+
+            if (spriteTransform == null)
+            {
+                spriteObj = new GameObject("SpriteRenderer");
+                spriteObj.transform.SetParent(transform);
+                spriteObj.transform.localPosition = box.offset;
+                sr = spriteObj.AddComponent<SpriteRenderer>();
+            }
+            else
+            {
+                spriteObj = spriteTransform.gameObject;
+                sr = spriteObj.GetComponent<SpriteRenderer>() ?? spriteObj.AddComponent<SpriteRenderer>();
+                spriteObj.transform.localPosition = box.offset;
+            }
+
+            sr.sprite = sprite;
+            sr.drawMode = SpriteDrawMode.Tiled;
+            sr.size = size;
+            sr.sortingOrder = 0;
         }
+
         void OnCollisionEnter2D(Collision2D collision)
         {
             var low = collision.gameObject.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
@@ -44,6 +87,7 @@ namespace Dungeon.DungeonEntity.Trap
 #endif
             trap.OnBuildingEnter(low);
         }
+
         void OnTriggerEnter2D(Collider2D collision)
         {
             var low = collision.gameObject.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
@@ -60,93 +104,231 @@ namespace Dungeon.DungeonEntity.Trap
             trap.OnBuildingEnter(low);
         }
     }
-    [RequireComponent(typeof(BoxCollider2D),typeof(Rigidbody2D))]
+
+    [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
     public class DungeonTrapEffectAreaCollider : MonoBehaviour
     {
         private DungeonTrapBase trap;
-        private List<BoxCollider2D> boxes;
+        private List<BoxCollider2D> boxes = new();
+        private Dictionary<Collider2D, int> map = new();
+
         public void Init(List<Vector2Int> area, DungeonTrapBase trapBase)
         {
+#if UNITY_EDITOR
+            if (LayerMask.NameToLayer("TrapTrigger") == -1)
+                GameFrameworkLog.Error("[DungeonTrapEffectAreaCollider] No Collider Layer named 'TrapTrigger'");
+#endif
             trap = trapBase;
+            gameObject.layer = LayerMask.NameToLayer("TrapTrigger");
 
-            foreach(var pos in area)
+            foreach (var pos in area)
             {
                 var box = gameObject.AddComponent<BoxCollider2D>();
                 box.size = Vector2.one;
-                box.offset += (Vector2)pos * new Vector2(0.5f,0.5f);
+                box.offset += (Vector2)pos * Vector2.one;
+                box.isTrigger = true;
+                boxes.Add(box);
+            }
+
+            var rb = GetComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Static;
+        }
+
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (!map.ContainsKey(collision))
+            {
+                map[collision] = 1;
+                var lowLevel = collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+                if (lowLevel != null)
+                {
+                    ExcuteTrap(lowLevel);
+                }
+            }
+            else
+            {
+                map[collision]++;
             }
         }
-        void OnTriggerEnter2D(Collider2D collision)
+
+        private void OnTriggerExit2D(Collider2D collision)
         {
-            var low = collision.gameObject.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            if (map.ContainsKey(collision))
+            {
+                map[collision]--;
+                if (map[collision] <= 0)
+                {
+                    map.Remove(collision);
+                }
+            }
+        }
+
+        private void ExcuteTrap(AgentLowLevelSystem.AgentLowLevelSystem low)
+        {
 #if UNITY_EDITOR
             if (low == null)
             {
                 StringBuilder sb = new();
                 sb.AppendLine("[DungeonTrapBase] Detected Collision with no-hero object. which is not should happen");
                 sb.AppendLine("Check if there has a no-hero obj set to wrong layer or collision layer is mis setted");
-                sb.AppendLine("Info:" + collision.gameObject.name);
+                sb.AppendLine("Info:" + low.gameObject.name);
                 GameFrameworkLog.Error(sb.ToString());
             }
 #endif
             trap.OnEffectEnter(low);
         }
     }
+
+    [RequireComponent(typeof(SkillShooter),typeof(BoxCollider2D),typeof(Rigidbody2D))]
     public abstract class DungeonTrapBase : DungeonVisibleEntity
     {
-        [Header("基本设置")]
-        [LabelText("陷阱名称")] public string trapName;
-        [SerializeField, LabelText("可见检定"), Tooltip("用于检定是否能被看见")]
-        protected DndCheckTarget mDndCheckTarget;
-
-        [Space]
-        [Header("网格设置")]
-
-        [LabelText("陷阱大小")] public Vector2Int size = new(1, 1);
-        [LabelText("陷阱是否可阻挡")] public bool isCollider = false;
-        [HideInInspector] public List<Sprite> sprites = new();
-        [ReadOnly] public List<Vector2Int> effectArea = new();
-
-        public int GetSpriteIndex(Vector2Int pos)
+        public static readonly Dictionary<TrapDirection, float> DirectionToElurRotation = new Dictionary<TrapDirection, float>
         {
-            return (pos.x < 0 || pos.x >= size.x || pos.y < 0 || pos.y >= size.y) ? -1 : pos.y * size.x + pos.x;
+            {TrapDirection.Left, 0f},
+            {TrapDirection.Up, -90f},
+            {TrapDirection.Right, -180f},
+            {TrapDirection.Down, -270f}
+        };
+        public void RotateToDirection(TrapDirection direction)
+        {
+            transform.rotation = Quaternion.Euler(0, 0, DirectionToElurRotation[direction]);
+            transform.position = fourCorners[(int)direction];
         }
-
+        public void RotateToDirection(TrapDirection direction, float timeToRotate)
+        {
+            var oriPos = transform.position;
+            var oriRot = transform.rotation.eulerAngles.z;
+            DOTween.To((float t) =>
+            {
+                transform.rotation = Quaternion.Euler(0, 0, Mathf.Lerp(oriRot, DirectionToElurRotation[direction], t));
+                transform.position = Vector3.Lerp(oriPos, fourCorners[(int)direction], t);
+            },0,1,timeToRotate);
+        }
         void Start()
         {
+            gameObject.layer = LayerMask.NameToLayer("Trap");
+            var rb = GetComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Static;
+            var box = GetComponent<BoxCollider2D>();
+            box.isTrigger = false;
+
             InitCollider2D();
+            CalculateFourCorners();
         }
-        public void InitCollider2D()
+
+        private void InitCollider2D()
         {
-            CreateOrResetChild("BuildingCollider", size, isCollider);
+            CreateOrResetChild("BuildingCollider", size, !isCollider);
             CreateOrResetChild("EffectAreaCollider", effectArea);
         }
+        private void CalculateFourCorners()
+        {
+            fourCorners[0] = transform.position;
+            fourCorners[1] = transform.position + new Vector3(0, size.y, 0);
+            fourCorners[2] = transform.position + new Vector3(size.x, size.y, 0);
+            fourCorners[3] = transform.position + new Vector3(size.x, 0, 0);
+        }
+
         private void CreateOrResetChild(string name, Vector2Int size, bool isTrigger)
         {
-            var go = new GameObject(name);
-            go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero;
-            var collider = go.AddComponent<DungeonTrapBuildingCollier>();
-            collider.Init(size, this, isTrigger);
+            Transform childTransform = transform.Find(name);
+            GameObject go;
+
+            if (childTransform != null)
+            {
+                go = childTransform.gameObject;
+            }
+            else
+            {
+                go = new GameObject(name);
+                go.transform.parent = transform;
+                go.transform.localPosition = Vector3.zero;
+            }
+
+            var collider = go.GetComponent<DungeonTrapBuildingCollier>() ?? go.AddComponent<DungeonTrapBuildingCollier>();
+            collider.Init(size, this, sprite, isTrigger);
         }
+
         private void CreateOrResetChild(string name, List<Vector2Int> area)
         {
-            var go = new GameObject(name);
-            go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero;
-            var collider = go.AddComponent<DungeonTrapEffectAreaCollider>();
+            Transform childTransform = transform.Find(name);
+            GameObject go;
+
+            if (childTransform != null)
+            {
+                go = childTransform.gameObject;
+            }
+            else
+            {
+                go = new GameObject(name);
+                go.transform.parent = transform;
+                go.transform.localPosition = Vector3.zero;
+            }
+
+            var collider = go.GetComponent<DungeonTrapEffectAreaCollider>() ?? go.AddComponent<DungeonTrapEffectAreaCollider>();
             collider.Init(area, this);
         }
 
-        public void OnEffectEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)
+        public virtual void OnEffectEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)
         {
-
+            m_SkillShooter.Fire(skill, agent.transform.position);
         }
-        public void OnBuildingEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)
+
+        public virtual void OnBuildingEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)
         {
-
+            return;
         }
+        public override VisitInformation OnUnvisited(VisitInformation visitInfo)
+        {
+            visitInfo.visited = gameObject;
+            return visitInfo;
+        }
+
+        public override VisitInformation OnVisited(VisitInformation visitInfo)
+        {
+            var visiter = visitInfo.visiter;
+            var low = visiter.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+
+            if (low == null)
+                return visitInfo;
+
+            var checkResut = low.DndCheck(mDndCheckTarget);
+            if (checkResut.Succeed)
+                visitInfo.visited = gameObject;
+
+            return visitInfo;
+        }
+
+        public enum TrapDirection
+        {
+            Up =0, // (0,0,) is up-left
+            Down = 1, // (0,0,) is down-right
+            Left = 2, // (0,0,) is down-left
+            Right = 3 // (0,0,) is up-right
+        }
+
+        [Header("基本设置")]
+        [LabelText("陷阱名称")] public string trapName;
+        [SerializeField, LabelText("可见检定")] protected DndCheckTarget mDndCheckTarget;
+        [SerializeField, LabelText("陷阱精灵")] protected Sprite sprite;
+
+        [Space]
+        [Header("功能设置")]
+        [SerializeField, LabelText("陷阱效果")] protected SkillData skill;
+        private SkillShooter m_SkillShooter;
+
+        [Space]
+        [Header("网格设置")]
+        [LabelText("陷阱大小")] public Vector2Int size = new(1, 1);
+        [LabelText("陷阱是否可阻挡")] public bool isCollider = false;
+        [ReadOnly] public List<Vector2Int> effectArea = new();
+
+        private TrapDirection currentDirection = TrapDirection.Left;
+        private Vector3[] fourCorners = new Vector3[4];
     }
+
+
+
 #if UNITY_EDITOR
     [CustomEditor(typeof(DungeonTrapBase), true)]
     public class DungeonTrapEditor : Editor
@@ -157,47 +339,16 @@ namespace Dungeon.DungeonEntity.Trap
 
             var trap = (DungeonTrapBase)target;
 
-            int totalCells = trap.size.x * trap.size.y;
-            while (trap.sprites.Count < totalCells)
-                trap.sprites.Add(null);
-            if (trap.sprites.Count > totalCells)
-                trap.sprites.RemoveRange(totalCells, trap.sprites.Count - totalCells);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("陷阱图块编辑", EditorStyles.boldLabel);
-            DrawSpriteGrid(trap.size, trap);
-
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("效果区域编辑", EditorStyles.boldLabel);
             DrawEffectAreaEditor(trap);
+            EditorGUILayout.LabelField("注意:设置时注意陷阱的方向,即注意0,0位置在哪一个角落");
 
             if (GUI.changed)
             {
                 Undo.RecordObject(trap, "Edit Trap Sprites");
                 EditorUtility.SetDirty(trap);
             }
-        }
-
-        private void DrawSpriteGrid(Vector2Int size, DungeonTrapBase trap)
-        {
-            EditorGUILayout.BeginVertical(GUI.skin.box);
-
-            for (int y = size.y - 1; y >= 0; y--)
-            {
-                EditorGUILayout.BeginHorizontal();
-                for (int x = 0; x < size.x; x++)
-                {
-                    int index = (size.y - 1 - y) * size.x + x;
-
-                    GUILayout.BeginVertical(GUILayout.Width(72));
-                    EditorGUILayout.LabelField($"({x},{y})", GUILayout.Width(64));
-                    trap.sprites[index] = (Sprite)EditorGUILayout.ObjectField(trap.sprites[index], typeof(Sprite), false, GUILayout.Width(64), GUILayout.Height(64));
-                    GUILayout.EndVertical();
-                }
-                EditorGUILayout.EndHorizontal();
-            }
-
-            EditorGUILayout.EndVertical();
         }
 
         private void DrawEffectAreaEditor(DungeonTrapBase trap)

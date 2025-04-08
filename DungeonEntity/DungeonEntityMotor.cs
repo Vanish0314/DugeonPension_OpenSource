@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using GameFramework;
 using UnityEngine;
+using UnityEngine.UIElements;
 using UnityGameFramework.Runtime;
 
 namespace Dungeon
@@ -39,15 +40,20 @@ namespace Dungeon
         {
             rb.velocity = direction.normalized * speed;
         }
-#if UNITY_EDITOR
         void Start()
         {
+#if UNITY_EDITOR
             if (speed == 0)
             {
                 GameFrameworkLog.Warning("[DungeonEntityMotor] DungeonEntityMotor speed is 0:" + gameObject.name);
             }
+#endif       
+            gameObject.layer = LayerMask.NameToLayer("Monster");
+            var rb = GetComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            var box = GetComponent<BoxCollider2D>();
+            box.isTrigger = false;
         }
-#endif
 
         void Update()
         {

@@ -17,7 +17,6 @@ namespace Dungeon.SkillSystem
         public LayerMask Layer { get; set; } = HeroTeamLayer;
         public static readonly LayerMask HeroTeamLayer = LayerMask.GetMask("Hero");
         public static readonly LayerMask MonsterTeamLayer = LayerMask.GetMask("Monster");
-
         public SkillShooterLayer(string layer)
         {
             if (layer == "Hero")
@@ -54,10 +53,19 @@ namespace Dungeon.SkillSystem
     {
         public SkillShooterLayer mSelfShooterLayer;
 
+        //TODO (vanish): Register skills could fire to control whether a skill is colded down or not.
+
         void Start()
         {
             var layer = LayerMask.LayerToName(gameObject.layer);
             mSelfShooterLayer = new SkillShooterLayer(layer);
+            owner = GetComponent<ICombatable>();
+#if UNITY_EDITOR
+            if (owner == null)
+            {
+                GameFrameworkLog.Error("[SkillShooter] owner is null,which is not allowed");
+            }
+#endif
         }
 
         public bool CouldFire()
@@ -66,10 +74,17 @@ namespace Dungeon.SkillSystem
         }
         public void Fire(Skill skillToFire)
         {
+            if (!isReadyToFire)
+            {
+                GameFrameworkLog.Info("[SkillShooter] SkillShooter is not ready to fire");
+                return;
+            }
+
             isReadyToFire = false;
             StartCoroutine(DelayFire(skillToFire.skillData.preCastTimeInSec, skillToFire));
 
-            Task.Run(async () =>{
+            Task.Run(async () =>
+            {
                 await Task.Delay(System.TimeSpan.FromSeconds(skillToFire.skillData.preCastTimeInSec));
                 await Task.Delay(System.TimeSpan.FromSeconds(skillToFire.skillData.midCastTimeInSec));
                 await Task.Delay(System.TimeSpan.FromSeconds(skillToFire.skillData.postCastTimeInSec));
@@ -77,10 +92,10 @@ namespace Dungeon.SkillSystem
                 isReadyToFire = true;
             });
         }
-        public void Fire(SkillData skillData, SkillShooter shooter, Vector3 posOrDirToUseSkill)
+        public void Fire(SkillData skillData, Vector3 posOrDirToUseSkill)
         {
-            var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, shooter, posOrDirToUseSkill);
-            var skill = new Skill(skillData, method);
+            var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, this, posOrDirToUseSkill);
+            var skill = new Skill(skillData, method, owner);
 
             Fire(skill);
         }
@@ -98,8 +113,29 @@ namespace Dungeon.SkillSystem
 #endif
             skillGo.InitAndFire(skillToFire);
         }
+        private bool isReadyToFire = true;
+        private ICombatable owner;
 
-        private bool isReadyToFire;
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            if (!Application.isPlaying) return;
+            if (mSelfShooterLayer == null || owner == null) return;
+
+            Handles.color = mSelfShooterLayer.Layer == SkillShooterLayer.HeroTeamLayer ? Color.cyan : Color.red;
+            Gizmos.color = new Color(1f, 0.5f, 0f, 1f); // 橙色
+
+            var mockTargetPos = transform.position + transform.forward * 3f;
+
+            Gizmos.DrawLine(transform.position, mockTargetPos);
+
+            Gizmos.DrawSphere(transform.position, 0.2f);
+
+            Gizmos.DrawWireSphere(mockTargetPos, 1.5f);
+
+            Handles.Label(transform.position + Vector3.up * 1.5f, $"Shooter Layer: {LayerMask.LayerToName(gameObject.layer)}");
+        }
+#endif
     }
 
 

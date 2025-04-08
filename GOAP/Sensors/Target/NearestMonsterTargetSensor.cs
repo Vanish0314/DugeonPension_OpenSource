@@ -6,7 +6,7 @@ using CrashKonijn.Goap.Runtime;
 using Dungeon.Target;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensors.Target
+namespace Dungeon.GOAP.Sensor.Target
 {
     public class NearestMonsterTargetSensor : LocalTargetSensorBase
     {

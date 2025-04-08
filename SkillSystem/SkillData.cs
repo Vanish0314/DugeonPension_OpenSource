@@ -9,6 +9,8 @@ using System.Text;
 using Dungeon.SkillSystem.SkillEffect;
 using System.Reflection;
 using System.Linq;
+using UnityEditor.EditorTools;
+
 #if UNITY_EDITOR
 using Dungeon.SkillSystem;
 using UnityEditor;
@@ -28,17 +30,21 @@ namespace Dungeon.SkillSystem
     public enum DamageType
     {
         [LabelText("物理伤害")] Physical,
-        [LabelText("魔法伤害")] Magical,
+        [LabelText("火焰伤害")] Fire,
+        [LabelText("冰冻伤害")] Ice,
+        [LabelText("圣洁伤害")] Holy,
+        [LabelText("毒素伤害")] Poison,
     }
 
     [Serializable]
-    public struct SkillDeployDesc
+    public class SkillDeployDesc
     {
         [Serializable]
         public enum SkillShootType
         {
             [LabelText("方向式")] Directional,
-            [LabelText("落点式")] Point
+            [LabelText("落点式")] Point,
+            [LabelText("原地式")] Origin
         }
         public enum SkillAoeType
         {
@@ -54,12 +60,9 @@ namespace Dungeon.SkillSystem
 
         [LabelText("施放方式")] public SkillShootType shootType;
         [LabelText("AOE类型")] public SkillAoeType aoeType;
-        [Required,LabelText("HitBox")] public readonly GameObject hitBoxPrefab;
-        [LabelText("施法半径")] public float radius;
-    }
-    public class Buff
-    {
-
+        [Required,LabelText("HitBox")] public GameObject hitBoxPrefab;
+        [LabelText("技能范围"),Tooltip("技能范围是技能的作用范围")] public float range = 1;//TODO: not used yet
+        [LabelText("施法半径"),Tooltip("施法半径是可以放技能的最远距离")] public float radius = 1;
     }
 
     [CreateAssetMenu(fileName = "New SkillData", menuName = "Skill System/Skill Data")]

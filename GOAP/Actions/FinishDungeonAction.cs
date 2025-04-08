@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
 using Dungeon.GOAP.Goals;
-using Dungeon.GOAP.Sensors.Target;
+using Dungeon.GOAP.Sensor.Target;
 using UnityEngine;
 
 namespace Dungeon.GOAP.Action

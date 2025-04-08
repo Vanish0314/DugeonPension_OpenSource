@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Dungeon.Vision2D;
 using UnityEngine;
 
-namespace Dungeon.DungeonEntity.Torch
+namespace Dungeon.DungeonEntity.InteractiveObject
 {
     public class Torch : DungeonVisibleEntity
     {
