@@ -494,7 +494,7 @@ GameObject:
   - component: {fileID: 713075081}
   - component: {fileID: 713075083}
   - component: {fileID: 713075082}
-  m_Layer: 5
+  m_Layer: 11
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -711,7 +711,7 @@ GameObject:
   - component: {fileID: 945166740}
   - component: {fileID: 945166739}
   - component: {fileID: 945166738}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Vision
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1057,7 +1057,7 @@ GameObject:
   - component: {fileID: 1362628842}
   - component: {fileID: 1362628841}
   - component: {fileID: 1362628843}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: hero
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1293,6 +1293,8 @@ GameObject:
   - component: {fileID: 1459031380}
   - component: {fileID: 1459031379}
   - component: {fileID: 1459031378}
+  - component: {fileID: 1459031387}
+  - component: {fileID: 1459031386}
   m_Layer: 0
   m_Name: "\u6807\u51C6\u602A\u7269"
   m_TagString: Untagged
@@ -1314,16 +1316,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animatorParametersHint: isIdle, isMoving, isAttacking, isDead
   basicInfo:
-    hp: 0
-    maxHp: 0
-    mp: 0
-    maxMp: 0
-    attackSpeed: 0
-    physicalResistance: 0
-    fireResistance: 0
-    iceResistance: 0
-    holyResistance: 0
-    posionResistance: 0
+    hp: 5
+    maxHp: 5
+    mp: 6
+    maxMp: 6
+    attackSpeed: 3
+    physicalResistance: 1
+    fireResistance: 1
+    iceResistance: 1
+    holyResistance: 1
+    posionResistance: 1
   visibleCheckTarget: {fileID: 0}
   skill: {fileID: 11400000, guid: 0e54ba37c198545cebb5fb00a2068813, type: 2}
   moveSpeed: 5
@@ -1523,6 +1525,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1459031386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459031377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b98a6db0b653f764eac834f85857a9dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _parentBlackboard: {fileID: 0}
+  _serializedBlackboard: '{"_variables":{"state":{"_propertyPath":"Dungeon.DungeonEntity.Monster.DungeonMonsterBehaviourTreeHelper.state","_name":"state","_id":"1f4a85e6-5e70-406a-a68e-c1e808207e0c","$type":"NodeCanvas.Framework.Variable`1[[Dungeon.DungeonEntity.Monster.MonsterAIState,
+    DungeonScripts, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"},"currentTarget":{"_propertyPath":"Dungeon.DungeonEntity.Monster.DungeonMonsterBehaviourTreeHelper.currentTarget","_name":"currentTarget","_id":"c2028842-7511-40cf-aef4-feb36a327b13","$type":"NodeCanvas.Framework.Variable`1[[UnityEngine.Transform,
+    UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"}}}'
+  _objectReferences: []
+  _serializedVariables:
+  - _json: '{"_propertyPath":"Dungeon.DungeonEntity.Monster.DungeonMonsterBehaviourTreeHelper.state","_name":"state","_id":"1f4a85e6-5e70-406a-a68e-c1e808207e0c","$type":"NodeCanvas.Framework.Variable`1[[Dungeon.DungeonEntity.Monster.MonsterAIState,
+      DungeonScripts, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"}'
+    _references: []
+  - _json: '{"_propertyPath":"Dungeon.DungeonEntity.Monster.DungeonMonsterBehaviourTreeHelper.currentTarget","_name":"currentTarget","_id":"c2028842-7511-40cf-aef4-feb36a327b13","$type":"NodeCanvas.Framework.Variable`1[[UnityEngine.Transform,
+      UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"}'
+    _references: []
+--- !u!114 &1459031387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459031377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aad115aca74ce3c4891b3f6de0b4aae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _serializedExposedParameters: []
+  _boundGraphSerialization: '{"type":"NodeCanvas.BehaviourTrees.BehaviourTree","nodes":[{"_position":{"x":1199.14,"y":101.3181},"$type":"NodeCanvas.BehaviourTrees.Selector","$id":"0"},{"_position":{"x":739.4734,"y":149.6514},"$type":"NodeCanvas.BehaviourTrees.Sequencer","$id":"1"},{"_condition":{"valueA":{"_type":"System.Enum","_name":"state","_targetVariableID":"1f4a85e6-5e70-406a-a68e-c1e808207e0c"},"valueB":{"_type":"Dungeon.DungeonEntity.Monster.MonsterAIState","_value":{"$content":0,"$type":"Dungeon.DungeonEntity.Monster.MonsterAIState"}},"$type":"NodeCanvas.Tasks.Conditions.CheckEnum"},"_position":{"x":514.1525,"y":323.9115},"$type":"NodeCanvas.BehaviourTrees.ConditionNode","$id":"2"},{"_condition":{"valueA":{"_name":"currentTarget","_targetVariableID":"c2028842-7511-40cf-aef4-feb36a327b13"},"valueB":{"_value":true},"$type":"NodeCanvas.Tasks.Conditions.CheckBoolean"},"_position":{"x":659.0002,"y":334.6667},"$type":"NodeCanvas.BehaviourTrees.ConditionNode","$id":"3"},{"_action":{"valueA":{"_type":"System.Enum","_name":"state","_targetVariableID":"1f4a85e6-5e70-406a-a68e-c1e808207e0c"},"valueB":{"_type":"Dungeon.DungeonEntity.Monster.MonsterAIState","_value":{"$content":1,"$type":"Dungeon.DungeonEntity.Monster.MonsterAIState"}},"$type":"NodeCanvas.Tasks.Actions.SetEnum"},"_position":{"x":855.6666,"y":275.6667},"$type":"NodeCanvas.BehaviourTrees.ActionNode","$id":"4"},{"_position":{"x":1184.041,"y":220.9848},"$type":"NodeCanvas.BehaviourTrees.Sequencer","$id":"5"},{"_condition":{"valueA":{"_type":"System.Enum","_name":"state","_targetVariableID":"1f4a85e6-5e70-406a-a68e-c1e808207e0c"},"valueB":{"_type":"Dungeon.DungeonEntity.Monster.MonsterAIState","_value":{"$content":1,"$type":"Dungeon.DungeonEntity.Monster.MonsterAIState"}},"$type":"NodeCanvas.Tasks.Conditions.CheckEnum"},"_position":{"x":985.2154,"y":358.7369},"$type":"NodeCanvas.BehaviourTrees.ConditionNode","$id":"6"},{"_action":{"method":{"_baseInfo":"Dungeon.DungeonEntity.Monster.DungeonMonsterBehaviourTreeHelper|TargetIsInSkillRange|System.Boolean","_paramsInfo":""},"parameters":[],"returnValue":{"_type":"System.Boolean","_value":{"$content":false,"$type":"System.Boolean"},"_name":""},"$type":"NodeCanvas.Tasks.Actions.ExecuteFunction_Multiplatform"},"_position":{"x":1148.333,"y":364.5305},"$type":"NodeCanvas.BehaviourTrees.ActionNode","$id":"7"},{"_action":{"valueA":{"_type":"System.Enum","_name":"state","_targetVariableID":"1f4a85e6-5e70-406a-a68e-c1e808207e0c"},"valueB":{"_type":"Dungeon.DungeonEntity.Monster.MonsterAIState","_value":{"$content":2,"$type":"Dungeon.DungeonEntity.Monster.MonsterAIState"}},"$type":"NodeCanvas.Tasks.Actions.SetEnum"},"_position":{"x":1391.333,"y":357.6667},"$type":"NodeCanvas.BehaviourTrees.ActionNode","$id":"8"},{"_position":{"x":1711.394,"y":187.7276},"$type":"NodeCanvas.BehaviourTrees.Sequencer","$id":"9"},{"_condition":{"valueA":{"_type":"System.Enum","_name":"state","_targetVariableID":"1f4a85e6-5e70-406a-a68e-c1e808207e0c"},"valueB":{"_type":"Dungeon.DungeonEntity.Monster.MonsterAIState","_value":{"$content":2,"$type":"Dungeon.DungeonEntity.Monster.MonsterAIState"}},"$type":"NodeCanvas.Tasks.Conditions.CheckEnum"},"_position":{"x":1579.591,"y":312.2076},"$type":"NodeCanvas.BehaviourTrees.ConditionNode","$id":"10"},{"_position":{"x":1926.802,"y":287.6403},"$type":"NodeCanvas.BehaviourTrees.Sequencer","$id":"11"},{"_condition":{"valueA":{"_name":"currentTarget","_targetVariableID":"c2028842-7511-40cf-aef4-feb36a327b13"},"valueB":{},"$type":"NodeCanvas.Tasks.Conditions.CheckBoolean"},"_position":{"x":1770.016,"y":394.5497},"$type":"NodeCanvas.BehaviourTrees.ConditionNode","$id":"12"},{"_action":{"valueA":{"_type":"System.Enum","_name":"state","_targetVariableID":"1f4a85e6-5e70-406a-a68e-c1e808207e0c"},"valueB":{"_type":"Dungeon.DungeonEntity.Monster.MonsterAIState","_value":{"$content":0,"$type":"Dungeon.DungeonEntity.Monster.MonsterAIState"}},"$type":"NodeCanvas.Tasks.Actions.SetEnum"},"_position":{"x":2017.681,"y":418.7473},"$type":"NodeCanvas.BehaviourTrees.ActionNode","$id":"13"},{"_position":{"x":2266.317,"y":330.4037},"$type":"NodeCanvas.BehaviourTrees.Sequencer","$id":"14"},{"_condition":{"valueA":{"_name":"currentTarget","_targetVariableID":"c2028842-7511-40cf-aef4-feb36a327b13"},"valueB":{"_value":true},"$type":"NodeCanvas.Tasks.Conditions.CheckBoolean"},"_position":{"x":2107.76,"y":542.1513},"$type":"NodeCanvas.BehaviourTrees.ConditionNode","$id":"15"},{"_action":{"method":{"_baseInfo":"Dungeon.DungeonEntity.Monster.DungeonMonsterBehaviourTreeHelper|TargetIsInSkillRange|System.Boolean","_paramsInfo":""},"parameters":[],"returnValue":{"_type":"System.Boolean","_value":{"$content":false,"$type":"System.Boolean"},"_name":""},"$type":"NodeCanvas.Tasks.Actions.ExecuteFunction_Multiplatform"},"_position":{"x":2321.243,"y":578.9418},"$type":"NodeCanvas.BehaviourTrees.ActionNode","$id":"16"}],"connections":[{"_sourceNode":{"$ref":"0"},"_targetNode":{"$ref":"1"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"0"},"_targetNode":{"$ref":"5"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"0"},"_targetNode":{"$ref":"9"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"1"},"_targetNode":{"$ref":"2"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"1"},"_targetNode":{"$ref":"3"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"1"},"_targetNode":{"$ref":"4"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"5"},"_targetNode":{"$ref":"6"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"5"},"_targetNode":{"$ref":"7"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"5"},"_targetNode":{"$ref":"8"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"9"},"_targetNode":{"$ref":"10"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"9"},"_targetNode":{"$ref":"11"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"11"},"_targetNode":{"$ref":"12"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"11"},"_targetNode":{"$ref":"13"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"14"},"_targetNode":{"$ref":"15"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"},{"_sourceNode":{"$ref":"14"},"_targetNode":{"$ref":"16"},"$type":"NodeCanvas.BehaviourTrees.BTConnection"}],"canvasGroups":[],"localBlackboard":{"_variables":{}},"derivedData":{"repeat":true,"$type":"NodeCanvas.BehaviourTrees.BehaviourTree+DerivedSerializationData"}}'
+  _boundGraphObjectReferences: []
+  _boundGraphSource:
+    _version: 3.28
+    _category: 
+    _comments: 
+    _translation: {x: -215, y: -44}
+    _zoomFactor: 0.99970204
+  _firstActivation: 0
+  _enableAction: 0
+  _disableAction: 0
+  _lockBoundGraphPrefabOverrides: 1
+  _preInitializeSubGraphs: 0
+  _updateMode: 0
+  _graph: {fileID: 0}
+  _blackboard: {fileID: 1459031386}
 --- !u!224 &1572763433 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 22400010, guid: ea4f45f1433c2404197edc445210b679, type: 3}
@@ -1540,7 +1595,7 @@ GameObject:
   - component: {fileID: 1595984884}
   - component: {fileID: 1595984883}
   - component: {fileID: 1595984882}
-  m_Layer: 5
+  m_Layer: 11
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1640,7 +1695,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1810848359}
   - component: {fileID: 1810848360}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

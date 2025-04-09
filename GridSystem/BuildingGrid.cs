@@ -13,7 +13,7 @@ namespace Dungeon
         
         private Vector3 originPoint => gridProperties.originPoint;
         public Vector3 GridDownLeftOriginPoint => GridToWorldPosition(0, 0);
-        private Vector3 offset => new Vector3(gridProperties.cellSize / 2, gridProperties.cellSize / 2, 0);
+        private Vector3 offset => new Vector3(GridProperties.cellSize / 2, GridProperties.cellSize / 2, 0);
 
 
         private void InitializeGrid()
@@ -38,39 +38,39 @@ namespace Dungeon
         
         public void Init(VisualGrid visualGrid)
         {
-            var tilemap = visualGrid.GetBackGroundTileMap();
-            var gridDesc = new GridProperties
-            {
-                width = tilemap.size.x,
-                height = tilemap.size.y,
-                cellSize = tilemap.cellSize.x,
-                originPoint = tilemap.origin
-            };
-            Init(gridDesc);
+            // var tilemap = visualGrid.GetBackGroundTileMap();
+            // var gridDesc = new GridProperties
+            // {
+            //     width = tilemap.size.x,
+            //     height = tilemap.size.y,
+            //     cellSize = tilemap.cellSize.x,
+            //     originPoint = tilemap.origin
+            // };
+            // Init(gridDesc);
             
-            var bounds = tilemap.cellBounds;
+            // var bounds = tilemap.cellBounds;
             
-            for (int x = bounds.xMin; x < bounds.xMax; x++)
-            {
-                for (int y = bounds.yMin; y < bounds.yMax; y++)
-                {
-                    Vector3Int tilePosition = new (x, y, 0);
-                    TileBase tile = tilemap.GetTile(tilePosition);
+            // for (int x = bounds.xMin; x < bounds.xMax; x++)
+            // {
+            //     for (int y = bounds.yMin; y < bounds.yMax; y++)
+            //     {
+            //         Vector3Int tilePosition = new (x, y, 0);
+            //         TileBase tile = tilemap.GetTile(tilePosition);
 
-                    // Trans world position to grid position
-                    var gridX = x - bounds.xMin;
-                    var gridY = y - bounds.yMin;
+            //         // Trans world position to grid position
+            //         var gridX = x - bounds.xMin;
+            //         var gridY = y - bounds.yMin;
 
-                    if (tile is IDungeonTile dungeonTile)
-                    {
-                        if(dungeonTile.TileType == TileType.Foundation || dungeonTile.TileType == TileType.Ground)
-                            grid.Set(gridX,gridY,new BuildingCell(true));
-                        else
-                            grid.Set(gridX,gridY,new BuildingCell(false));
-                    }
+            //         if (tile is IDungeonTile dungeonTile)
+            //         {
+            //             if(dungeonTile.BlockType == TilePathBlockType.Foundation || dungeonTile.BlockType == TilePathBlockType.Ground)
+            //                 grid.Set(gridX,gridY,new BuildingCell(true));
+            //             else
+            //                 grid.Set(gridX,gridY,new BuildingCell(false));
+            //         }
 
-                }
-            }
+            //     }
+            // }
         }
 
         #region PUBLIC METHODS
@@ -174,10 +174,11 @@ namespace Dungeon
         /// </summary>
         public Vector2Int WorldToGridPosition(Vector3 worldPosition)
         {
-            worldPosition -= offset;
-            int x = Mathf.FloorToInt((worldPosition.x - gridProperties.originPoint.x) / gridProperties.cellSize);
-            int y = Mathf.FloorToInt((worldPosition.y - gridProperties.originPoint.y) / gridProperties.cellSize);
-            return new Vector2Int(x, y);
+            return Vector2Int.zero;
+            // worldPosition -= offset;
+            // int x = Mathf.FloorToInt((worldPosition.x - gridProperties.originPoint.x) / gridProperties.cellSize);
+            // int y = Mathf.FloorToInt((worldPosition.y - gridProperties.originPoint.y) / gridProperties.cellSize);
+            // return new Vector2Int(x, y);
         }
 
         /// <summary>
@@ -185,10 +186,12 @@ namespace Dungeon
         /// </summary>
         public Vector3 GridToWorldPosition(int x, int y)
         {
-            return new Vector3(
-                x * gridProperties.cellSize + gridProperties.originPoint.x,
-                y * gridProperties.cellSize + gridProperties.originPoint.y,
-                0) + offset;
+            // return new Vector3(
+            //     x * gridProperties.cellSize + gridProperties.originPoint.x,
+            //     y * gridProperties.cellSize + gridProperties.originPoint.y,
+            //     0) + offset;
+
+            return Vector3.zero;
         }
 
         #endregion
@@ -238,7 +241,7 @@ namespace Dungeon
                         Gizmos.color = buildableColor;
                     }
 
-                    Gizmos.DrawWireCube(cellWorldPos, new Vector3(gridProperties.cellSize, gridProperties.cellSize, 0));
+                    // Gizmos.DrawWireCube(cellWorldPos, new Vector3(gridProperties.cellSize, gridProperties.cellSize, 0));
                 }
             }
         }

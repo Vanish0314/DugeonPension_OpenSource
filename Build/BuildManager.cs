@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon;
+using Dungeon.GridSystem;
 using GameFramework;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -141,8 +142,8 @@ namespace Dungeon
             
                 Vector3 worldCenterPos = gridSystem.GridToWorldPosition(gridPos) + 
                                          new Vector3(
-                                             centerOffset.x * gridSystem.GetGridProperties().cellSize,
-                                             centerOffset.y * gridSystem.GetGridProperties().cellSize,
+                                             centerOffset.x * GridProperties.cellSize,
+                                             centerOffset.y * GridProperties.cellSize,
                                              0);
                 
                 // 实例化建筑（精确居中）
@@ -171,8 +172,8 @@ namespace Dungeon
             Vector2 centerOffset = GetBuildingCenterOffset(m_SelectedBuildingData.size);
             Vector3 worldCenterPos = gridSystem.GridToWorldPosition(gridPos) + 
                                      new Vector3(
-                                         centerOffset.x * gridSystem.GetGridProperties().cellSize,
-                                         centerOffset.y * gridSystem.GetGridProperties().cellSize,
+                                         centerOffset.x * GridProperties.cellSize,
+                                         centerOffset.y * GridProperties.cellSize,
                                          0);
 
             m_PreviewInstance.transform.position = worldCenterPos;

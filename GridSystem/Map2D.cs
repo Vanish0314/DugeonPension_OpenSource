@@ -1,6 +1,8 @@
 using System;
+using System.Numerics;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEngine;
 
 namespace Dungeon.GridSystem
 {
@@ -47,6 +49,11 @@ namespace Dungeon.GridSystem
             if (!IsValidCoordinate(MapX, MapY))
                 throw new ArgumentOutOfRangeException("[Map_2D.cs] Invalid coordinates.");
             m_MapData[MapX, MapY] = value;
+        }
+
+        public void Set(Vector2Int pos, T value)
+        {
+            Set(pos.x, pos.y, value);
         }
 
         public bool IsValidCoordinate(int x, int y)

@@ -8,7 +8,6 @@ namespace Dungeon.DungeonEntity.Monster
     {
         protected override void OnTakeSkill(Skill skill)
         {
-
         }
 
         protected override void OnUpdate()

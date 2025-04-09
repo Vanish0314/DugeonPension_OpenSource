@@ -9,22 +9,14 @@ namespace Dungeon.GridSystem
     {
         public int width;      // 网格宽度
         public int height;     // 网格高度
-        public float cellSize;     // 每个单元格的大小
-        public Vector3 originPoint; // 网格原点
-
-        public GridProperties(int width = 128, int height = 128, float size = 1.0f, Vector3 origin = default)
-        {
-            this.width = width;
-            this.height = height;
-            cellSize = size;
-            originPoint = origin;
-        }
+        public const float cellSize = 1;     // 每个单元格的大小
+        public Vector3 originPoint; // 网格原点(即左下角)
     }
     public struct LogicalCell
     {
-        public LogicalCell(GridCellReachableType type) {  this.type = type; }
+        public LogicalCell(TilePathBlockType type) {  this.type = type; }
         
-        public GridCellReachableType type;
+        public TilePathBlockType type;
     }
     public struct BuildingCell
     {
@@ -41,17 +33,21 @@ namespace Dungeon.GridSystem
             this.BuildingOrigin = Vector2Int.zero;
         }
     }
-    public enum TileType
+    public enum TilePathBlockType
     {
         Ground,
-        Wall,
-        Building,
-        Foundation,
-        Debug
+        Wall
+    }
+    public enum TileFunctionType
+    {
+        Default,     
+        Trap,        
+        Treasure,    
+        Door,
     }
     public struct TileDesc
     {
-        public TileType type;
+        public TilePathBlockType type;
     }
 
     public struct GridPath

@@ -7,96 +7,81 @@ using UnityEngine.Tilemaps;
 
 namespace Dungeon.GridSystem
 {
+    [HideInInspector]
     public class VisualGrid : MonoBehaviour
     {
-        /// <summary>
-        /// if backGroundTileMap is not null, will return it's grid properties, otherwise will return null
-        /// this will create gird if it's not exist
-        /// </summary>
-        /// <returns></returns>
-        public GridProperties? GetGridProperties()
+        public void Load(GridData data)
         {
-            m_BackGroundTileMap = transform.Find("BackGround")?.GetComponent<Tilemap>();
-            if(m_BackGroundTileMap == null)
-                return null;
-
+            // TODO
+            throw new NotImplementedException();
+        }
+        public void Init()
+        {
             var bg = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
             var bt = transform.Find("Buildings")?.gameObject ?? new GameObject("Buildings");
-            var bug = transform.Find("Debug")?.gameObject ?? new GameObject("Debug");
+            var dc = transform.Find("Debug")?.gameObject ?? new GameObject("Debug");
             bg.transform.parent = transform;
             bt.transform.parent = transform;
-            bug.transform.parent = transform;
+            dc.transform.parent = transform;
 
             m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
-            m_BackGroundTileMapRenderer = bg.GetOrAddComponent<TilemapRenderer>();
-
             m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
-            m_BuildingsTileMapRenderer = bt.GetOrAddComponent<TilemapRenderer>();
-
-            m_DebugTileMap = bug.GetOrAddComponent<Tilemap>();
-            m_DebugTileMapRenderer = bug.GetOrAddComponent<TilemapRenderer>();
-
-            return new GridProperties()
+            m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
+        }
+        [Obsolete("Visual should only responsible for rendering, not for getting grid properties")]
+        public GridProperties GetGridProperties() => new()
+        {
+            width = m_BackGroundTileMap.size.x,
+            height = m_BackGroundTileMap.size.y,
+            originPoint = m_BackGroundTileMap.origin
+        };
+        public void SetTile(Vector2Int gridPos, DungeonRuleTile tile)
+        {
+            switch (mFunctionToLayerMap[tile.FunctionType])
             {
-                width = m_BackGroundTileMap.size.x,
-                height = m_BackGroundTileMap.size.y,
-                cellSize = m_BackGroundTileMap.cellSize.x,
-                originPoint = m_BackGroundTileMap.origin
-            };
-        }
-
-        public void SetTileBases(DungeonRuleTile wallTile, DungeonRuleTile groundTile,DungeonRuleTile debugTile)
-        {
-            m_WallTile = wallTile;
-            m_GroundTile = groundTile;
-            m_DebugTile = debugTile;
-        }
-
-#region PUBLIC
-        public void OnResize(GridProperties properties)
-        {
-            //TODO
-        }
-
-        public void SetTile(Vector2Int gridPos, TileDesc tileDesc)
-        {
-            TileBase tile;
-            switch (tileDesc.type)
-            {
-                case TileType.Ground:
-                    tile = m_GroundTile;
+                case VisualLayer.BackGround:
+                    m_BackGroundTileMap.SetTile(new Vector3Int(gridPos.x, gridPos.y, 0), tile);
                     break;
-                case TileType.Wall:
-                    tile = m_WallTile;
+                case VisualLayer.Buildings:
+                    m_BuildingsTileMap.SetTile(new Vector3Int(gridPos.x, gridPos.y, 0), tile);
                     break;
-                case TileType.Debug:
-                    tile = m_DebugTile;
-                    break;
-                default:
-                    throw new NotImplementedException();
+                case VisualLayer.Decorate:
+                    m_DecorateTileMap.SetTile(new Vector3Int(gridPos.x, gridPos.y, 0), tile);
                     break;
             }
-
-            m_BackGroundTileMap.SetTile(new Vector3Int(gridPos.x, gridPos.y, 0), tile);
         }
-
-        public Tilemap GetBackGroundTileMap() => m_BackGroundTileMap;
-        public DungeonRuleTile GetWallTile() => m_WallTile;
-        public DungeonRuleTile GetGroundTile() => m_GroundTile;
-#endregion
-
-        private DungeonRuleTile m_WallTile;
-        private DungeonRuleTile m_GroundTile;
-        private DungeonRuleTile m_DebugTile;
-        /// <summary>
-        /// BackGround ,With only two kind of Tile: Groung , Wall
-        /// </summary>
         private Tilemap m_BackGroundTileMap;
-        private TilemapRenderer m_BackGroundTileMapRenderer;
         private Tilemap m_BuildingsTileMap;
-        private TilemapRenderer m_BuildingsTileMapRenderer;
-        private Tilemap m_DebugTileMap;
-        private TilemapRenderer m_DebugTileMapRenderer;
+        private Tilemap m_DecorateTileMap;
 
+        public enum VisualLayer
+        {
+            BackGround,
+            Buildings,
+            Decorate
+        }
+        public static Dictionary<TileFunctionType, VisualLayer> mFunctionToLayerMap = new()
+        {
+            { TileFunctionType.Default, VisualLayer.BackGround },
+            { TileFunctionType.Trap, VisualLayer.Decorate },
+            { TileFunctionType.Treasure, VisualLayer.Decorate },
+            { TileFunctionType.Door, VisualLayer.Buildings },
+        };
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (!Application.isPlaying)
+            {
+                var bg = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
+                var bt = transform.Find("Buildings")?.gameObject ?? new GameObject("Buildings");
+                var dc = transform.Find("Debug")?.gameObject ?? new GameObject("Debug");
+
+                m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
+                m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
+                m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
+            }
+#endif
+        }
     }
 }

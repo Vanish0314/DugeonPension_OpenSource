@@ -36,6 +36,8 @@ namespace Dungeon.AgentLowLevelSystem
             m_AgentRigdbody ??= GetComponent<Rigidbody2D>();
             m_BlackboardController ??= gameObject.GetOrAddComponent<BlackboardController>();
 
+            gameObject.layer = LayerMask.NameToLayer("Hero");
+
             InitSystem();
         }
         private void InitSystem()

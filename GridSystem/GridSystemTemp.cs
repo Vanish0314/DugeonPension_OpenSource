@@ -27,7 +27,7 @@ namespace Dungeon.GridSystem
         {
             Debug.Assert(CheckEssentials(), "网格系统必须填入Tile");
 
-            m_VisualGrid.SetTileBases(wallTile, groundTile, foundationTile);//------------
+            // m_VisualGrid.SetTileBases(wallTile, groundTile, foundationTile);//------------
 
             InitPosition(transform);
 
@@ -43,7 +43,7 @@ namespace Dungeon.GridSystem
         {
             properties = props;
 
-            m_VisualGrid.OnResize(properties);
+            // m_VisualGrid.OnResize(properties);
         }
         private void InitPosition(Transform go)
         {
@@ -61,27 +61,27 @@ namespace Dungeon.GridSystem
         private void InitGrid()
         {
             var p = m_VisualGrid.GetGridProperties();
-            if (p == null)
-            {
-                p = new GridProperties(64, 64, 1, default);
-                m_VisualGrid.OnResize(p.Value);
-            }
+            // if (p == null)
+            // {
+            //     p = new GridProperties(64, 64, 1, default);
+            //     m_VisualGrid.OnResize(p.Value);
+            // }
 
             //m_LogicalGrid.Init(m_VisualGrid);
             m_BuildingGrid.Init(m_VisualGrid);//------------------
 
-            properties = p.Value;
+            // properties = p.Value;
         }
 
         #region PUBLIC
         public void SetTile(Vector2Int gridPos, TileDesc tileDesc)
         {
-            m_VisualGrid.SetTile(gridPos, tileDesc);
+            // m_VisualGrid.SetTile(gridPos, tileDesc);
 
-            if (tileDesc.type == TileType.Debug) // TEMP
-                return;
+            // if (tileDesc.type == TilePathBlockType.Debug) // TEMP
+            //     return;
             
-            m_BuildingGrid.SetTile(gridPos, tileDesc.type == TileType.Foundation);
+            // m_BuildingGrid.SetTile(gridPos, tileDesc.type == TilePathBlockType.Foundation);
         }
         
         public Vector3 GridToWorldPosition(Vector2Int gridPos) => m_BuildingGrid.GridToWorldPosition(gridPos.x, gridPos.y);
@@ -150,7 +150,7 @@ namespace Dungeon.GridSystem
                 // m_LogicalGrid.SetTile(gridPos, GridCellReachableType.Reachabel);
                 
                 // 更新可视化网格
-                m_VisualGrid.SetTile(gridPos, new TileDesc { type = TileType.Ground });
+                // m_VisualGrid.SetTile(gridPos, new TileDesc { type = TilePathBlockType.Ground });
                 return true;
             }
             return false;
