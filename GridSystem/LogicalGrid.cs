@@ -1,16 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
-using Dungeon.GridSystem;
-using Dungeon.Common;
 using GameFramework;
 using UnityEngine;
 using static UnityGameFramework.Runtime.DebuggerComponent;
-using DG.Tweening.Core.Easing;
-using UnityEngine.Tilemaps;
 using UnityGameFramework.Runtime;
 using System.Threading.Tasks;
-
-
+using Dungeon.DungeonEntity.InteractiveObject;
+using Dungeon.DungeonEntity.Trap;
+using static Dungeon.GridSystem.GridSystem;
+using System.Linq;
+using System;
 
 
 
@@ -39,35 +37,256 @@ namespace Dungeon.GridSystem
                 {
                     var gridPos = WorldToGridPosition(new Vector3(tileCell.x, tileCell.y, 0));
 
-                    if(IsUnReachable(gridPos))
+                    if (IsUnReachable(gridPos))
                         continue;
 
                     var logicalCell = new LogicalCell(tileCell.blockTypeType);
-                    grid.Set(gridPos, logicalCell);
+                    wallMap.Set(gridPos, logicalCell);
                 }
             }
         }
+        public void Clear()
+        {
+            wallMap.Clear();
+            gridProperties = new GridProperties();
+        }
         public void SetTile(Vector2Int gridPos, IDungeonTile tile)
         {
-            grid.Set(gridPos.x, gridPos.y, new LogicalCell(tile.BlockType));
+            wallMap.Set(gridPos.x, gridPos.y, new LogicalCell(tile.BlockType));
+        }
+        public void AddTrap(Vector2Int gridPos, DungeonTrapBase trap)
+        {
+            if (trapMap.ContainsKey(gridPos))
+                return;
+
+            if (trap.isCollider)
+                wallMap.Set(gridPos.x, gridPos.y, new LogicalCell(TilePathBlockType.Wall));
+
+            trapMap.Add(gridPos, trap);
+        }
+        public void AddInteractiveObject(Vector2Int gridPos, DungeonInteractiveObjectBase interactiveObject)
+        {
+            if (interactMap.ContainsKey(gridPos))
+                return;
+
+            wallMap.Set(gridPos.x, gridPos.y, new LogicalCell(TilePathBlockType.Wall));
+
+            interactMap.Add(gridPos, interactiveObject);
         }
         public bool IsUnReachable(Vector2Int gridPos)
         {
-            return grid.Get(gridPos.x, gridPos.y).type == TilePathBlockType.Wall;
+            return wallMap.Get(gridPos.x, gridPos.y).type == TilePathBlockType.Wall;
         }
-
         public Vector2Int WorldToGridPosition(Vector3 worldPosition)
         {
-            worldPosition -= offset;
             int x = Mathf.FloorToInt((worldPosition.x - gridProperties.originPoint.x) / GridProperties.cellSize);
             int y = Mathf.FloorToInt((worldPosition.y - gridProperties.originPoint.y) / GridProperties.cellSize);
             return new Vector2Int(x, y);
         }
-
         public Vector3 GridToWorldPosition(int x, int y)
         {
             return new Vector3(x * GridProperties.cellSize + gridProperties.originPoint.x, y * GridProperties.cellSize + gridProperties.originPoint.y, 0) + offset;
         }
+        public System.Object GetStaticEntity(Vector2Int gridPos)
+        {
+            if (interactMap.ContainsKey(gridPos))
+            {
+                return interactMap[gridPos];
+            }
+            else if (trapMap.ContainsKey(gridPos))
+            {
+                return trapMap[gridPos];
+            }
+
+            return null;
+        }
+        public T GetStaticEntity<T>(Vector2Int gridPos) where T : DungeonEntity.DungeonEntity
+        {
+            if (interactMap.ContainsKey(gridPos))
+            {
+                return interactMap[gridPos] as T;
+            }
+            else if (trapMap.ContainsKey(gridPos))
+            {
+                return trapMap[gridPos] as T;
+            }
+
+            return null;
+        }
+        public DungeonTrapBase GetTrap(Vector2Int gridPos)
+        {
+            if (trapMap.ContainsKey(gridPos))
+            {
+                return trapMap[gridPos];
+            }
+
+            return null;
+        }
+        public DungeonInteractiveObjectBase GetInteractiveObject(Vector2Int gridPos)
+        {
+            if (interactMap.ContainsKey(gridPos))
+            {
+                return interactMap[gridPos];
+            }
+
+            return null;
+        }
+
+        public List<Room> CalculateRoom()
+        {
+            int width = wallMap.Width;
+            int height = wallMap.Height;
+
+            bool[,] visited = new bool[width, height];
+            Dictionary<Vector2Int, int> positionToRoomId = new();
+            List<List<Vector2Int>> roomCells = new();
+
+            int[,] directions = new int[,] { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
+
+            // Step 1: Flood fill to find all rooms
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (visited[x, y]) continue;
+
+                    LogicalCell cell = wallMap.Get(x, y);
+                    if (cell.type != TilePathBlockType.Ground) continue;
+
+                    // New room found
+                    List<Vector2Int> currentRoomCells = new();
+                    Queue<Vector2Int> queue = new();
+                    queue.Enqueue(new Vector2Int(x, y));
+                    visited[x, y] = true;
+
+                    while (queue.Count > 0)
+                    {
+                        Vector2Int pos = queue.Dequeue();
+                        currentRoomCells.Add(pos);
+                        positionToRoomId[pos] = roomCells.Count;
+
+                        for (int i = 0; i < 4; i++)
+                        {
+                            int nx = pos.x + directions[i, 0];
+                            int ny = pos.y + directions[i, 1];
+
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[nx, ny])
+                            {
+                                LogicalCell neighbor = wallMap.Get(nx, ny);
+                                if (neighbor.type == TilePathBlockType.Ground)
+                                {
+                                    visited[nx, ny] = true;
+                                    queue.Enqueue(new Vector2Int(nx, ny));
+                                }
+                            }
+                        }
+                    }
+
+                    roomCells.Add(currentRoomCells);
+                }
+            }
+
+            // Step 2: Build Room objects (without neighbours yet)
+            positionToRoom.Clear();
+
+            List<Room> rooms = new();
+            for (int i = 0; i < roomCells.Count; i++)
+            {
+                List<Vector2Int> cells = roomCells[i];
+                Vector2 avg = Vector2.zero;
+                foreach (var pos in cells)
+                    avg += new Vector2(pos.x, pos.y);
+                avg /= cells.Count;
+
+                Vector2Int center = new (Mathf.RoundToInt(avg.x), Mathf.RoundToInt(avg.y));
+
+                Room newRoom = new (center, $"Room_{i}_{UnityEngine.Random.Range(0, 1000000)}", new Room[0]);
+                rooms.Add(newRoom);
+
+                foreach (var pos in cells)
+                {
+                    positionToRoom.Add(pos, newRoom);
+                }
+            }
+
+            // Step 3: Determine neighbours via corridor
+            Dictionary<int, HashSet<int>> roomNeighbours = new();
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    LogicalCell cell = wallMap.Get(x, y);
+                    if (cell.type != TilePathBlockType.corridor)
+                        continue;
+
+                    HashSet<int> adjacentRooms = new();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        int nx = x + directions[i, 0];
+                        int ny = y + directions[i, 1];
+
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height)
+                        {
+                            Vector2Int pos = new Vector2Int(nx, ny);
+                            if (positionToRoomId.TryGetValue(pos, out int roomId))
+                            {
+                                adjacentRooms.Add(roomId);
+                            }
+                        }
+                    }
+
+                    // If two different rooms adjacent via same corridor
+                    if (adjacentRooms.Count >= 2)
+                    {
+                        var ids = adjacentRooms.ToList();
+                        for (int i = 0; i < ids.Count; i++)
+                        {
+                            for (int j = i + 1; j < ids.Count; j++)
+                            {
+                                if (!roomNeighbours.ContainsKey(ids[i]))
+                                    roomNeighbours[ids[i]] = new HashSet<int>();
+                                if (!roomNeighbours.ContainsKey(ids[j]))
+                                    roomNeighbours[ids[j]] = new HashSet<int>();
+
+                                roomNeighbours[ids[i]].Add(ids[j]);
+                                roomNeighbours[ids[j]].Add(ids[i]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Step 4: Assign neighbours to Room
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                if (roomNeighbours.TryGetValue(i, out var neighbours))
+                {
+                    rooms[i].neighbours = neighbours.Select(id => rooms[id]).ToArray();
+                }
+                else
+                {
+                    rooms[i].neighbours = Array.Empty<Room>();
+                }
+            }
+
+            return rooms;
+        }
+
+        public void GetRoomAt(Vector2Int gridPos, out Room room)
+{
+    room = null;
+
+    if (!wallMap.IsValidCoordinate(gridPos.x, gridPos.y))
+        return;
+
+    LogicalCell cell = wallMap.Get(gridPos.x, gridPos.y);
+    if (cell.type != TilePathBlockType.Ground)
+        return;
+
+    positionToRoom.TryGetValue(gridPos, out room);
+}
+
 
         /// <summary>
         /// return in grid coordinate
@@ -113,7 +332,7 @@ namespace Dungeon.GridSystem
                 List<Vector2Int> neighbors = GetNeighbors(current);
                 foreach (var neighbor in neighbors)
                 {
-                    if (closedList.Contains(neighbor) || !IsValidCoordinate(neighbor.x, neighbor.y))
+                    if (closedList.Contains(neighbor) || !IsCellReachable(neighbor.x, neighbor.y))
                         continue;
 
                     int tentativeG = gCosts[current] + 1;
@@ -138,8 +357,8 @@ namespace Dungeon.GridSystem
         }
         private void OnResize(GridProperties properties)
         {
-            grid = new Map2D<LogicalCell>(properties.width, properties.height);
-            grid.FillAll(new LogicalCell());
+            wallMap = new Map2D<LogicalCell>(properties.width, properties.height);
+            wallMap.FillAll(new LogicalCell());
         }
         private List<Vector2Int> GetNeighbors(Vector2Int node)
         {
@@ -153,7 +372,7 @@ namespace Dungeon.GridSystem
             {
                 int newX = node.x + direction.x;
                 int newY = node.y + direction.y;
-                if (IsValidCoordinate(newX, newY))
+                if (IsCellReachable(newX, newY))
                 {
                     neighbors.Add(new Vector2Int(newX, newY));
                 }
@@ -183,17 +402,30 @@ namespace Dungeon.GridSystem
 
             return lowestFNode;
         }
-        private bool IsValidCoordinate(int x, int y)
+        private bool IsCellReachable(int x, int y)
         {
             return x >= 0 &&
                    x < gridProperties.width &&
                    y >= 0 &&
                    y < gridProperties.height &&
-                   grid.Get(x, y).type == TilePathBlockType.Wall;
+                   wallMap.Get(x, y).type != TilePathBlockType.Wall;
+        }
+        public bool IsValidGridPosition(Vector2Int gridPos)
+        {
+            var x = gridPos.x;
+            var y = gridPos.y;
+            return x >= 0 &&
+                   x < gridProperties.width &&
+                   y >= 0 &&
+                   y < gridProperties.height;
         }
 
         private GridProperties gridProperties;
-        private Map2D<LogicalCell> grid;
+        private Map2D<LogicalCell> wallMap;
+        private Dictionary<Vector2Int, DungeonInteractiveObjectBase> interactMap = new();
+        private Dictionary<Vector2Int, DungeonTrapBase> trapMap = new();
+        private Dictionary<Vector2Int, Room> positionToRoom = new();
+
         private Vector3 originPoint => gridProperties.originPoint;
         public Vector3 GridDownLeftOriginPoint => GridToWorldPosition(0, 0);
         private Vector3 offset => new(GridProperties.cellSize / 2, GridProperties.cellSize / 2, 0);
@@ -229,7 +461,7 @@ namespace Dungeon.GridSystem
                 {
                     Vector3 cellWorldPos = GridToWorldPosition(x, y);
 
-                    var cell = grid.Get(x, y);
+                    var cell = wallMap.Get(x, y);
                     if (cell.type == TilePathBlockType.Wall)
                     {
                         Gizmos.color = new Color(1f, 0f, 0f, 0.5f);
@@ -244,13 +476,43 @@ namespace Dungeon.GridSystem
                     if (x % posGap.x == 0 && y % posGap.y == 0)
                     {
                         Handles.Label(cellWorldPos, $"({x},{y})", labelStyle);
+                        Handles.Label(cellWorldPos - new Vector3(0, 1, 0), $"({cellWorldPos.x},{cellWorldPos.y})", labelStyle);
                     }
                     if (x == gridProperties.width - 1 && y == gridProperties.height - 1)
                     {
                         Handles.Label(cellWorldPos, $"({x},{y})", labelStyle);
+                        Handles.Label(cellWorldPos + new Vector3(0, 1, 0), $"({cellWorldPos.x},{cellWorldPos.y})", labelStyle);
                     }
                 }
             }
+
+            if (positionToRoom != null && positionToRoom.Count > 0)
+            {
+                Gizmos.color = new Color(0f, 0.5f, 1f, 0.3f); // 半透明蓝色
+
+                foreach (var kvp in positionToRoom)
+                {
+                    Vector3 worldPos = GridToWorldPosition(kvp.Key.x, kvp.Key.y);
+                    Gizmos.DrawCube(worldPos, new Vector3(cellSize, cellSize, 0));
+                }
+
+                HashSet<Room> drawnRooms = new();
+                foreach (var kvp in positionToRoom)
+                {
+                    Room room = kvp.Value;
+                    if (room == null || drawnRooms.Contains(room)) continue;
+
+                    drawnRooms.Add(room);
+                    Vector3 labelPos = GridToWorldPosition(room.centerPos.x, room.centerPos.y);
+                    labelStyle.normal.textColor = new Color(0.2f, 0.8f, 1f);
+                    Handles.Label(labelPos + new Vector3(0, 0.3f, 0), room.name, labelStyle);
+                }
+            }
+            else
+            {
+                CalculateRoom();
+            }
+
         }
 
         [DungeonGridWindow("SayHello")]

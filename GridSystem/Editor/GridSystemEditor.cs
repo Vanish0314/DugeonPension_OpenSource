@@ -14,9 +14,11 @@ namespace Dungeon.GridSystem
     public class GridSystemEditor : Editor
     {
         private string customMapName = "";
+        private string mapToLoad = "";
 
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
             DrawDefaultInspector();
 
             GridSystem gridSystem = (GridSystem)target;
@@ -38,8 +40,19 @@ namespace Dungeon.GridSystem
                 SaveToFile(data, customMapName);
             }
 
+            GUILayout.Space(10);
+            EditorGUILayout.LabelField("地图加载设置", EditorStyles.boldLabel);
+
+            mapToLoad = EditorGUILayout.TextField("加载名称", mapToLoad);
+
             if (GUILayout.Button("应用地图"))
             {
+                if (string.IsNullOrEmpty(mapToLoad))
+                {
+                    Debug.LogError("请输入地图加载名称！");
+                    return;
+                }
+
                 ApplyGridData();
             }
         }
@@ -59,7 +72,7 @@ namespace Dungeon.GridSystem
             Tilemap bld = GetTilemap(visualGrid, VisualGrid.VisualLayer.Buildings);
             Tilemap deco = GetTilemap(visualGrid, VisualGrid.VisualLayer.Decorate);
 
-            if(bg == null || bld == null || deco == null)
+            if (bg == null || bld == null || deco == null)
             {
                 GameFrameworkLog.Error("[GridSystemEditor] 找不到 Tilemap!\n");
             }
@@ -87,16 +100,22 @@ namespace Dungeon.GridSystem
         {
             GridSystem gridSystem = (GridSystem)target;
 
-            FieldInfo field = typeof(GridSystem).GetField("gridData", BindingFlags.NonPublic | BindingFlags.Instance);
-            GridData data = field?.GetValue(gridSystem) as GridData;
+            var data = JsonUtility.FromJson<GridData>(File.ReadAllText(Path.Combine("Assets/Save/GridData", mapToLoad + ".grid.json")));
 
             if (data == null)
             {
-                Debug.LogError("[GridSystemEditor] 无法获取 gridData,或数据为空!");
+                GameFrameworkLog.Error($"[GridSystemEditor] 找不到地图数据!\n地图数据文件路径: Assets/Save/GridData/{mapToLoad}.grid.json");
                 return;
             }
 
             gridSystem.Load(data);
+
+            SerializedProperty gridPathProp = serializedObject.FindProperty("m_GridDataPath");
+
+            var path = Path.Combine("Assets/Save/GridData", mapToLoad + ".grid.json");
+            gridPathProp.stringValue = path;
+
+            serializedObject.ApplyModifiedProperties();
         }
 
         private void SaveLayer(string layerName, Tilemap tilemap, GridData data)
@@ -141,10 +160,10 @@ namespace Dungeon.GridSystem
 
         private BoundsInt IntersectBounds(BoundsInt a, BoundsInt b, BoundsInt c)
         {
-            int xMin = Mathf.Max(a.xMin, b.xMin, c.xMin);
-            int yMin = Mathf.Max(a.yMin, b.yMin, c.yMin);
-            int xMax = Mathf.Min(a.xMax, b.xMax, c.xMax);
-            int yMax = Mathf.Min(a.yMax, b.yMax, c.yMax);
+            int xMin = Mathf.Min(a.xMin, b.xMin, c.xMin);
+            int yMin = Mathf.Min(a.yMin, b.yMin, c.yMin);
+            int xMax = Mathf.Max(a.xMax, b.xMax, c.xMax);
+            int yMax = Mathf.Max(a.yMax, b.yMax, c.yMax);
             return new BoundsInt(xMin, yMin, 0, xMax - xMin, yMax - yMin, 1);
         }
 
@@ -160,6 +179,23 @@ namespace Dungeon.GridSystem
 
             Debug.Log($"地图数据已保存到: {fullPath}");
             AssetDatabase.Refresh();
+        }
+
+        private static void MarkAllObjectsAndComponentsDirty(GameObject root)
+        {
+            if (root == null) return;
+
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                GameObject go = t.gameObject;
+                EditorUtility.SetDirty(go);
+
+                foreach (var comp in go.GetComponents<Component>())
+                {
+                    if (comp != null)
+                        EditorUtility.SetDirty(comp);
+                }
+            }
         }
     }
 }

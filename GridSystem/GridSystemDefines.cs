@@ -36,7 +36,8 @@ namespace Dungeon.GridSystem
     public enum TilePathBlockType
     {
         Ground,
-        Wall
+        Wall,
+        corridor
     }
     public enum TileFunctionType
     {

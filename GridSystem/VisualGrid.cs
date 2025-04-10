@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon.GridSystem;
+using GameFramework;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -12,41 +13,105 @@ namespace Dungeon.GridSystem
     {
         public void Load(GridData data)
         {
-            // TODO
-            throw new NotImplementedException();
+            Init();
+
+            var runtimeTileCache = new Dictionary<string, IDungeonTile>();
+
+            foreach (var layer in data.layers)
+            {
+                foreach (var tile in layer.tiles)
+                {
+#if UNITY_EDITOR
+                    if (string.IsNullOrEmpty(tile.tilePath))
+                    {
+                        GameFrameworkLog.Error("[VisualGrid] Tile path is null");
+                    }
+                    var tileAsset1 = Resources.Load<TileBase>(tile.tilePath);
+                    if (tileAsset1 == null)
+                    {
+                        GameFrameworkLog.Error($"[VisualGrid] Tile not found at path: {tile.tilePath}");
+                    }
+                    if (tileAsset1 is not IDungeonTile dungeonTile1)
+                    {
+                        GameFrameworkLog.Error($"[VisualGrid] Tile is not a IDungeonTile: {tile.tilePath}");
+                    }
+#endif
+                    if (!runtimeTileCache.TryGetValue(tile.tilePath, out var dungeonTile))
+                    {
+                        var tileAsset = Resources.Load<TileBase>(tile.tilePath);
+                        if (tileAsset is not IDungeonTile castedTile)
+                            continue;
+
+                        dungeonTile = castedTile;
+                        runtimeTileCache[tile.tilePath] = dungeonTile;
+                    }
+
+                    SetTile(new Vector2Int(tile.x, tile.y), dungeonTile);
+                }
+            }
         }
+        public void Clear()
+        {
+            foreach (Transform child in transform)
+            {
+                DestroyImmediate(child.gameObject);
+            }
+            m_BackGroundTileMap = null;
+            m_BuildingsTileMap = null;
+            m_DecorateTileMap = null;
+        }
+
         public void Init()
         {
-            var bg = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
-            var bt = transform.Find("Buildings")?.gameObject ?? new GameObject("Buildings");
-            var dc = transform.Find("Debug")?.gameObject ?? new GameObject("Debug");
-            bg.transform.parent = transform;
-            bt.transform.parent = transform;
-            dc.transform.parent = transform;
+            foreach (Transform child in transform)
+            {
+                DestroyImmediate(child.gameObject);
+            }
 
-            m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
-            m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
-            m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
+            m_BackGroundTileMap = GetOrCreateTilemap("BackGround");
+            m_BuildingsTileMap = GetOrCreateTilemap("Buildings");
+            m_DecorateTileMap = GetOrCreateTilemap("Debug");
         }
-        [Obsolete("Visual should only responsible for rendering, not for getting grid properties")]
+
+        private Tilemap GetOrCreateTilemap(string name)
+        {
+            var child = transform.Find(name);
+            var obj = child != null ? child.gameObject : new GameObject(name);
+            obj.transform.SetParent(transform);
+            obj.GetOrAddComponent<TilemapRenderer>();
+            obj.layer = LayerMask.NameToLayer("GridMap");
+            return obj.GetOrAddComponent<Tilemap>();
+        }
+
+        [Obsolete("Visual should only be responsible for rendering, not for getting grid properties")]
         public GridProperties GetGridProperties() => new()
         {
             width = m_BackGroundTileMap.size.x,
             height = m_BackGroundTileMap.size.y,
             originPoint = m_BackGroundTileMap.origin
         };
-        public void SetTile(Vector2Int gridPos, DungeonRuleTile tile)
+
+        public void SetTile(Vector2Int gridPos, IDungeonTile tile)
         {
-            switch (mFunctionToLayerMap[tile.FunctionType])
+            if (!mFunctionToLayerMap.TryGetValue(tile.FunctionType, out var layer))
+            {
+                GameFrameworkLog.Error($"[VisualGrid] Unknown FunctionType: {tile.FunctionType}");
+                return;
+            }
+
+            var pos = new Vector3Int(gridPos.x, gridPos.y, 0);
+            var tileBase = tile as TileBase;
+
+            switch (layer)
             {
                 case VisualLayer.BackGround:
-                    m_BackGroundTileMap.SetTile(new Vector3Int(gridPos.x, gridPos.y, 0), tile);
+                    m_BackGroundTileMap.SetTile(pos, tileBase);
                     break;
                 case VisualLayer.Buildings:
-                    m_BuildingsTileMap.SetTile(new Vector3Int(gridPos.x, gridPos.y, 0), tile);
+                    m_BuildingsTileMap.SetTile(pos, tileBase);
                     break;
                 case VisualLayer.Decorate:
-                    m_DecorateTileMap.SetTile(new Vector3Int(gridPos.x, gridPos.y, 0), tile);
+                    m_DecorateTileMap.SetTile(pos, tileBase);
                     break;
             }
         }

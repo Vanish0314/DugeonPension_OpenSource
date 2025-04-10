@@ -9,6 +9,7 @@ using Dungeon.DungeonGameEntry;
 using Dungeon.BlackBoardSystem;
 using GameFramework;
 using System.ComponentModel;
+using CrashKonijn.Goap.Runtime;
 
 
 namespace Dungeon.GridSystem
@@ -27,8 +28,30 @@ namespace Dungeon.GridSystem
 
             InitPosition(transform);
 
-            InitGrid();
+            InitGridSystem();
         }
+        private void InitGridSystem()
+        {
+            if (gridData != null)
+            {
+                Load(gridData);
+            }
+
+            if (!string.IsNullOrEmpty(m_GridDataPath))
+            {
+                Load(m_GridDataPath);
+            }
+
+            GameFrameworkLog.Error("[GridSystem] GridData is null and path is null");
+        }
+        public void SetGrid(GridData data) => gridData = data;
+        public void SetGrid(string path) => m_GridDataPath = path;
+        public void UnLoad()
+        {
+            m_VisualGrid.Clear();
+            m_LogicalGrid.Clear();
+        }
+
         private void OnEnable()
         {
             DungeonGameEntry.DungeonGameEntry.WorldBlackboard.RegisterExpert(this);
@@ -39,6 +62,8 @@ namespace Dungeon.GridSystem
         }
 
         [SerializeField] private GridData gridData;
+        [SerializeField] private string m_GridDataPath;
+
 
         [SerializeField] private VisualGrid m_VisualGrid;
         [SerializeField] private LogicalGrid m_LogicalGrid;
