@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.DungeonEntity.Trap;
 using Dungeon.GridSystem;
 using GameFramework;
 using UnityEngine;
@@ -71,6 +72,8 @@ namespace Dungeon.GridSystem
             m_BackGroundTileMap = GetOrCreateTilemap("BackGround");
             m_BuildingsTileMap = GetOrCreateTilemap("Buildings");
             m_DecorateTileMap = GetOrCreateTilemap("Debug");
+
+            InitTilemapCollider();
         }
 
         private Tilemap GetOrCreateTilemap(string name)
@@ -81,6 +84,14 @@ namespace Dungeon.GridSystem
             obj.GetOrAddComponent<TilemapRenderer>();
             obj.layer = LayerMask.NameToLayer("GridMap");
             return obj.GetOrAddComponent<Tilemap>();
+        }
+        private void InitTilemapCollider()
+        {
+            var go = m_BackGroundTileMap.gameObject;
+
+            go.GetOrAddComponent<Rigidbody2D>();
+            go.GetOrAddComponent<TilemapCollider2D>();
+            go.GetOrAddComponent<CompositeCollider2D>();
         }
 
         [Obsolete("Visual should only be responsible for rendering, not for getting grid properties")]
