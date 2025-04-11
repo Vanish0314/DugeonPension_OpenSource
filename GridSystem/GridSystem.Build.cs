@@ -169,7 +169,7 @@ namespace Dungeon.GridSystem
         public bool HasMonsterOnCell(Vector2Int gridPos)
         {
             Collider2D[] results = new Collider2D[2];
-            Physics2D.OverlapBoxNonAlloc(GrideToWorldPosition(gridPos),Vector2.one*0.5f,0,results,LayerMask.GetMask("Monster"));
+            Physics2D.OverlapBoxNonAlloc(GridToWorldPosition(gridPos),Vector2.one*0.5f,0,results,LayerMask.GetMask("Monster"));
 
             #if UNITY_EDITOR
             foreach (Collider2D collider in results)
@@ -189,6 +189,8 @@ namespace Dungeon.GridSystem
             m_VisualGrid.Init();
 
             m_LogicalGrid.Init(gridData);
+
+            InitRooms();
         }
         private void InitPosition(Transform go)
         {

@@ -21,9 +21,7 @@ namespace Dungeon.GOAP.Targets
 
         public bool IsValid()
         {
-            DungeonGameEntry.DungeonGameEntry.WorldBlackboard.TryGetValue<Vector3>(DungeonGameWorldBlackboardEnum.DungeonExitWorldPositionVector3, out var exitPosInWorlCoord);
-            // return Vector3.Distance(exitPosInWorlCoord, DungeonExitPositionInWorldCoord) < 0.1f;
-            return exitPosInWorlCoord == DungeonExitPositionInWorldCoord;
+            return true;
         }
     }
 }

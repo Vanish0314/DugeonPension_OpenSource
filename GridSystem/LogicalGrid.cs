@@ -9,6 +9,8 @@ using Dungeon.DungeonEntity.Trap;
 using static Dungeon.GridSystem.GridSystem;
 using System.Linq;
 using System;
+using NUnit.Framework;
+
 
 
 
@@ -198,9 +200,9 @@ namespace Dungeon.GridSystem
                     avg += new Vector2(pos.x, pos.y);
                 avg /= cells.Count;
 
-                Vector2Int center = new (Mathf.RoundToInt(avg.x), Mathf.RoundToInt(avg.y));
+                Vector2Int center = new(Mathf.RoundToInt(avg.x), Mathf.RoundToInt(avg.y));
 
-                Room newRoom = new (center, $"Room_{i}_{UnityEngine.Random.Range(0, 1000000)}", new Room[0]);
+                Room newRoom = new(center, $"Room_{i}_{UnityEngine.Random.Range(0, 1000000)}", new Room[0], cells);
                 rooms.Add(newRoom);
 
                 foreach (var pos in cells)
@@ -211,6 +213,7 @@ namespace Dungeon.GridSystem
 
             // Step 3: Determine neighbours via corridor
             Dictionary<int, HashSet<int>> roomNeighbours = new();
+            HashSet<MyVector2Int> visitedCorridor = new();
 
             for (int x = 0; x < width; x++)
             {
@@ -219,24 +222,48 @@ namespace Dungeon.GridSystem
                     LogicalCell cell = wallMap.Get(x, y);
                     if (cell.type != TilePathBlockType.corridor)
                         continue;
+                    if (visitedCorridor.Contains(new MyVector2Int(x, y)))
+                        continue;
 
                     HashSet<int> adjacentRooms = new();
-                    for (int i = 0; i < 4; i++)
-                    {
-                        int nx = x + directions[i, 0];
-                        int ny = y + directions[i, 1];
+                    Queue<Vector2Int> corridorQueue = new();
+                    corridorQueue.Enqueue(new Vector2Int(x, y));
 
-                        if (nx >= 0 && nx < width && ny >= 0 && ny < height)
+                    // BFS to process the whole corridor
+                    while (corridorQueue.Count > 0)
+                    {
+                        Vector2Int pos = corridorQueue.Dequeue();
+
+                        for (int i = 0; i < 4; i++)
                         {
-                            Vector2Int pos = new Vector2Int(nx, ny);
-                            if (positionToRoomId.TryGetValue(pos, out int roomId))
+                            int nx = pos.x + directions[i, 0];
+                            int ny = pos.y + directions[i, 1];
+
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height)
                             {
-                                adjacentRooms.Add(roomId);
+                                if (visitedCorridor.Contains(new MyVector2Int(nx, ny)))
+                                    continue;
+
+                                Vector2Int neighborPos = new(nx, ny);
+                                if (wallMap.Get(nx, ny).type == TilePathBlockType.corridor)
+                                {
+                                    corridorQueue.Enqueue(neighborPos);
+                                }
+                                else if (wallMap.Get(nx, ny).type == TilePathBlockType.Ground)
+                                {
+                                    if (!positionToRoomId.ContainsKey(neighborPos))
+                                        continue;
+
+                                    int roomId = positionToRoomId[neighborPos];
+                                    adjacentRooms.Add(roomId);
+                                }
+
+                                visitedCorridor.Add(new MyVector2Int(nx, ny));
                             }
                         }
                     }
 
-                    // If two different rooms adjacent via same corridor
+                    // If two different rooms are adjacent via this corridor
                     if (adjacentRooms.Count >= 2)
                     {
                         var ids = adjacentRooms.ToList();
@@ -274,18 +301,18 @@ namespace Dungeon.GridSystem
         }
 
         public void GetRoomAt(Vector2Int gridPos, out Room room)
-{
-    room = null;
+        {
+            room = null;
 
-    if (!wallMap.IsValidCoordinate(gridPos.x, gridPos.y))
-        return;
+            if (!wallMap.IsValidCoordinate(gridPos.x, gridPos.y))
+                return;
 
-    LogicalCell cell = wallMap.Get(gridPos.x, gridPos.y);
-    if (cell.type != TilePathBlockType.Ground)
-        return;
+            LogicalCell cell = wallMap.Get(gridPos.x, gridPos.y);
+            if (cell.type != TilePathBlockType.Ground)
+                return;
 
-    positionToRoom.TryGetValue(gridPos, out room);
-}
+            positionToRoom.TryGetValue(gridPos, out room);
+        }
 
 
         /// <summary>
@@ -435,7 +462,7 @@ namespace Dungeon.GridSystem
         public bool enableGizmos = true;
         public Color textColor = Color.red;
         public Vector2Int posGap = new(10, 10);
-        [Range(1, 100)] public float gridColorScale = 1;
+        [UnityEngine.Range(1, 100)] public float gridColorScale = 1;
         private void OnDrawGizmos()
         {
             if (!enableGizmos) return;
@@ -504,7 +531,7 @@ namespace Dungeon.GridSystem
 
                     drawnRooms.Add(room);
                     Vector3 labelPos = GridToWorldPosition(room.centerPos.x, room.centerPos.y);
-                    labelStyle.normal.textColor = new Color(0.2f, 0.8f, 1f);
+                    labelStyle.normal.textColor = new Color(1f, 0.8f, 0.4f);
                     Handles.Label(labelPos + new Vector3(0, 0.3f, 0), room.name, labelStyle);
                 }
             }
@@ -521,5 +548,47 @@ namespace Dungeon.GridSystem
             GameFrameworkLog.Info("Hello, World!");
         }
 #endif
+        private struct MyVector2Int : IEquatable<MyVector2Int>
+        {
+            public int x, y;
+            public MyVector2Int(int x, int y)
+            {
+                this.x = x;
+                this.y = y;
+            }
+            public MyVector2Int(Vector2Int v)
+            {
+                x = v.x;
+                y = v.y;
+            }
+            public override bool Equals(object obj)
+            {
+                return obj is MyVector2Int other && Equals(other);
+            }
+
+            public bool Equals(MyVector2Int other)
+            {
+                return x == other.x && y == other.y;
+            }
+
+            public override int GetHashCode()
+            {
+                int hashCode = x.GetHashCode();
+                hashCode = (hashCode * 397) ^ y.GetHashCode();
+                return hashCode;
+            }
+            public static bool operator ==(MyVector2Int left, MyVector2Int right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator !=(MyVector2Int left, MyVector2Int right)
+            {
+                return !(left == right);
+            }
+        }
     }
 }
+
+
+

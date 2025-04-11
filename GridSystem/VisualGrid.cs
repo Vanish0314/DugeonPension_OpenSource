@@ -89,9 +89,14 @@ namespace Dungeon.GridSystem
         {
             var go = m_BackGroundTileMap.gameObject;
 
-            go.GetOrAddComponent<Rigidbody2D>();
-            go.GetOrAddComponent<TilemapCollider2D>();
-            go.GetOrAddComponent<CompositeCollider2D>();
+            var rb = go.GetOrAddComponent<Rigidbody2D>();
+            var collider = go.GetOrAddComponent<TilemapCollider2D>();
+            var composite = go.GetOrAddComponent<CompositeCollider2D>();
+
+            rb.bodyType = RigidbodyType2D.Static;
+            collider.usedByComposite = true;
+            composite.geometryType = CompositeCollider2D.GeometryType.Polygons;
+            composite.generationType = CompositeCollider2D.GenerationType.Synchronous;
         }
 
         [Obsolete("Visual should only be responsible for rendering, not for getting grid properties")]
