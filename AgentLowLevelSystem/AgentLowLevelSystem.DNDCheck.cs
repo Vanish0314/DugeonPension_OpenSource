@@ -10,18 +10,9 @@ namespace Dungeon.AgentLowLevelSystem
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem,ICombatable
     {
-        private DndSystem m_DndSystem;
-        [SerializeField] private DndAbilityConfig m_DndAbility;
-
         private void InitDNDSystem()
         {
             m_DndSystem = new DndSystem();
-#if UNITY_EDITOR
-            if (m_DndAbility == null)
-            {
-                GameFrameworkLog.Error("DND Ability Config is null");
-            }
-#endif
         }
 
         public DndCheckResult DndCheck(DndCheckTarget target)
@@ -32,8 +23,13 @@ namespace Dungeon.AgentLowLevelSystem
         }
 
         public void AddDndModifier(DndAbility ability, string name, int value) => m_DndSystem.AddModifier(ability, name, value);
+
+        private DndSystem m_DndSystem;
+        // [SerializeField] private DndAbilityConfig m_DndAbility;
     }
 
+
+#region DND System
     public class DndSystem
     {
         public static Dictionary<DndSkill, DndAbility> SkillToAbility = new()
@@ -154,7 +150,6 @@ namespace Dungeon.AgentLowLevelSystem
                 _ => new List<Dictionary<string, int>>() // 默认空列表
             };
         }
-
         private List<Dictionary<string, int>> StrengthModifiers = new();
         private List<Dictionary<string, int>> DexterityModifiers = new();
         private List<Dictionary<string, int>> ConstitutionModifiers = new();
@@ -203,16 +198,6 @@ namespace Dungeon.AgentLowLevelSystem
         [LabelText("生存")] Survival // 生存
     }
 
-    [CreateAssetMenu(fileName = "New DndAbility", menuName = "DND/DndAbility")]
-    public class DndAbilityConfig : ScriptableObject
-    {
-        [LabelText("力量")][UnityEngine.Range(1, 20)] public int Strength = 1;
-        [LabelText("敏捷")][UnityEngine.Range(1, 20)] public int Dexterity = 1;
-        [LabelText("体质")][UnityEngine.Range(1, 20)] public int Constitution = 1;
-        [LabelText("智力")][UnityEngine.Range(1, 20)] public int Intelligence = 1;
-        [LabelText("知识")][UnityEngine.Range(1, 20)] public int Wisdom = 1;
-        [LabelText("魅力")][UnityEngine.Range(1, 20)] public int Charisma = 1;
-    }
     public struct DndCheckResult
     {
         public readonly AgentLowLevelSystem Checker { get; }  // 进行检定的角色
@@ -299,5 +284,6 @@ namespace Dungeon.AgentLowLevelSystem
         }
     }
 
+#endregion
 
 }

@@ -213,7 +213,7 @@ namespace Dungeon.GridSystem
 
             // Step 3: Determine neighbours via corridor
             Dictionary<int, HashSet<int>> roomNeighbours = new();
-            HashSet<MyVector2Int> visitedCorridor = new();
+            HashSet<MyVector2Int> visitedCorridor = new(); // Don't know why Unity's Vector2Int doesn't work with HashSet here;
 
             for (int x = 0; x < width; x++)
             {

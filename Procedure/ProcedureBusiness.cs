@@ -1,3 +1,4 @@
+using Dungeon.GridSystem;
 using GameFramework.Procedure;
 using UnityEngine;
 using UnityGameFramework.Runtime;
@@ -10,9 +11,10 @@ namespace Dungeon
     {
         private ProcedureOwner procedureOwner;
         
-        VarInt32 targetId = 3;
-        
-        BusinessControl businessControl;
+        BusinessControl m_BusinessControl;
+
+        private bool m_IsBusiness;
+            
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
             base.OnInit(procedureOwner);
@@ -21,39 +23,61 @@ namespace Dungeon
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             Debug.Log("ProcedureBusiness OnEnter");
-            targetId = 3;//初始化场景id
 
-            base.OnEnter(procedureOwner);
+            m_IsBusiness = true;
             
-            BuildManager buildManager = UnityEngine.GameObject.Find("Manager").GetComponent<BuildManager>();
-
-            businessControl = BusinessControl.Create(buildManager);
+            // 暂时---------------------------------------------------
+            BuildGridSystem.Instance.gameObject.SetActive(true);
             
+            // 发送流程开始事件
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnBusinessStartEventArgs.Create());
+            
+            // 初始化BusinessControl
+            m_BusinessControl = BusinessControl.Create(PlaceManager.Instance);
+            
+            // 初始化UI
             GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
             GameEntry.UI.OpenUIForm(EnumUIForm.TimelineForm);
+            // 暂时
+            GameEntry.UI.OpenUIForm(EnumUIForm.HeroMenuForm);
+            
+            // 订阅TimeManager
+            TimeManager.Instance.OnFiveMinutesElapsed += EndBusiness;
             
             this.procedureOwner = procedureOwner;
             
-            businessControl.OnEnter();
+            m_BusinessControl.OnEnter();
+            
+            base.OnEnter(procedureOwner);
         }
-
+        
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
-            if(!businessControl.m_IsBusiness)
-                ChangeState<ProcedureChangeScene>(procedureOwner);
+            if(!m_IsBusiness)
+                ChangeState<ProcedureBusinessSettlement>(procedureOwner);
             
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            if (businessControl != null)
+            if (m_BusinessControl != null)
             {
-                businessControl.Update(elapseSeconds, realElapseSeconds);
+                m_BusinessControl.Update(elapseSeconds, realElapseSeconds);
             }
         }
     
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
-            procedureOwner.SetData(Constant.ProcedureData.NextSceneId, targetId);
+            //----------------------------------------------------
+            BuildGridSystem.Instance.gameObject.SetActive(false);
             
+            GameEntry.UI.CloseAllLoadedUIForms();
+            
+            // 发送流程结束事件
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnBusinessEndEventArgs.Create());
+            
+            // 取消订阅TimeManager
+            TimeManager.Instance.OnFiveMinutesElapsed -= EndBusiness;
+            
+            m_BusinessControl.OnLeave();
             base.OnLeave(procedureOwner, isShutdown);
         }
 
@@ -61,5 +85,11 @@ namespace Dungeon
         {
             base.OnDestroy(procedureOwner);
         }
+        
+        private void EndBusiness()
+        {
+            m_IsBusiness = false;
+        }
+
     }
 }

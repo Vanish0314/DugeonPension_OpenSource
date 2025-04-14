@@ -9,21 +9,15 @@ namespace Dungeon
 {
     public class BusinessControl : IReference
     {
-        private BuildManager m_BuildManager;
-        
-        public bool m_IsBusiness;
+        private PlaceManager m_PlaceManager;
 
         public void OnEnter()
         {
-            if(m_BuildManager == null)
+            if(m_PlaceManager == null)
                 return; 
             
-            m_IsBusiness = true;
-            
-            m_BuildManager.inputReader.OnBuildEvent += StartBuilding;
-            m_BuildManager.inputReader.OnBuildEndEvent += EndBuilding;
-
-            TimeManager.Instance.OnFiveMinutesElapsed += EndBuisness;
+            m_PlaceManager.inputReader.OnBuildEvent += StartBuilding;
+            m_PlaceManager.inputReader.OnBuildEndEvent += EndBuilding;
         }
 
         public void Update(float elapseSeconds, float realElapseSeconds)
@@ -33,34 +27,22 @@ namespace Dungeon
 
         public void OnLeave()
         {
-            if(m_BuildManager == null)
+            if(m_PlaceManager == null)
                 return; 
             
-            m_IsBusiness = false;
-            
-            m_BuildManager.inputReader.OnBuildEvent -= StartBuilding;
-            m_BuildManager.inputReader.OnBuildEndEvent -= EndBuilding;
-
-            TimeManager.Instance.OnFiveMinutesElapsed -= EndBuisness;
+            m_PlaceManager.inputReader.OnBuildEvent -= StartBuilding;
+            m_PlaceManager.inputReader.OnBuildEndEvent -= EndBuilding;
         }
 
         private void StartBuilding()
         {
-            Debug.Log("StartBuilding");
             GameEntry.UI.OpenUIForm(EnumUIForm.BuildForm);
         }
         
         private void EndBuilding()
         {
-            Debug.Log("EndBuilding");
-            GameEntry.UI.GetUIForm(EnumUIForm.BuildForm).Close();//-------------------
+            GameEntry.UI.GetUIForm(EnumUIForm.BuildForm).Close();
         }
-
-        private void EndBuisness()
-        {
-            m_IsBusiness = false;
-        }
-
         
         public void Pause()
         {
@@ -72,18 +54,16 @@ namespace Dungeon
             TimeManager.Instance.SetPaused(false);
         }
         
-        public static BusinessControl Create(BuildManager buildManager)
+        public static BusinessControl Create(PlaceManager placeManager)
         {
             BusinessControl businessControl = ReferencePool.Acquire<BusinessControl>();
-            businessControl.m_BuildManager = buildManager;
-            businessControl.m_IsBusiness = true;
+            businessControl.m_PlaceManager = placeManager;
             return businessControl;
         }
         
         public void Clear()
         {
-            
+            m_PlaceManager = null;
         }
     }
-
 }

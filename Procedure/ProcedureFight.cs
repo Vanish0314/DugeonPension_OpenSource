@@ -18,7 +18,8 @@ namespace Dungeon
         {
             Debug.Log("ProcedureFight OnEnter");
 
-            GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
+            // 发送流程开始事件
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnFightStartEventArgs.Create());
             
             base.OnEnter(procedureOwner);
 
@@ -32,13 +33,16 @@ namespace Dungeon
             //战斗相关机制
             //**********
             if (Input.GetKeyDown(KeyCode.Space))//一些条件
-                ChangeState<ProcedureEnd>(procedureOwner);
+                ChangeState<ProcedureFightSettlement>(procedureOwner);
             
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
         }
     
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
+            // 发送流程结束事件
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnFightEndEventArgs.Create());
+            
             base.OnLeave(procedureOwner, isShutdown);
         }
 

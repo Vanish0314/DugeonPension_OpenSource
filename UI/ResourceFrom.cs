@@ -34,5 +34,10 @@ namespace Dungeon
         {
             MaterialText.text = "材料：" + materialValue.ToString();
         }
+
+        public void SetSomeUIActive(bool active)
+        {
+            StoneText.transform.parent.gameObject.SetActive(active);
+        }
     }
 }

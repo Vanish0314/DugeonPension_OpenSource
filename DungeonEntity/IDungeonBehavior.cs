@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Common.MonoPool;
 using Dungeon.GridSystem;
+using GameFramework.ObjectPool;
 using UnityEngine;
 
 namespace Dungeon.DungeonEntity
@@ -17,7 +19,7 @@ namespace Dungeon.DungeonEntity
     /// <summary>
     /// 注意: 任何在场景中的实例对象都必须是叶子类型!!!
     /// </summary>
-    public abstract class DungeonEntity : MonoBehaviour , IDungeonEntity
+    public abstract class DungeonEntity : MonoPoolItem , IDungeonEntity
     {
     }
 }

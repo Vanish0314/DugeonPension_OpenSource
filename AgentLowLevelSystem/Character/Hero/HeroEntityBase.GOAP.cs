@@ -26,7 +26,6 @@ namespace Dungeon.Character.Hero
         {
 
         }
-
         private AgentBehaviour m_GoapAgent;
         private GoapActionProvider m_GoapActionProvider;
         private GoapBehaviour m_Goap;

@@ -48,6 +48,22 @@ namespace Dungeon.GridSystem
                 PlaceDungeonInteractiveObject(interactiveObject,gridPos);
             }
         }
+        
+        private void HandleMonsterPlacement(Vector3 worldPos, MonsterData monsterData)
+        {
+            Vector2Int gridPos = WorldToGridPosition(worldPos);
+
+            if(!CouldPlaceTrap(gridPos))
+                return;
+            
+            GameObject monsterObj = monsterData.monsterPrefab;
+            DungeonMonsterBase monster = monsterObj.GetComponent<DungeonMonsterBase>();
+    
+            PlaceDungeonMonster(monster, gridPos);
+    
+            // 通知放置成功
+            PlaceManager.Instance.TriggerOnMonsterPlaced(monsterData);
+        }
         public bool PlaceDungeonMonster(DungeonMonsterBase monsterInstiated, Vector2Int gridPos)
         {
             if(!CouldPlaceMonster(gridPos))
@@ -55,6 +71,22 @@ namespace Dungeon.GridSystem
 
             monsterInstiated.transform.position = m_LogicalGrid.GridToWorldPosition(gridPos.x, gridPos.y);
             return true;
+        }
+        
+        private void HandleTrapPlacement(Vector3 worldPos, TrapData trapData)
+        {
+            Vector2Int gridPos = WorldToGridPosition(worldPos);
+            
+            if(!CouldPlaceTrap(gridPos))
+                return;
+            
+            GameObject trapObj = trapData.trapPrefab;
+            DungeonTrapBase trap = trapObj.GetComponent<DungeonTrapBase>();
+    
+            PlaceDungeonTrap(trap, gridPos);
+    
+            // 通知放置成功
+            PlaceManager.Instance.TriggerOnTrapPlaced(trapData);
         }
         public void PlaceDungeonTrap(DungeonTrapBase trapInstiated, Vector2Int gridPos)
         {
@@ -189,7 +221,6 @@ namespace Dungeon.GridSystem
             m_VisualGrid.Init();
 
             m_LogicalGrid.Init(gridData);
-
             InitRooms();
         }
         private void InitPosition(Transform go)
@@ -213,3 +244,6 @@ namespace Dungeon.GridSystem
 #endif
     }
 }
+
+
+

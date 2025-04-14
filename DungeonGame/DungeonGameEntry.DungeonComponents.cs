@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using CrashKonijn.Goap.Runtime;
 using Dungeon.BlackBoardSystem;
-using Dungeon.GridSystem;
+using Dungeon.Common;
 using GameFramework;
 using UnityEngine;
 

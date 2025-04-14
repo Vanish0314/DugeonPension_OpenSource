@@ -10,9 +10,9 @@ namespace Dungeon
 {
     public class ProcedurePlaceArmy : ProcedureBase
     {
-        BusinessControl businessControl;
-        
-        private bool placeArmyEnd = false;
+        private PlaceArmyControl m_PlaceArmyControl;
+
+        private bool placeArmyEnd;
         
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
@@ -25,16 +25,22 @@ namespace Dungeon
             
             placeArmyEnd = false;
             
-            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnFightSceneLoadEventArgs.Create());
-
-            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnPlaceArmyEndEventArgs.EventId, PlaceArmyEnd);
+            //GridSystem.GridSystem
             
-            BuildManager buildManager = UnityEngine.GameObject.Find("Manager").GetComponent<BuildManager>();
+            // 发送流程开始事件
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnFightSceneLoadEventArgs.Create());
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnPlaceArmyStartEventArgs.Create());
+            
+            // 订阅事件
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnStartFightButtonClickEventArgs.EventId, PlaceArmyEnd);
 
-            businessControl = BusinessControl.Create(buildManager);
+            m_PlaceArmyControl = PlaceArmyControl.Create(PlaceManager.Instance);
             
             GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
-            GameEntry.UI.OpenUIForm(EnumUIForm.PlaceArmyForm);
+            GameEntry.UI.OpenUIForm(EnumUIForm.HeroInfoForm);
+            GameEntry.UI.OpenUIForm(EnumUIForm.StartFightButtonForm);
+            
+            m_PlaceArmyControl.OnEnter();
 
             base.OnEnter(procedureOwner);
         }
@@ -49,14 +55,19 @@ namespace Dungeon
     
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
-            BuildManager buildManager = UnityEngine.GameObject.Find("Manager").GetComponent<BuildManager>();
+            // 发送流程结束事件
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnPlaceArmyEndEventArgs.Create());
             
-            // 关闭所有ui
-            GameEntry.UI.CloseAllLoadedUIForms();
+            // 取消订阅
+            GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnStartFightButtonClickEventArgs.EventId, PlaceArmyEnd);
             
-            // 禁用GridSystem（暂时）
-            buildManager.DisableGridSystemTemp();
-                
+            // 关闭ui
+            GameEntry.UI.GetUIForm(EnumUIForm.PlaceArmyForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.HeroInfoForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.StartFightButtonForm)?.Close();
+            
+            m_PlaceArmyControl.OnLeave();
+            
             base.OnLeave(procedureOwner, isShutdown);
         }
 

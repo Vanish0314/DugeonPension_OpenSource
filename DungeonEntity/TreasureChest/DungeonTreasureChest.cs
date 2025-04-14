@@ -42,5 +42,15 @@ namespace Dungeon.DungeonEntity.InteractiveObject
             visiter.visited = this.gameObject;
             return visiter;
         }
+
+        public override void Init(object data)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Reset()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

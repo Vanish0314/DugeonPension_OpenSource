@@ -35,11 +35,13 @@ namespace Dungeon.GridSystem
             if (gridData != null)
             {
                 Load(gridData);
+                return;
             }
 
             if (!string.IsNullOrEmpty(m_GridDataPath))
             {
                 Load(m_GridDataPath);
+                return;
             }
 
             GameFrameworkLog.Error("[GridSystem] GridData is null and path is null");

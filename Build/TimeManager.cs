@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.DungeonGameEntry;
+using GameFramework.Event;
 using UnityEngine;
+using UnityGameFramework.Runtime;
 
 namespace Dungeon
 {
@@ -12,12 +15,13 @@ namespace Dungeon
     
         // 5分钟计时相关
         public event Action OnFiveMinutesElapsed;
-        private float fiveMinuteTimer;
-        private const float FiveMinutes = 5f; // 300秒=5分钟
+        [SerializeField] private float fiveMinuteTimer;
+        private const float FiveMinutes = 20f; // 300秒=5分钟
     
         // 游戏暂停控制
         public bool IsPaused { get; private set; }
-
+        private bool _isFiveMinute;
+        
         private void Awake()
         {
             if (Instance == null) Instance = this;
@@ -25,21 +29,39 @@ namespace Dungeon
 
         private void OnEnable()
         {
-            fiveMinuteTimer = FiveMinutes;
+            DungeonGameEntry.DungeonGameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
         }
-    
+
+        private void OnSceneLoaded(object sender, GameEventArgs e)
+        {
+            OnSceneLoadedEventArgs sceneLoadedEventArgs = e as OnSceneLoadedEventArgs;
+            if (sceneLoadedEventArgs.SceneID == 2)
+            {
+                fiveMinuteTimer = FiveMinutes;
+                _isFiveMinute = true;
+            }
+        }
+
+        private void OnDisable()
+        {
+            GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+        }
+
         private void Update()
         {
             if (IsPaused) return;
-        
-            fiveMinuteTimer -= Time.deltaTime;
-            if (TimelineModel.Instance != null)
-                TimelineModel.Instance.Timeline = fiveMinuteTimer / FiveMinutes;
-        
-            if (fiveMinuteTimer <= 0f)
+
+            if (_isFiveMinute)
             {
-                fiveMinuteTimer = FiveMinutes;
-                OnFiveMinutesElapsed?.Invoke();
+                fiveMinuteTimer -= Time.deltaTime;
+                if (TimelineModel.Instance != null)
+                    TimelineModel.Instance.Timeline = fiveMinuteTimer / FiveMinutes;
+        
+                if (fiveMinuteTimer <= 0f)
+                {
+                    OnFiveMinutesElapsed?.Invoke();
+                    _isFiveMinute = false;
+                }
             }
         }
     

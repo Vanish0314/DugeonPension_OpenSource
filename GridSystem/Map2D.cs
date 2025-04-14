@@ -47,7 +47,11 @@ namespace Dungeon.GridSystem
         public void Set(int MapX, int MapY, T value)
         {
             if (!IsValidCoordinate(MapX, MapY))
+            {
+                Debug.Log("cuo:"+MapX + ", " + MapY);
                 throw new ArgumentOutOfRangeException("[Map_2D.cs] Invalid coordinates.");
+            }
+                
             m_MapData[MapX, MapY] = value;
         }
 

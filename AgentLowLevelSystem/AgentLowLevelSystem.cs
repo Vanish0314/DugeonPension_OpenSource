@@ -21,7 +21,7 @@ namespace Dungeon.AgentLowLevelSystem
         private BoxCollider2D m_AgentCollider;
         private Animator m_AgentAnimator;
         private BlackboardController m_BlackboardController;
-        private BlackBoardSystem.Blackboard m_blackboard => m_BlackboardController.GetBlackboard();
+        private Blackboard m_blackboard => m_BlackboardController.GetBlackboard();
 
         public BlackboardController GetBlackboard() => m_BlackboardController;
 

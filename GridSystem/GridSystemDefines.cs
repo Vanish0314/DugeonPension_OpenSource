@@ -33,6 +33,12 @@ namespace Dungeon.GridSystem
             this.BuildingOrigin = Vector2Int.zero;
         }
     }
+
+    public enum TilePlacementType
+    {
+        None,
+        Foundation
+    }
     public enum TilePathBlockType
     {
         Ground,

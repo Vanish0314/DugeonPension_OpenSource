@@ -1,100 +1,62 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Dungeon
 {
+    public enum BuildingType
+    {
+        Castle,
+        Quarry,
+        Factory,
+        MonsterLair,
+        Monitor,
+        Dormitory,
+    }
+
+    [System.Serializable]
+    public class BuildingUI
+    {
+        public BuildingType type;
+        public Button button;
+        public Text countText;
+    }
+
     public class BuildForm : UGuiForm
     {
-        public Button castleButton;
-        public Text castleCount;
-        public Button quarryButton;
-        public Text quarryCount; 
-        public Button factoryButton;
-        public Text factoryCount;
-        public Button monsterLairButton;
-        public Text monsterLairCount;
-        public Button monitorButton;
-        public Text monitorCount;
-        public Button dormitoryButton;
-        public Text dormitoryCount;
-        public Button trapButton;
-        public Text trapCount;
+        [SerializeField]
+        private List<BuildingUI> buildingUIs = new List<BuildingUI>();
 
+        private Dictionary<BuildingType, BuildingUI> m_BuildingUIDict;
 
-
-        public void PlaceArmyUI()
+        private void Awake()
         {
-            castleButton.gameObject.SetActive(false);
-            quarryButton.gameObject.SetActive(false);
-            factoryButton.gameObject.SetActive(false);
-            monsterLairButton.gameObject.SetActive(false);
-            monitorButton.gameObject.SetActive(false);
-            dormitoryButton.gameObject.SetActive(false);
-            trapButton.gameObject.SetActive(true);
+            InitializeBuildingDictionary();
         }
 
-        public void BuildUI()
+        private void InitializeBuildingDictionary()
         {
-            castleButton.gameObject.SetActive(true);
-            quarryButton.gameObject.SetActive(true);
-            factoryButton.gameObject.SetActive(true);
-            monsterLairButton.gameObject.SetActive(true);
-            monitorButton.gameObject.SetActive(true);
-            dormitoryButton.gameObject.SetActive(true);
-            trapButton.gameObject.SetActive(false);
-        }
-        
-        // 更新建筑的UI（count <= 0 时隐藏Button）
-        public void UpdateCastleUI(int count)
-        {
-            castleCount.text ="X " + count.ToString();
-            if (count <= 0)
-                castleButton.gameObject.SetActive(false); // 仅count>0时显示
-        }
-        
-        public void UpdateQuarryUI(int count)
-        {
-            quarryCount.text ="X " +  count.ToString();
-            if (count <= 0)
-                quarryButton.gameObject.SetActive(false); 
+            m_BuildingUIDict = new Dictionary<BuildingType, BuildingUI>();
+            foreach (var buildingUI in buildingUIs)
+            {
+                if (!m_BuildingUIDict.TryAdd(buildingUI.type, buildingUI))
+                {
+                    // Debug.LogError($"Duplicate entry for {buildingUI.type} in buildingUIs list!");
+                    continue;
+                }
+            }
         }
 
-        public void UpdateFactoryUI(int count)
+        public void UpdateBuildingUI(BuildingType type, int count)
         {
-            factoryCount.text ="X " +  count.ToString();
-            if (count <= 0)
-                factoryButton.gameObject.SetActive(false);
-        }
+            if (!m_BuildingUIDict.TryGetValue(type, out var buildingUI))
+            {
+                // Debug.LogError($"BuildingUI not found for type: {type}");
+                return;
+            }
 
-        public void UpdateMonsterLairUI(int count)
-        {
-            monsterLairCount.text ="X " +  count.ToString();
-            if (count <= 0)
-                monsterLairButton.gameObject.SetActive(false);
-        }
-
-        public void UpdateMonitorUI(int count)
-        {
-            monitorCount.text ="X " +  count.ToString();
-            if (count <= 0)
-                monitorButton.gameObject.SetActive(false);
-        }
-
-        public void UpdateDormitoryUI(int count)
-        {
-            dormitoryCount.text ="X " +  count.ToString();
-            if (count <= 0)
-                dormitoryButton.gameObject.SetActive(false);
-        }
-        
-        public void UpdateTrapUI(int count)
-        {
-            trapCount.text ="X " +  count.ToString();
-            if (count <= 0)
-                trapButton.gameObject.SetActive(false);
+            buildingUI.countText.text = $"X {count}";
+            buildingUI.button.gameObject.SetActive(count > 0);
         }
     }
 }

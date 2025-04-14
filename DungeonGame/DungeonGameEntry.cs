@@ -1,5 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Common;
+using Dungeon.Evnents;
+using GameFramework;
+using GameFramework.Event;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 
@@ -17,6 +22,8 @@ namespace Dungeon.DungeonGameEntry
     {
         void Awake()
         {
+            InitInstance();
+
             CheckValidation();
 
             InitGameFramwork();
@@ -24,10 +31,6 @@ namespace Dungeon.DungeonGameEntry
             InitDungeonComponents();
 
             InitDungeonDebuggers();
-        }
-        void Start()
-        {
-            
         }
     }
 }

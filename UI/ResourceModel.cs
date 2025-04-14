@@ -60,6 +60,7 @@ namespace Dungeon
         }
         private void Awake() {
             if (Instance == null) Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
     }
 }

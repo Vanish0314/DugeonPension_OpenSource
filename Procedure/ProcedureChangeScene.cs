@@ -49,8 +49,6 @@ namespace Dungeon
 
             //加载场景相关
             loadingSceneId = procedureOwner.GetData<VarInt32>(Constant.ProcedureData.NextSceneId).Value;//获取目标场景ID
-            Debug.Log("ProcedureChangeScene: LoadSceneCompleted: " + loadingSceneId);
-            Debug.Log(GameEntry.Data.GetData<DataScene>());
             sceneData = GameEntry.Data.GetData<DataScene>().GetSceneData(loadingSceneId);//获取场景数据
             
             //日志
@@ -63,6 +61,7 @@ namespace Dungeon
 
             //根据数据加载场景
             GameEntry.Scene.LoadScene(sceneData.AssetPath, Constant.AssetPriority.SceneAsset, this);
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this,OnSceneLoadedEventArgs.Create(sceneData.Id));
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)

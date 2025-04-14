@@ -17,6 +17,16 @@ namespace Dungeon.Character.Hero
     {
         void Start()
         {
+            InitHero();
+        }
+
+        void Update()
+        {
+            UpdateGOAP();
+        }
+
+        private void InitHero()
+        {
             InitICharacter();
 
             InitGOAP();
@@ -24,9 +34,14 @@ namespace Dungeon.Character.Hero
             InitViewer();
         }
 
-        void Update()
+        public override void Init(object data)
         {
-            UpdateGOAP();
+            
+        }
+
+        public override void Reset()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

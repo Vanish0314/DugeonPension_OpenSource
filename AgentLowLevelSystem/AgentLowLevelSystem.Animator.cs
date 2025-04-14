@@ -12,6 +12,7 @@ namespace Dungeon.AgentLowLevelSystem
         private const string ANIMATOR_BOOL_ATTACKING = "Attacking";
         private const string ANIMATOR_BOOL_STUN = "Stunned";
         private const string ANIMATOR_TRIGGER_INTERACT = "Interacting";
+        private const string ANIMATOR_TRIGGER_Die = "Died";
 
         private void InitAnimator()
         {

@@ -12,10 +12,12 @@ using UnityEngine;
 using ProcedureOwner = GameFramework.Fsm.IFsm<GameFramework.Procedure.IProcedureManager>;
 using LoadDataTableSuccessEventArgs = UnityGameFramework.Runtime.LoadDataTableSuccessEventArgs;
 using LoadDataTableFailureEventArgs = UnityGameFramework.Runtime.LoadDataTableFailureEventArgs;
+using System;
 
 namespace Dungeon
 {
-    public class ProcedurePreload : ProcedureBase
+    [Obsolete]
+    public class ProcedurePreLoad : ProcedureBase
     {
         private bool initResourceComplete = false;
         
@@ -53,7 +55,7 @@ namespace Dungeon
                     throw new System.Exception(string.Format("Data {0} is not derive form DataBase", _datas[i].GetType()));
                 }
             }
-
+            
             PreloadResources();
         }
 

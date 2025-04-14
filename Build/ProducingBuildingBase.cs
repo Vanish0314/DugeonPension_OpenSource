@@ -52,6 +52,7 @@ namespace Dungeon
                 case ResourceType.Stone:
                     ResourceModel.Instance.Stone += amount;
                     string textStone = "+" + amount;
+                    BubbleManager.Instance.ShowBubble(transform, textStone,BubbleID.ProcedureBubble);
                     FeelSystem.Instance.FloatingText(textStone,transform,produceData.productionGradient);
                     break;
                 case ResourceType.MagicPower:
