@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using Codice.Client.BaseCommands.Merge.IncomingChanges;
+using Dungeon.Data;
 using Dungeon.DungeonEntity;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
 using GameFramework;
 using GameFramework.Event;
 using GameFramework.Procedure;
+using GameFramework.Resource;
 using GluonGui.Dialog;
 using UnityEditor;
 using UnityEditor.SearchService;
@@ -20,6 +24,7 @@ namespace Dungeon.Procedure
     /// 1. 获取存档信息与用户设置
     /// 2. 初始化部分系统
     /// 3. 一帧后切换到ProcedureOpenning
+    /// 4. 配置全局初始静态数据
     /// </summary>
     public class ProcedureLauch : ProcedureBase
     {
@@ -29,20 +34,17 @@ namespace Dungeon.Procedure
 
             // 声音配置：根据用户配置数据，设置即将使用的声音选项
             InitSoundSettings();
-
-            InitDataTables();
         }
-
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            ChangeState<ProcedureOpenning>(procedureOwner);
+            ChangeState<ProcedurePreload>(procedureOwner);
         }
 
-        private void InitDataTables()
+        private void OnInitResourcesComplete()
         {
-            GameEntry.Data.PreLoadAllData();
+            GameFrameworkLog.Info("初始化资源完成");
         }
 
         private void InitSoundSettings()
@@ -55,7 +57,168 @@ namespace Dungeon.Procedure
             // GameEntry.Sound.SetVolume("UISound", GameEntry.Setting.GetFloat(Constant.Setting.UISoundVolume, 1f));
             // Log.Info("Init sound settings complete.");
         }
+
     }
+
+    public class ProcedurePreload : ProcedureBase
+    {
+        private DataBase[] datas;
+
+        private Dictionary<string, bool> m_LoadedFlag = new Dictionary<string, bool>();
+
+        protected override void OnInit(ProcedureOwner procedureOwner)
+        {
+            base.OnInit(procedureOwner);
+        }
+
+        protected override void OnEnter(ProcedureOwner procedureOwner)
+        {
+            base.OnEnter(procedureOwner);
+
+            GameEntry.Event.Subscribe(LoadConfigSuccessEventArgs.EventId, OnLoadConfigSuccess);
+            GameEntry.Event.Subscribe(LoadConfigFailureEventArgs.EventId, OnLoadConfigFailure);
+            GameEntry.Event.Subscribe(LoadDictionarySuccessEventArgs.EventId, OnLoadDictionarySuccess);
+            GameEntry.Event.Subscribe(LoadDictionaryFailureEventArgs.EventId, OnLoadDictionaryFailure);
+
+            GameFramework.Data.Data[] _datas = GameEntry.Data.GetAllData();
+
+            datas = new DataBase[_datas.Length];
+            for (int i = 0; i < _datas.Length; i++)
+            {
+                if (_datas[i] is DataBase)
+                {
+                    datas[i] = _datas[i] as DataBase;
+                }
+                else
+                {
+                    throw new System.Exception(string.Format("Data {0} is not derive form DataBase", _datas[i].GetType()));
+                }
+            }
+
+            PreloadResources();
+        }
+
+        protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
+        {
+            base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
+
+            foreach (var item in m_LoadedFlag)
+            {
+                if (!item.Value)
+                    return;
+            }
+
+            if (datas == null)
+                return;
+
+            foreach (var item in datas)
+            {
+                if (!item.IsPreloadReady)
+                    return;
+            }
+
+            SetComponents();
+            ChangeState<ProcedureOpenning>(procedureOwner);
+        }
+
+
+        protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
+        {
+            base.OnLeave(procedureOwner, isShutdown);
+
+            GameEntry.Event.Unsubscribe(LoadConfigSuccessEventArgs.EventId, OnLoadConfigSuccess);
+            GameEntry.Event.Unsubscribe(LoadConfigFailureEventArgs.EventId, OnLoadConfigFailure);
+            GameEntry.Event.Unsubscribe(LoadDictionarySuccessEventArgs.EventId, OnLoadDictionarySuccess);
+            GameEntry.Event.Unsubscribe(LoadDictionaryFailureEventArgs.EventId, OnLoadDictionaryFailure);
+        }
+
+        protected override void OnDestroy(ProcedureOwner procedureOwner)
+        {
+            base.OnDestroy(procedureOwner);
+        }
+
+        private void PreloadResources()
+        {
+            LoadConfig("DefaultConfig");
+
+            GameEntry.Data.PreLoadAllData();
+        }
+
+        private void SetComponents()
+        {
+            SetDataComponent();
+            SetUIComponent();
+        }
+
+        private void SetDataComponent()
+        {
+            // GameEntry.Data.PreLoadAllData();
+            GameEntry.Data.LoadAllData();
+        }
+
+        private void SetUIComponent()
+        {
+            UIGroupData[] uiGroupDatas = GameEntry.Data.GetData<DataUI>().GetAllUIGroupData();
+            foreach (var item in uiGroupDatas)
+            {
+                GameEntry.UI.AddUIGroup(item.Name, item.Depth);
+            }
+        }
+        private void LoadConfig(string configName)
+        {
+            string configAssetName = AssetUtility.GetConfigAsset(configName, false);
+            m_LoadedFlag.Add(configAssetName, false);
+            GameEntry.Config.ReadData(configAssetName, this);
+        }
+        private void OnLoadConfigSuccess(object sender, GameEventArgs e)
+        {
+            LoadConfigSuccessEventArgs ne = (LoadConfigSuccessEventArgs)e;
+            if (ne.UserData != this)
+            {
+                return;
+            }
+
+            m_LoadedFlag[ne.ConfigAssetName] = true;
+            Log.Info("Load config '{0}' OK.", ne.ConfigAssetName);
+        }
+
+        private void OnLoadConfigFailure(object sender, GameEventArgs e)
+        {
+            LoadConfigFailureEventArgs ne = (LoadConfigFailureEventArgs)e;
+            if (ne.UserData != this)
+            {
+                return;
+            }
+
+            Log.Error("Can not load config '{0}' from '{1}' with error message '{2}'.", ne.ConfigAssetName, ne.ConfigAssetName, ne.ErrorMessage);
+        }
+
+        private void OnLoadDictionarySuccess(object sender, GameEventArgs e)
+        {
+            LoadDictionarySuccessEventArgs ne = (LoadDictionarySuccessEventArgs)e;
+            if (ne.UserData != this)
+            {
+                return;
+            }
+
+            m_LoadedFlag[ne.DictionaryAssetName] = true;
+            Log.Info("Load dictionary '{0}' OK.", ne.DictionaryAssetName);
+        }
+
+        private void OnLoadDictionaryFailure(object sender, GameEventArgs e)
+        {
+            LoadDictionaryFailureEventArgs ne = (LoadDictionaryFailureEventArgs)e;
+            if (ne.UserData != this)
+            {
+                return;
+            }
+
+            Log.Error("Can not load dictionary '{0}' from '{1}' with error message '{2}'.", ne.DictionaryAssetName, ne.DictionaryAssetName, ne.ErrorMessage);
+        }
+
+    }
+
+  
 
     /// <summary>
     /// ProcedureOpenning
@@ -162,7 +325,7 @@ namespace Dungeon.Procedure
 
             mOwner = procedureOwner;
 
-            GameEntry.UI.GetComponent<UIComponent>().OpenUIForm(EnumUIForm.GameStartForm);
+            GameEntry.UI.OpenUIForm(EnumUIForm.GameStartForm);
 
             GameEntry.Event.Subscribe(OnStartNewGameButtonClickEvent.EventId, OnStartNewGameHandler);
             GameEntry.Event.Subscribe(OnContinueGameButtonClickEvent.EventId, OnContinueGameHandler);
@@ -576,8 +739,56 @@ namespace Dungeon.Procedure
 namespace Dungeon.Evnents
 {
     /// <summary>
-    /// 当玩家按下切换到模拟经营按钮时触发 //TODO(xy)
+    /// 当玩家按下按钮时触发//TODO(xy)
     /// </summary>
+    public sealed class OnStartNewGameButtonClickEvent : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnStartNewGameButtonClickEvent).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+
+        public static OnStartNewGameButtonClickEvent Create()
+        {
+            OnStartNewGameButtonClickEvent a = ReferencePool.Acquire<OnStartNewGameButtonClickEvent>();
+            return a;
+        }
+
+        public override void Clear()
+        {
+        }
+
+    }
+    /// <summary>
+    /// 当玩家按下继续游戏按钮时触发//TODO(xy)
+    /// </summary>
+    public sealed class OnContinueGameButtonClickEvent : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnContinueGameButtonClickEvent).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+
+        public static OnContinueGameButtonClickEvent Create()
+        {
+            OnContinueGameButtonClickEvent a = ReferencePool.Acquire<OnContinueGameButtonClickEvent>();
+            return a;
+        }
+
+        public override void Clear()
+        {
+        }
+    }
     public sealed class OnPlayerSwitchToMetroplisEvent : GameEventArgs
     {
         public static readonly int EventId = typeof(OnPlayerSwitchToMetroplisEvent).GetHashCode();
@@ -600,6 +811,7 @@ namespace Dungeon.Evnents
         {
         }
     }
+
 
     /// <summary>
     /// 当玩家按下切换到地牢按钮时触发 //TODO(xy)
