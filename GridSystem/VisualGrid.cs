@@ -64,9 +64,12 @@ namespace Dungeon.GridSystem
 
         public void Init()
         {
-            foreach (Transform child in transform)
+            for(int i = transform.childCount - 1; i >= 0 ; i--)
             {
-                DestroyImmediate(child.gameObject);
+                if(transform.GetChild(i).gameObject.GetComponent<Tilemap>()!= null)
+                {
+                    DestroyImmediate(transform.GetChild(i).gameObject);
+                }
             }
 
             m_BackGroundTileMap = GetOrCreateTilemap("BackGround");
@@ -149,20 +152,24 @@ namespace Dungeon.GridSystem
             { TileFunctionType.Door, VisualLayer.Buildings },
         };
 
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            if (!Application.isPlaying)
-            {
-                var bg = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
-                var bt = transform.Find("Buildings")?.gameObject ?? new GameObject("Buildings");
-                var dc = transform.Find("Debug")?.gameObject ?? new GameObject("Debug");
+// #if UNITY_EDITOR
+//         private void OnValidate()
+//         {
+//             if (!Application.isPlaying)
+//             {
+//                 var bg = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
+//                 var bt = transform.Find("Buildings")?.gameObject ?? new GameObject("Buildings");
+//                 var dc = transform.Find("Debug")?.gameObject ?? new GameObject("Debug");
 
-                m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
-                m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
-                m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
-            }
-#endif
-        }
+//                 bg.transform.SetParent(transform);
+//                 bt.transform.SetParent(transform);
+//                 dc.transform.SetParent(transform);
+
+//                 m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
+//                 m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
+//                 m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
+//             }
+//         }
+// #endif
     }
 }

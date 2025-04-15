@@ -2,13 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Dungeon.BlackBoardSystem;
+using Dungeon.Common.MonoPool;
 using Dungeon.DungeonEntity.InteractiveObject;
 using Dungeon.DungeonEntity.Monster;
 using Dungeon.DungeonEntity.Trap;
 using GameFramework;
+using GameFramework.Event;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityGameFramework.Runtime;
 
 namespace Dungeon.GridSystem
 {
@@ -49,20 +52,26 @@ namespace Dungeon.GridSystem
             }
         }
         
-        private void HandleMonsterPlacement(Vector3 worldPos, MonsterData monsterData)
+        private void HandleMonsterPlacement(object sender, GameEventArgs gameEventArgs)
         {
-            Vector2Int gridPos = WorldToGridPosition(worldPos);
-
-            if(!CouldPlaceTrap(gridPos))
-                return;
+            TryPlaceMonsterEventArgs args = (TryPlaceMonsterEventArgs)gameEventArgs;
             
-            GameObject monsterObj = monsterData.monsterPrefab;
+            Vector3 worldPos = args.WorldPosition;
+            MonoPoolItem monsterItem = args.MonsterItem;
+            
+            Vector2Int gridPos = WorldToGridPosition(worldPos);
+            
+            GameObject monsterObj = monsterItem.gameObject;
             DungeonMonsterBase monster = monsterObj.GetComponent<DungeonMonsterBase>();
-    
-            PlaceDungeonMonster(monster, gridPos);
-    
-            // 通知放置成功
-            PlaceManager.Instance.TriggerOnMonsterPlaced(monsterData);
+
+            if (PlaceDungeonMonster(monster, gridPos))
+            {
+                GameEntry.Event.GetComponent<EventComponent>().Fire(this,OnMonsterPlacedEventArgs.Create(args.MonsterData));
+            }
+            else
+            {
+                monsterItem.ReturnToPool();
+            }
         }
         public bool PlaceDungeonMonster(DungeonMonsterBase monsterInstiated, Vector2Int gridPos)
         {
@@ -73,28 +82,35 @@ namespace Dungeon.GridSystem
             return true;
         }
         
-        private void HandleTrapPlacement(Vector3 worldPos, TrapData trapData)
+        private void HandleTrapPlacement(object sender, GameEventArgs gameEventArgs)
         {
+            TryPlaceTrapEventArgs args = (TryPlaceTrapEventArgs)gameEventArgs;
+            
+            Vector3 worldPos = args.WorldPosition;
+            MonoPoolItem trapItem = args.TrapItem;
+            
             Vector2Int gridPos = WorldToGridPosition(worldPos);
             
-            if(!CouldPlaceTrap(gridPos))
-                return;
-            
-            GameObject trapObj = trapData.trapPrefab;
+            GameObject trapObj = trapItem.gameObject;
             DungeonTrapBase trap = trapObj.GetComponent<DungeonTrapBase>();
-    
-            PlaceDungeonTrap(trap, gridPos);
-    
-            // 通知放置成功
-            PlaceManager.Instance.TriggerOnTrapPlaced(trapData);
+
+            if (PlaceDungeonTrap(trap, gridPos))
+            {
+                GameEntry.Event.GetComponent<EventComponent>().Fire(this,OnTrapPlacedEventArgs.Create(args.TrapData));
+            }
+            else
+            {
+                trapItem.ReturnToPool();
+            }
         }
-        public void PlaceDungeonTrap(DungeonTrapBase trapInstiated, Vector2Int gridPos)
+        public bool PlaceDungeonTrap(DungeonTrapBase trapInstiated, Vector2Int gridPos)
         {
             if(!CouldPlaceTrap(gridPos))
-                return;
+                return false;
 
             trapInstiated.transform.position = m_LogicalGrid.GridToWorldPosition(gridPos.x, gridPos.y);
             m_LogicalGrid.AddTrap(gridPos, trapInstiated);
+            return true;
         }
         public void PlaceDungeonInteractiveObject(DungeonInteractiveObjectBase interactiveObjectInstiated, Vector2Int gridPos)
         {
@@ -218,7 +234,6 @@ namespace Dungeon.GridSystem
         private void InitGrid()
         {
             m_VisualGrid.Load(gridData);
-            m_VisualGrid.Init();
 
             m_LogicalGrid.Init(gridData);
             InitRooms();

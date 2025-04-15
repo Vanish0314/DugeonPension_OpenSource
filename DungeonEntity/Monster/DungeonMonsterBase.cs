@@ -80,6 +80,7 @@ namespace Dungeon.DungeonEntity.Monster
             m_Animator = GetComponent<Animator>();
             m_Motor = GetComponent<DungeonEntityMotor>();
             m_Motor.InitMotor(moveSpeed);
+            m_BtHelper.Init(this, skill);
             Init();
         }
 

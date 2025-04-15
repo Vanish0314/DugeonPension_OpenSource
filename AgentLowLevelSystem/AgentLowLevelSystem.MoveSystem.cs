@@ -49,6 +49,7 @@ namespace Dungeon.AgentLowLevelSystem
         {
             GameFrameworkLog.Info("[AgentLowLevelSystem] AgentLowLevelSystem.MoveTo()");
 
+            m_MoveWayPoints.Clear();
             m_MoveWayPoints = DungeonGameEntry.DungeonGameEntry.GridSystem.FindPath(transform.position, targetPositionWorldCoord);
         }
 
@@ -65,6 +66,16 @@ namespace Dungeon.AgentLowLevelSystem
             MoveTo(target.Position);
             SetAnimatorState(ANIMATOR_BOOL_MOVING);
 
+        }
+
+        public void TargetPositionChanged(ITarget target)
+        {
+            if(Vector3.Distance(transform.position, target.Position) < 0.3f)
+            {
+                return;
+            }
+
+            MoveTo(target.Position);
         }
 
         public void TargetInRange(ITarget target)

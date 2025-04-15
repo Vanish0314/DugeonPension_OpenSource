@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Dungeon.DungeonGameEntry;
+using Dungeon.Common.MonoPool;
 using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityGameFramework.Runtime;
 using static UnityGameFramework.Runtime.DebuggerComponent;
 
@@ -12,8 +13,18 @@ namespace Dungeon
     public class PlaceManager : MonoBehaviour
     {
         [SerializeField] public InputReader inputReader;
-
-        //[SerializeField] private GridSystem.BuildGridSystem buildGridSystem;
+        
+        // BuildingPool
+        [SerializeField] private MonoPoolComponent m_CastleBuildingPoolComponent;
+        [SerializeField] private MonoPoolItem m_CastleBuildingPoolItemPrefab;
+        
+        // TrapPool
+        [SerializeField] private MonoPoolComponent m_SpikeTrapPoolComponent;
+        [SerializeField] private MonoPoolItem m_SpikeTrapPoolItemPrefab;
+        
+        // MonsterPool
+        [SerializeField] private MonoPoolComponent m_SlimeMonsterPoolComponent;
+        [SerializeField] private MonoPoolItem m_SlimeMonsterItemPrefab;
         
         // 字典存储对应 放置物 信息
         private Dictionary<BuildingType, BuildingData> m_BuildingDataDict = new Dictionary<BuildingType, BuildingData>();
@@ -32,24 +43,18 @@ namespace Dungeon
         
         // 预览事件
         public event Action<Vector3,GameObject> SelectBuildingPreviewEvent; 
-
-        // 建造完成事件
-        public event Action<Vector3,BuildingData> TryPlaceBuildingHere; 
-        public event Action<BuildingData> OnBuildingPlaced;
-        public event Action<Vector3,TrapData> TryPlaceTrapHere; 
-        public event Action<TrapData> OnTrapPlaced;
-        public event Action<Vector3,MonsterData> TryPlaceMonsterHere; 
-        public event Action<MonsterData> OnMonsterPlaced;
         
         // 枚举方向
         public enum Direction { Up, Right, Down, Left }
         
-        // 建造资源缺乏事件 --------------------------------加不加参数再说
-        public event Action CannotAfford;
-        
         public static PlaceManager Instance { get; private set; }
         private void Awake()
         {
+            m_CastleBuildingPoolComponent.Init("CastleBuildingPool", m_CastleBuildingPoolItemPrefab,null,16);
+            GameFrameworkLog.Debug(m_CastleBuildingPoolComponent.GetItem(null));
+            m_SpikeTrapPoolComponent.Init("SpikeTrapPool", m_SpikeTrapPoolItemPrefab,null,16);
+            m_SlimeMonsterPoolComponent.Init("SlimeMonsterPool",m_SlimeMonsterItemPrefab,null,16);
+            
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -58,18 +63,28 @@ namespace Dungeon
 
             Instance = this;
             inputReader = Resources.Load<InputReader>("InputReader");
-            DungeonGameEntry.DungeonGameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
             DontDestroyOnLoad(gameObject);
         }
 
         private void OnEnable()
         {
             LoadPlacementData();
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            GameEntry.Event.Subscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
+            GameEntry.Event.Subscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
+            GameEntry.Event.Subscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            GameEntry.Event.Unsubscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
+            GameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
+            GameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+        }
+        private void OnDestroy()
+        {
+           
         }
 
         private void Update()
@@ -183,7 +198,7 @@ namespace Dungeon
             // 仅当放置陷阱时订阅旋转事件
             if (m_SelectedTrapData != null)
             {
-                inputReader.OnTrapRotateEvent += HandleTrapRotation;
+                //inputReader.OnTrapRotateEvent += HandleTrapRotation;
             }
         }
 
@@ -208,34 +223,14 @@ namespace Dungeon
         private void TryPlaceBuilding()
         {
             if (m_SelectedBuildingData == null) return;
-            
+
             if (!CanAffordBuilding())
-            {
-                CannotAfford?.Invoke();
-                Debug.Log("资源不足，无法建造");
                 return;
-            }
-            
-            TryPlaceBuildingHere?.Invoke(m_CurrentMouseWorldPos, m_SelectedBuildingData);
-            
-            if (true)//----------------------------判断建造是否完成
-            {
-                InstantiateBuilding(m_CurrentMouseWorldPos);
-                FinalizePlacement();
-            }
-        }
-        
-        private void InstantiateBuilding(Vector3 worldPos)
-        {
-            // 实例化建筑（精确居中）
-            GameObject building = Instantiate(
-                m_SelectedBuildingData.buildingPrefab,
-                worldPos,
-                Quaternion.identity
-            );
-                
-            // 触发事件（传递BuildingData而非名字）
-            OnBuildingPlaced?.Invoke(m_SelectedBuildingData);
+
+            var buildingItem = m_CastleBuildingPoolComponent.GetItem(null);
+
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this,
+                TryPlaceBuildingEventArgs.Create(m_CurrentMouseWorldPos, buildingItem, m_SelectedBuildingData));
         }
         
         // 检查资源是否足够
@@ -250,80 +245,36 @@ namespace Dungeon
 
         #region Trap Placement
         
-        [DungeonGridWindow("TryPlaceTrap")]
-        private static void TryPlaceTrapTest()
-        {
-            PlaceManager.Instance.TryPlaceTrapHere?.Invoke(PlaceManager.Instance.m_CurrentMouseWorldPos, PlaceManager.Instance.m_SelectedTrapData);//--------------------------------------放置陷阱事件
-        }
         private void TryPlaceTrap()
         {
             if (!CanAffordTrap())
-            {
-                CannotAfford?.Invoke();
                 return;
-            }
-            
-            TryPlaceTrapHere?.Invoke(m_CurrentMouseWorldPos, m_SelectedTrapData);//--------------------------------------放置陷阱事件
-        }
 
-        // 在 PlaceManager 类中添加
-        public void TriggerOnTrapPlaced(TrapData trapData)
-        {
-            OnTrapPlaced?.Invoke(trapData);
-            FinalizePlacement();
+            var trapItem = m_SpikeTrapPoolComponent.GetItem(null);
+
+            GameEntry.Event.GetComponent<EventComponent>()
+                .Fire(this, TryPlaceTrapEventArgs.Create(m_CurrentMouseWorldPos, trapItem, m_SelectedTrapData));
         }
 
         private bool CanAffordTrap()
         {
             return ResourceModel.Instance.Material >= m_SelectedTrapData.cost.material;
         }
-
         
-        // 旋转相关
-        private Direction GetCurrentDirection()
-        {
-            // 将角度转换为四方向
-            return (Direction)(Mathf.RoundToInt(m_CurrentRotationAngle / 90) % 4);
-        }
-        
-        // 可能有问题
-        private void HandleTrapRotation(float angle)
-        {
-            if (angle != 0)
-            {
-                m_CurrentRotationAngle += angle > 0 ? 90 : -90;
-                m_CurrentRotationAngle %= 360;
-                UpdatePreviewRotation();
-            }
-        }
-
-        private void UpdatePreviewRotation()
-        {
-            if (m_PreviewInstance != null)
-            {
-                m_PreviewInstance.transform.rotation = Quaternion.Euler(0, 0, m_CurrentRotationAngle);
-            }
-        }
         #endregion
         
         #region Monster Placement
         private void TryPlaceMonster()
         {
             if (!CanAffordMonster())
-            {
-                CannotAfford?.Invoke();
                 return;
-            }
             
-            TryPlaceMonsterHere?.Invoke(m_CurrentMouseWorldPos, m_SelectedMonsterData);//--------------------------------
+            var monsterItem = m_SlimeMonsterPoolComponent.GetItem(null);
+
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this,
+                TryPlaceMonsterEventArgs.Create(m_CurrentMouseWorldPos, monsterItem, m_SelectedMonsterData));
         }
         
-        public void TriggerOnMonsterPlaced(MonsterData monsterData)
-        {
-            OnMonsterPlaced?.Invoke(monsterData);
-            FinalizePlacement();
-        }
-
         private bool CanAffordMonster()
         {
             return ResourceModel.Instance.MagicPower >= m_SelectedMonsterData.cost.magicPower;
@@ -333,7 +284,7 @@ namespace Dungeon
         #region Common Logic
         
         // 放置结束
-        private void FinalizePlacement()
+        private void FinalizePlacement(object sender, GameEventArgs gameEventArgs)
         {
             Destroy(m_PreviewInstance);
             CancelPlacement();
@@ -346,7 +297,7 @@ namespace Dungeon
             inputReader.OnTryPlaceEvent -= TryPlace;
             inputReader.OnCancelPlaceEvent -= CancelPlacement;
             
-            inputReader.OnTrapRotateEvent -= HandleTrapRotation;
+            //inputReader.OnTrapRotateEvent -= HandleTrapRotation;
 
             inputReader.SetUIActions();
             

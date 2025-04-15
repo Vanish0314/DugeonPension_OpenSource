@@ -46,24 +46,24 @@ namespace Dungeon.DungeonGameEntry
                 Destroy(gameObject);
             }
 
-            SubscribleEvents();
 
-            m_DungeonSystem = gameObject.GetComponent<DungeonSystem>();
-            m_MetropolisSystem = gameObject.GetComponent<MetropolisSystem>();
-            m_UniversalSystem = gameObject.GetComponent<UniversalSystem>();
         }
 
         private void SubscribleEvents()
         {
-            Event.Subscribe(OnSwitchToFactoryEvent.EventId, OnSwitchToFactory);
-            Event.Subscribe(OnSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
+            m_DungeonSystem = gameObject.GetComponent<DungeonSystem>();
+            m_MetropolisSystem = gameObject.GetComponent<MetropolisSystem>();
+            m_UniversalSystem = gameObject.GetComponent<UniversalSystem>();
+
+            Event.Subscribe(OnPlayerSwitchToMetroplisEvent.EventId, OnSwitchToFactory);
+            Event.Subscribe(OnPlayerSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
         }
 
 
         private void UnSubscribleEvents()
         {
-            Event.Unsubscribe(OnSwitchToFactoryEvent.EventId, OnSwitchToFactory);
-            Event.Unsubscribe(OnSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
+            Event.Unsubscribe(OnPlayerSwitchToMetroplisEvent.EventId, OnSwitchToFactory);
+            Event.Unsubscribe(OnPlayerSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
         }
         private void OnSwitchToFactory(object sender, GameEventArgs e)
         {
@@ -83,55 +83,3 @@ namespace Dungeon.DungeonGameEntry
     }
 }
 
-
-#region Events
-namespace Dungeon.Evnents
-{
-    public sealed class OnSwitchToFactoryEvent : GameEventArgs
-    {
-        public static readonly int EventId = typeof(OnSwitchToFactoryEvent).GetHashCode();
-
-        public override int Id
-        {
-            get
-            {
-                return EventId;
-            }
-        }
-
-        public static OnSwitchToFactoryEvent Create()
-        {
-            OnSwitchToFactoryEvent onStartFightButtonClickEventArgs = ReferencePool.Acquire<OnSwitchToFactoryEvent>();
-            return onStartFightButtonClickEventArgs;
-        }
-
-        public override void Clear()
-        {
-        }
-    }
-
-    public sealed class OnSwitchToDungeonEvent : GameEventArgs
-    {
-        public static readonly int EventId = typeof(OnSwitchToDungeonEvent).GetHashCode();
-
-        public override int Id
-        {
-            get
-            {
-                return EventId;
-            }
-        }
-
-        public static OnSwitchToDungeonEvent Create()
-        {
-            OnSwitchToDungeonEvent onSwitchToDungeonEventArgs = ReferencePool.Acquire<OnSwitchToDungeonEvent>();
-            return onSwitchToDungeonEventArgs;
-        }
-
-        public override void Clear()
-        {
-        }
-    }
-}
-
-#endregion

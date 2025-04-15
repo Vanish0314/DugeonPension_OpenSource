@@ -1,6 +1,8 @@
 using System;
+using GameFramework.Event;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityGameFramework.Runtime;
 
 namespace Dungeon
 {
@@ -75,8 +77,8 @@ namespace Dungeon
         {
             PlaceArmyModel.Instance.OnTrapCountChanged += UpdateTrapUI;
             PlaceArmyModel.Instance.OnMonsterCountChanged += UpdateMonsterUI;
-            m_PlaceManager.OnTrapPlaced += ReduceTrapCount;
-            m_PlaceManager.OnMonsterPlaced += ReduceMonsterCount;
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnTrapPlacedEventArgs.EventId,ReduceTrapCount);
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnMonsterPlacedEventArgs.EventId,ReduceMonsterCount);
         }
 
         private void OnDisable()
@@ -85,8 +87,8 @@ namespace Dungeon
             {
                 PlaceArmyModel.Instance.OnTrapCountChanged -= UpdateTrapUI;
                 PlaceArmyModel.Instance.OnMonsterCountChanged -= UpdateMonsterUI;
-                m_PlaceManager.OnTrapPlaced -= ReduceTrapCount;
-                m_PlaceManager.OnMonsterPlaced -= ReduceMonsterCount;
+                GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnTrapPlacedEventArgs.EventId,ReduceTrapCount);
+                GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnMonsterPlacedEventArgs.EventId,ReduceMonsterCount);
             }
         }
 
@@ -100,14 +102,16 @@ namespace Dungeon
             m_PlaceManager.SelectMonsterData(type);
         }
 
-        private void ReduceTrapCount(TrapData trapData)
+        private void ReduceTrapCount(object sender, GameEventArgs gameEventArgs)
         {
-            PlaceArmyModel.Instance.ModifyTrapCount(trapData.trapType, -1);
+            OnTrapPlacedEventArgs e = (OnTrapPlacedEventArgs)gameEventArgs;
+            PlaceArmyModel.Instance.ModifyTrapCount(e.TrapData.trapType, -1);
         }
 
-        private void ReduceMonsterCount(MonsterData monsterData)
+        private void ReduceMonsterCount(object sender, GameEventArgs gameEventArgs)
         {
-            PlaceArmyModel.Instance.ModifyMonsterCount(monsterData.monsterType, -1);
+            OnMonsterPlacedEventArgs e = (OnMonsterPlacedEventArgs)gameEventArgs;
+            PlaceArmyModel.Instance.ModifyMonsterCount(e.MonsterData.monsterType, -1);
         }
 
         private void UpdateTrapUI(TrapType type, int count)

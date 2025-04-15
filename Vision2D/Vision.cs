@@ -43,6 +43,11 @@ namespace Dungeon.Vision2D
 
             polyCollider.SetPath(0, vertices2D);
         }
+
+        public void Init(AgentLowLevelSystem.AgentLowLevelSystem low)
+        {
+            mOwner = low;
+        }
         private void OnTriggerEnter2D(Collider2D other)
         {
             var visible = other.GetComponent<IVisible>();
@@ -54,7 +59,7 @@ namespace Dungeon.Vision2D
             var visitInfo = visible.OnVisited(new VisitInformation(transform.parent.gameObject, null));
             if (visitInfo.visited != null)
             {
-                if (memorizedVisibleObjects.Add(other.gameObject))
+                mOwner.OnSee(other.gameObject);
                 {
                     var key = m_Blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(visible.GetType().Name));
                     m_Blackboard.TryGetValue(key, out int count);
@@ -73,7 +78,7 @@ namespace Dungeon.Vision2D
 
             GameFrameworkLog.Info($"[Vision] {other.gameObject.name} out of the {gameObject.name}'s Vision.");
 
-            if (memorizedVisibleObjects.Remove(other.gameObject))
+            mOwner.OnUnSee(other.gameObject);
             {
                 visible.OnUnvisited(new VisitInformation(transform.parent.gameObject, null));
 
@@ -96,8 +101,7 @@ namespace Dungeon.Vision2D
         public event Action<GameObject> OnLoseVisionOf;
 
         private Blackboard m_Blackboard;
-        private HashSet<GameObject> memorizedVisibleObjects = new();
-
+        private AgentLowLevelSystem.AgentLowLevelSystem mOwner;
         [HideInInspector] public MeshFilter meshFilter;
         [HideInInspector] public PolygonCollider2D polyCollider;
     }

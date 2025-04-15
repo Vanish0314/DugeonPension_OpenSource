@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
@@ -21,6 +22,7 @@ namespace Dungeon.AgentLowLevelSystem
     /// </summary>
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem,ICombatable
     {
+        [Obsolete]
         public bool GetNearestTorch(out Transform torchTransform)
         {
             Collider2D[] colliders = new Collider2D[100];
@@ -49,6 +51,7 @@ namespace Dungeon.AgentLowLevelSystem
             return false;
         }
 
+        [Obsolete]
         public bool GetNearestTrap(out Transform trapTransform)
         {
             Collider2D[] colliders = new Collider2D[100];
@@ -81,6 +84,7 @@ namespace Dungeon.AgentLowLevelSystem
             return false;
         }
 
+        [Obsolete]
         public bool GetNearestTreasureChest(out Transform treasureChestTransform)
         {
             Collider2D[] colliders = new Collider2D[100];
@@ -113,6 +117,7 @@ namespace Dungeon.AgentLowLevelSystem
             return false;
         }
 
+        [Obsolete]
         public void GetNearestMonster(out Transform monsterTransform)
         {
             Collider2D[] colliders = new Collider2D[100];

@@ -57,10 +57,16 @@ namespace Dungeon.GridSystem
         private void OnEnable()
         {
             DungeonGameEntry.DungeonGameEntry.WorldBlackboard.RegisterExpert(this);
+            
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(TryPlaceTrapEventArgs.EventId,HandleTrapPlacement);
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(TryPlaceMonsterEventArgs.EventId,HandleMonsterPlacement);
         }
         private void OnDisable()
         {
             DungeonGameEntry.DungeonGameEntry.WorldBlackboard.DeregisterExpert(this);
+            
+            GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(TryPlaceTrapEventArgs.EventId,HandleTrapPlacement);
+            GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(TryPlaceMonsterEventArgs.EventId,HandleMonsterPlacement);
         }
 
         [SerializeField] private GridData gridData;

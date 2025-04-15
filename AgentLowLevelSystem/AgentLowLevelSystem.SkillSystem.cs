@@ -15,23 +15,9 @@ namespace Dungeon.AgentLowLevelSystem
             m_SkillShooter = gameObject.GetOrAddComponent<SkillShooter>();
         }
 
-        public void UseSkill(SkillDesc skillDesc, Vector3 targetPosOrDirection)
+        private void UseSkill(Skill skillToUse)
         {
-#if UNITY_EDITOR
-            CheckIfAnimatorHasParameter(skillDesc.name);
-#endif
-
-            m_AgentAnimator.SetTrigger(skillDesc.name);
-
-            GameFrameworkLog.Info("[AgentLowLevelSystem] UseSkill: " + skillDesc.name);
-            BumpUseSkillBubbule(skillDesc.name);
-
-            var skillData = SkillData.GetFromSkillDesc(skillDesc);
-            var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, m_SkillShooter, targetPosOrDirection);
-
-            var skill = new Skill(skillData, method, this);
-
-            m_SkillShooter.Fire(skill);
+            m_SkillShooter.Fire(skillToUse);
         }
 
         public void TakeSkill(Skill skill)
@@ -133,6 +119,8 @@ namespace Dungeon.AgentLowLevelSystem
             m_IsStunned = true;
             this.SendMessage("OnStunned");
 
+            SetAnimatorState(ANIMATOR_BOOL_STUN);
+
             m_StunTween = DOVirtual.DelayedCall(duration, () =>
             {
                 m_IsStunned = false;
@@ -169,8 +157,6 @@ namespace Dungeon.AgentLowLevelSystem
 
         private CombatorData m_combatorData;
         private SkillShooter m_SkillShooter;
-        private Tween m_StunTween;
-        private bool m_IsStunned;
     }
 
 }

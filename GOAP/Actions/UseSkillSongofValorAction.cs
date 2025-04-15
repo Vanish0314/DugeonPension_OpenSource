@@ -10,14 +10,13 @@ namespace Dungeon.GOAP.Action
     {
         public override bool IsInRange(IMonoAgent agent, float distance, IActionData data, IComponentReference references)
         {
-            return true;
+            return agent.LowLevelSystem.IsInSkillRange(new SkillDesc("Song of Valor"), distance);
         }
 
         public override IActionRunState Perform(IMonoAgent agent, ActionDataForSkillUsage data, IActionContext context)
         {
-            agent.LowLevelSystem.UseSkill(new SkillDesc("Song of Valor"),data.DirectionToUseSkill);
 
-            return ActionRunState.WaitThenComplete(1.0f);
+            return agent.LowLevelSystem.UseSkill(new SkillDesc("Song of Valor"), data.PositionToUseSkill, data.DirectionToUseSkill);
         }
     }
 }

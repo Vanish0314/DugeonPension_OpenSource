@@ -18,15 +18,14 @@ namespace Dungeon.GOAP.Action
 
         public override IActionRunState Perform(IMonoAgent agent, ActionDataWithTransform data, IActionContext context)
         {
+ #if UNITY_EDITOR
             var chest = data.transform.GetComponent<DungeonTreasureChest>();
-#if UNITY_EDITOR
             if (chest.IsOpened())
                 GameFrameworkLog.Error("[OpenTreasureChestAction] 箱子已经点亮!,可能是sensor出错或是没有及时更新状态");
 #endif
-            chest.Open(agent.LowLevelSystem);
+            
             var low = agent.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
-            low.DecreaseBlackboardCountOfIVisible<DungeonTreasureChest>();
-            return ActionRunState.Completed;
+            return low.OpenTreasureChest(data.transform);
 
         }
     }

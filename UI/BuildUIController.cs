@@ -1,7 +1,9 @@
 using System;
 using System.Data.Common;
+using GameFramework.Event;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityGameFramework.Runtime;
 
 namespace Dungeon
 {
@@ -52,7 +54,7 @@ namespace Dungeon
         private void SubscribeEvents()
         {
             BuildModel.Instance.OnBuildingCountChanged += UpdateBuildingUI;
-            m_PlaceManager.OnBuildingPlaced += ReduceBuildingCount;
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnBuildingPlacedEventArgs.EventId,ReduceBuildingCount);
         }
 
         private void OnDisable()
@@ -60,7 +62,7 @@ namespace Dungeon
             if (BuildModel.Instance != null)
             {
                 BuildModel.Instance.OnBuildingCountChanged -= UpdateBuildingUI;
-                m_PlaceManager.OnBuildingPlaced -= ReduceBuildingCount;
+                GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnBuildingPlacedEventArgs.EventId,ReduceBuildingCount);
             }
         }
 
@@ -69,9 +71,10 @@ namespace Dungeon
             m_PlaceManager.SelectBuildingData(type);
         }
 
-        private void ReduceBuildingCount(BuildingData buildingData)
+        private void ReduceBuildingCount(object sender, GameEventArgs gameEventArgs)
         {
-            BuildModel.Instance.ModifyCount(buildingData.buildingType, -1);
+            OnBuildingPlacedEventArgs eventData = (OnBuildingPlacedEventArgs)gameEventArgs;
+            BuildModel.Instance.ModifyCount(eventData.BuildingData.buildingType, -1);
         }
 
         private void UpdateBuildingUI(BuildingType type, int count)

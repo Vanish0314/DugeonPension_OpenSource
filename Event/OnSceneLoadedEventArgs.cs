@@ -21,13 +21,13 @@ namespace Dungeon
                 return EventId;
             }
         }
-
+        
         public int SceneID
         {
             get;
             private set;
         }
-        
+
         public static OnSceneLoadedEventArgs Create(int sceneId)
         {
             OnSceneLoadedEventArgs onSceneLoadedEventArgs = ReferencePool.Acquire<OnSceneLoadedEventArgs>();

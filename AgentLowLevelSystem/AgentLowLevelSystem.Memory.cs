@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using Codice.Client.BaseCommands;
+using Dungeon.DungeonEntity.InteractiveObject;
+using Dungeon.DungeonEntity.Monster;
+using Dungeon.DungeonEntity.Trap;
 using GameFramework;
 using UnityEngine;
 using static Dungeon.GridSystem.GridSystem;
@@ -17,11 +20,68 @@ namespace Dungeon.AgentLowLevelSystem
         {
             return m_BrainMemory.roomsVisited.Contains(room);
         }
-
         public Vector3 GetUnvisitedRoomCenterPos()
         {
             var room = GetUnvisitedRoom();
             return DungeonGameEntry.DungeonGameEntry.GridSystem.GridToWorldPosition(room.centerPos);
+        }
+        public DungeonMonsterBase GetNearestMonsterInVision()
+        {
+            if(m_BrainMemory.monstersInVision.Count == 0)
+            {
+                return null;
+            }
+
+            var result = m_BrainMemory.monstersInVision[0];
+            foreach(var monster in m_BrainMemory.monstersInVision)
+            {
+                if(Vector3.Distance(transform.position, monster.transform.position) < Vector3.Distance(transform.position, result.transform.position))
+                {
+                    result = monster;
+                }
+            }
+
+            return result;
+        }
+        
+
+        public void OnSee(GameObject entity)
+        {
+            if(entity.GetComponent<DungeonMonsterBase>()!= null)
+            {
+                m_BrainMemory.monstersInVision.Add(entity.GetComponent<DungeonMonsterBase>());
+            }
+            else if(entity.GetComponent<DungeonTreasureChest>()!= null)
+            {
+                m_BrainMemory.treasureChestInVision.Add(entity.GetComponent<DungeonTreasureChest>());
+            }
+            else if(entity.GetComponent<DungeonTrapBase>()!= null)
+            {
+                m_BrainMemory.trapInVision.Add(entity.GetComponent<DungeonTrapBase>());
+            }
+            else
+            {
+                GameFrameworkLog.Error("[AgentLowLevelSystem] OnSee: unknown entity:" + entity.name);
+            }
+        }
+        public void OnUnSee(GameObject entity) //TODO(vanish): 当go死亡时不调用导致没能正确销毁
+        {
+            if(entity.GetComponent<DungeonMonsterBase>()!= null)
+            {
+                m_BrainMemory.monstersInVision.Remove(entity.GetComponent<DungeonMonsterBase>());
+            }
+            else if(entity.GetComponent<DungeonTreasureChest>()!= null)
+            {
+                m_BrainMemory.treasureChestInVision.Remove(entity.GetComponent<DungeonTreasureChest>());
+            }
+            else if(entity.GetComponent<DungeonTrapBase>()!= null)
+            {
+                m_BrainMemory.trapInVision.Remove(entity.GetComponent<DungeonTrapBase>());
+            }
+            else
+            {
+                GameFrameworkLog.Error("[AgentLowLevelSystem] OnUnSee: unknown entity:" + entity.name);
+            }
         }
 
         /// <summary>
@@ -87,6 +147,9 @@ namespace Dungeon.AgentLowLevelSystem
         private class BrainMemory
         {
             public List<Room> roomsVisited = new ();
+            public List<DungeonMonsterBase> monstersInVision = new ();
+            public List<DungeonTreasureChest> treasureChestInVision = new ();
+            public List<DungeonTrapBase> trapInVision = new ();
         }
     }
 }

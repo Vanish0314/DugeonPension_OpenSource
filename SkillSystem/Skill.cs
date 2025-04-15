@@ -15,7 +15,7 @@ namespace Dungeon
 
         public LayerMask SkillLayerToShootMask; // Layer to use skill on
 
-        public static SkillDeployMethod CreateSkillDeployMethod(SkillData skillData, SkillShooter user, Vector3 posOrDirToUseSkill)
+        public static SkillDeployMethod CreateSkillDeployMethod(SkillData skillData, SkillShooter user, Vector3 posToUseSkill,Vector3 dirToUseSkill)
         {
             var desc = skillData.deployMethodDesc;
             var result = new SkillDeployMethod();
@@ -24,14 +24,14 @@ namespace Dungeon
             {
                 case SkillDeployDesc.SkillShootType.Directional:
                     {
-                        result.SkillPosition = user.transform.position;
-                        result.SkillDirection = posOrDirToUseSkill.normalized;
+                        result.SkillPosition = posToUseSkill;
+                        result.SkillDirection = dirToUseSkill.normalized;
                         break;
                     }
                 case SkillDeployDesc.SkillShootType.Point:
                     {
-                        result.SkillPosition = posOrDirToUseSkill;
-                        result.SkillDirection = (posOrDirToUseSkill - user.transform.position).normalized;
+                        result.SkillPosition = posToUseSkill;
+                        result.SkillDirection = (posToUseSkill - user.transform.position).normalized;
                         break;
                     }
                 case SkillDeployDesc.SkillShootType.Origin:

@@ -23,9 +23,9 @@ namespace Dungeon
        
        private void OnEnable()
        {
-           m_PlaceManager.OnBuildingPlaced += ReduceResources;
-           m_PlaceManager.OnTrapPlaced += ReduceResources;
-           m_PlaceManager.OnMonsterPlaced += ReduceResources;
+           GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnBuildingPlacedEventArgs.EventId, ReduceResources);
+           GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnTrapPlacedEventArgs.EventId, ReduceResources);
+           GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnMonsterPlacedEventArgs.EventId, ReduceResources);
            
            ResourceModel.Instance.OnGoldChanged += UpdateGoldUI;
            ResourceModel.Instance.OnStoneChanged += UpdateStoneUI;
@@ -45,14 +45,14 @@ namespace Dungeon
        {
            if (ResourceModel.Instance != null)
            {
+               GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnBuildingPlacedEventArgs.EventId, ReduceResources);
+               GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnTrapPlacedEventArgs.EventId, ReduceResources);
+               GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnMonsterPlacedEventArgs.EventId, ReduceResources);
+
                ResourceModel.Instance.OnGoldChanged -= UpdateGoldUI;
                ResourceModel.Instance.OnStoneChanged -= UpdateStoneUI;
                ResourceModel.Instance.OnMagicPowerChanged -= UpdateMagicPowerUI;
                ResourceModel.Instance.OnMaterialChanged -= UpdateMaterialUI;
-               
-               m_PlaceManager.OnBuildingPlaced -= ReduceResources;
-               m_PlaceManager.OnTrapPlaced -= ReduceResources;
-               m_PlaceManager.OnMonsterPlaced -= ReduceResources;
                
                // 取消订阅
                GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnBusinessStartEventArgs.EventId, SetBusinessUI);
@@ -66,24 +66,30 @@ namespace Dungeon
            
        }
        
-       private void ReduceResources(BuildingData buildingData)
+       private void ReduceResources(object sender, GameEventArgs gameEventArgs)
        {
-           if (buildingData.cost.gold > 0)
-               ResourceModel.Instance.Gold = Mathf.Max(0, ResourceModel.Instance.Gold - buildingData.cost.gold);
-           if (buildingData.cost.stone > 0)
-               ResourceModel.Instance.Stone = Mathf.Max(0, ResourceModel.Instance.Stone - buildingData.cost.stone);
-           if (buildingData.cost.magicPower > 0)
-               ResourceModel.Instance.MagicPower = Mathf.Max(0, ResourceModel.Instance.MagicPower - buildingData.cost.magicPower);
-           if (buildingData.cost.material > 0)
-               ResourceModel.Instance.Material = Mathf.Max(0, ResourceModel.Instance.Material - buildingData.cost.material);
-       }
-       private void ReduceResources(TrapData trapData)
-       {
-           ResourceModel.Instance.Material = Mathf.Max(0, ResourceModel.Instance.Material - trapData.cost.material);
-       }
-       private void ReduceResources(MonsterData monsterData)
-       {
-           ResourceModel.Instance.MagicPower = Mathf.Max(0, ResourceModel.Instance.MagicPower - monsterData.cost.magicPower);
+           if (gameEventArgs is OnBuildingPlacedEventArgs buildingPlacedEventArgs)
+           {
+               BuildingData buildingData = buildingPlacedEventArgs.BuildingData;
+               if (buildingData.cost.gold > 0)
+                   ResourceModel.Instance.Gold = Mathf.Max(0, ResourceModel.Instance.Gold - buildingData.cost.gold);
+               if (buildingData.cost.stone > 0)
+                   ResourceModel.Instance.Stone = Mathf.Max(0, ResourceModel.Instance.Stone - buildingData.cost.stone);
+               if (buildingData.cost.magicPower > 0)
+                   ResourceModel.Instance.MagicPower = Mathf.Max(0, ResourceModel.Instance.MagicPower - buildingData.cost.magicPower);
+               if (buildingData.cost.material > 0)
+                   ResourceModel.Instance.Material = Mathf.Max(0, ResourceModel.Instance.Material - buildingData.cost.material);
+           }
+           else if (gameEventArgs is OnTrapPlacedEventArgs trapPlacedEventArgs)
+           {
+               TrapData trapData = trapPlacedEventArgs.TrapData;
+               ResourceModel.Instance.Material = Mathf.Max(0, ResourceModel.Instance.Material - trapData.cost.material);
+           }
+           else if(gameEventArgs is OnMonsterPlacedEventArgs monsterPlacedEventArgs)
+           {
+               MonsterData monsterData = monsterPlacedEventArgs.MonsterData;
+               ResourceModel.Instance.MagicPower = Mathf.Max(0, ResourceModel.Instance.MagicPower - monsterData.cost.magicPower);
+           }
        }
        
        private void UpdateGoldUI()

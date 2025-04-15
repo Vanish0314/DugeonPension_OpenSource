@@ -12,7 +12,6 @@ namespace Dungeon.AgentLowLevelSystem
 {
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(BoxCollider2D))]
-    [RequireComponent(typeof(Animator))]
     [RequireComponent(typeof(Viewer))]
     [RequireComponent(typeof(BlackboardController))]
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem,ICombatable

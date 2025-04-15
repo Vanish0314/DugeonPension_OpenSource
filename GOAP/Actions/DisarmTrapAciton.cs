@@ -20,23 +20,7 @@ namespace Dungeon.GOAP.Action
             if(data.Target is DungeonTransformTarget target)
             {
                 //return agent.LowLevelSystem.DisarmTrap(target,context);//TODO: For all actions , should be done in low level system. For that this is a stateless class.
-
-                if(timeDisarming < 2.0f)
-                {
-                    timeDisarming += Time.deltaTime;
-                    agent.LowLevelSystem.BumpActioningBubbule("拆陷阱", timeDisarming / 2.0f);
-                    return ActionRunState.Continue;
-                }
-                else
-                {
-                    timeDisarming = 0;
-                }
-
-                GameObject.Destroy(target.transform.gameObject);
-                GameFrameworkLog.Info("[DisarmTrap] Trap disarmed");
-                var low = agent.LowLevelSystem;
-                low.DecreaseBlackboardCountOfIVisible(target.transform.gameObject);
-                return ActionRunState.Completed;
+                return agent.LowLevelSystem.DisarmTrap(target.transform);
             }
             else
             {
@@ -44,8 +28,5 @@ namespace Dungeon.GOAP.Action
             }
             
         }
-
-        [Obsolete("This should be a state less class")]
-        private float timeDisarming = 0;
     }
 }

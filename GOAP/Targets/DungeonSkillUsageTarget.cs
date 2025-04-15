@@ -11,14 +11,14 @@ namespace Dungeon.Target
         /// The position to use the skill for ranged attacks.
         /// direction to use skill for melee attacks.
         /// </summary>
-        public SkillDesc skillToUse;
-        public Vector3 PositionOrDirToUseSkill => Position;
         public Vector3 Position { get; set; }
 
-        public DungeonSkillUsageTarget(Vector3 PositionOrDirectionToUseSkill, SkillDesc skill)
+        public Vector3 Direction { get; set; }
+
+        public DungeonSkillUsageTarget(Vector3 position, Vector3 direction)
         {
-            Position = PositionOrDirectionToUseSkill;
-            skillToUse = skill;
+            Position = position;
+            Direction = direction;
         }
 
         public bool IsValid()

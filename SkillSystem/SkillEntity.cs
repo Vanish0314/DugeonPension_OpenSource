@@ -1,3 +1,4 @@
+using GameFramework;
 using UnityEngine;
 
 namespace Dungeon.SkillSystem
@@ -52,6 +53,8 @@ namespace Dungeon.SkillSystem
                 if (obj != null)
                     obj.TakeSkill(skill);
             }
+
+            GameFrameworkLog.Info($"[SkillEntity] {collision.gameObject.name} 收到了技能 {skill.skillData.skillName}");
         }
         public void OTriggerExit2D(Collider2D collision)
         {

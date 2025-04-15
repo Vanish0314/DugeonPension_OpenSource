@@ -22,8 +22,6 @@ namespace Dungeon.DungeonGameEntry
     {
         void Awake()
         {
-            InitInstance();
-
             CheckValidation();
 
             InitGameFramwork();
@@ -31,6 +29,15 @@ namespace Dungeon.DungeonGameEntry
             InitDungeonComponents();
 
             InitDungeonDebuggers();
+         
+            InitInstance();
+
+            SubscribleEvents();
+        }
+
+        void Sart()
+        {
+            InitGameFramwork(); //Prevent init order issue
         }
     }
 }

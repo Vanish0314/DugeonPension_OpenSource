@@ -1,7 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
+using DG.Tweening;
 using UnityEngine;
+using UnityGameFramework.Runtime;
 
 namespace Dungeon.AgentLowLevelSystem
 {
@@ -16,7 +19,17 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void InitAnimator()
         {
-            m_AgentAnimator = gameObject.GetComponent<Animator>();
+            var transf = transform.Find("Sprite");
+            if(transf == null)
+            {
+                var go = new GameObject("Sprite");
+                go.transform.parent = transform;
+                go.transform.localPosition = Vector3.zero;
+                m_AgentAnimator = go.AddComponent<Animator>();
+            }
+            else
+            {m_AgentAnimator = transf.gameObject.GetOrAddComponent<Animator>();}
+
 
             m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, true);
             m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, false);
@@ -53,6 +66,12 @@ namespace Dungeon.AgentLowLevelSystem
                     break;
             }
         }
+        private void SetAnimatorState(string stateName, float duration)
+        {
+            DOTween.To((float t)=>{
+                SetAnimatorState(stateName);
+            },0,1,duration);
+        }
         private void SetAnimatorTrigger(string triggerName)
         {
 #if UNITY_EDITOR
@@ -61,6 +80,7 @@ namespace Dungeon.AgentLowLevelSystem
             m_AgentAnimator.SetTrigger(triggerName);
         }
 #if UNITY_EDITOR
+        [Obsolete]
         private bool CheckIfAnimatorHasParameter(string parameterName)
         {
             bool flag = false;

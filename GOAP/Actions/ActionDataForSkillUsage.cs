@@ -7,13 +7,12 @@ namespace Dungeon.GOAP.Action
 {
     public class ActionDataForSkillUsage : IActionData
     {
-        public SkillDesc SkillToUse => skill;
-        public Vector3 PositionToUseSkill => skillPos;
-        public Vector3 DirectionToUseSkill => Vector3.Normalize(skillPos);
+        public Vector3 PositionToUseSkill => posToUseSkill;
+        public Vector3 DirectionToUseSkill => dirToUseSkill;
 
         private ITarget _target;
-        private SkillDesc skill;
-        private Vector3 skillPos;
+        private Vector3 dirToUseSkill;
+        private Vector3 posToUseSkill;
 
         public ITarget Target
         {
@@ -27,15 +26,17 @@ namespace Dungeon.GOAP.Action
                 if (value is DungeonSkillUsageTarget target)
                 {
                     _target = target;
+                    posToUseSkill = target.Position;
+                    dirToUseSkill = target.Direction;
                 }
                 else
                 {
                     GameFrameworkLog.Error("[ActionDataWithTransform] Target is not of type DungeonTransformTarget");
                 }
 #else
-                DungeonSkillUsageTarget target = ((DungeonSkillUsageTarget)value);
-                skillPos = target.Position;
-                skill = target.skillToUse;
+                DungeonSkillUsageTarget target = (DungeonSkillUsageTarget)value;
+                posToUseSkill = target.Position;
+                dirToUseSkill = target.Direction;
                 _target = value;
 #endif
             }

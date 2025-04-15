@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.BlackBoardSystem;
 using GameFramework;
@@ -20,6 +21,9 @@ namespace Dungeon.GridSystem
         }
         private void InitRooms()
         {
+            var roomGo = GameObject.Find("Rooms");
+            if (roomGo != null) DestroyImmediate(roomGo);
+
             CalculateRoom();
         }
         private void CalculateRoom()

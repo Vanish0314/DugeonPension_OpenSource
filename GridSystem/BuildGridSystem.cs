@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
-using Dungeon.DungeonGameEntry;
+using Dungeon.Common.MonoPool;
+using Dungeon.DungeonEntity.Monster;
 using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
@@ -37,7 +39,7 @@ namespace Dungeon.GridSystem
             }
         }
 
-        private void Start()
+        private void Awake()
         {
             if (_instance != null && _instance != this)
             {
@@ -50,58 +52,30 @@ namespace Dungeon.GridSystem
             
             m_Grid = GetComponent<Grid>();
             m_BuildingGrid = GetComponent<BuildingGrid>();
-            
-            // 初始禁用所有Tilemap子物体
-            SetAllTilemapsActive(false);
-            
-            DungeonGameEntry.DungeonGameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
-
-            InitializeForCurrentScene(2);
-
         }
+
+        private void Start()
+        {
+            InitializeForCurrentScene();
+        }
+
+        private void OnEnable()
+        {
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(TryPlaceBuildingEventArgs.EventId,HandleTryPlaceBuildingEventArgs);
+        }
+
         private void OnDisable()
         {
-            GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+           GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(TryPlaceBuildingEventArgs.EventId,HandleTryPlaceBuildingEventArgs);
         }
         
-        private void OnSceneLoaded(object sender, GameEventArgs gameEventArgs)
+        private void InitializeForCurrentScene()
         {
-            if (gameEventArgs is OnSceneLoadedEventArgs sceneLoadedEventArgs)
-                InitializeForCurrentScene(sceneLoadedEventArgs.SceneID);
-        }
-
-        private void InitializeForCurrentScene(int sceneId)
-        {
-            if (sceneId == 1)
+            if (m_CurrentTilemap != null)
+            {
+                m_CurrentTilemap.gameObject.SetActive(true);
+                InitializeGridSystem();
                 return;
-            string targetTilemapName = $"Tilemap{sceneId}";
-
-            // 查找对应的Tilemap子物体
-            Transform tilemapChild = transform.Find(targetTilemapName);
-            if (tilemapChild != null)
-            {
-                m_CurrentTilemap = tilemapChild.GetComponent<Tilemap>();
-                if (m_CurrentTilemap != null)
-                {
-                    SetAllTilemapsActive(false);
-                    m_CurrentTilemap.gameObject.SetActive(true);
-                    InitializeGridSystem();
-                    return;
-                }
-            }
-
-            Debug.LogError($"找不到对应场景的Tilemap: {targetTilemapName}");
-        }
-
-        private void SetAllTilemapsActive(bool active)
-        {
-            foreach (Transform child in transform)
-            {
-                Tilemap tm = child.GetComponent<Tilemap>();
-                if (tm != null)
-                {
-                    tm.gameObject.SetActive(active);
-                }
             }
         }
 
@@ -118,6 +92,28 @@ namespace Dungeon.GridSystem
             // 初始化建筑网格 -----------------------------------------仅经营部分会用到
             m_BuildingGrid.Init(m_CurrentTilemap);
         }
+        
+        private void HandleTryPlaceBuildingEventArgs(object sender, GameEventArgs gameEventArgs)
+        {
+            TryPlaceBuildingEventArgs args = (TryPlaceBuildingEventArgs)gameEventArgs;
+            
+            Vector3 worldPos = args.WorldPosition;
+            MonoPoolItem buildingItem = args.BuildingItem;
+            
+            Vector2Int gridPos = WorldToGridPosition(worldPos);
+    
+            GameObject buildingGo = buildingItem.gameObject;
+
+            if (TryPlaceBuilding(gridPos,args.BuildingData,buildingGo))
+            {
+                GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnBuildingPlacedEventArgs.Create(args.BuildingData));
+            }
+            else
+            {
+                buildingItem.ReturnToPool();
+            }
+        }
+
         
         #region PUBLIC
         public void SetTile(Vector2Int gridPos, TileDesc tileDesc)
@@ -137,34 +133,22 @@ namespace Dungeon.GridSystem
             return m_BuildingGrid.CanBuildAt(gridPos.x, gridPos.y, buildingData);
         }
         
-        public bool CanBuildAt(Vector3 worldPos, BuildingData buildingData)
-        {
-            var gridPos = WorldToGridPosition(worldPos);
-            return CanBuildAt(gridPos, buildingData);
-        }
-
         /// <summary>
         /// 尝试在指定位置放置建筑
         /// </summary>
-        public bool TryPlaceBuilding(Vector2Int gridPos, BuildingData buildingData)
+        public bool TryPlaceBuilding(Vector2Int gridPos, BuildingData buildingData,GameObject buildingGameObject)
         {
             if (!CanBuildAt(gridPos, buildingData)) return false;
 
             // 更新建筑网格
             if (m_BuildingGrid.TryPlaceBuilding(gridPos.x, gridPos.y, buildingData))
             {
+                buildingGameObject.transform.position = GridToWorldPosition(gridPos);
                 return true;
             }
             return false;
         }
-
-        //这个不兑，暂时也用不到
-        public bool TryPlaceBuilding(Vector3 worldPos, BuildingData buildingData)
-        {
-            var gridPos = WorldToGridPosition(worldPos);
-            return TryPlaceBuilding(gridPos, buildingData);
-        }
-
+        
         /// <summary>
         /// 尝试拆除指定位置的建筑
         /// </summary>
@@ -181,12 +165,6 @@ namespace Dungeon.GridSystem
             return false;
         }
 
-        public bool TryRemoveBuilding(Vector3 worldPos)
-        {
-            var gridPos = WorldToGridPosition(worldPos);
-            return TryRemoveBuilding(gridPos);
-        }
-
         /// <summary>
         /// 获取指定位置的建筑数据
         /// </summary>
@@ -194,12 +172,7 @@ namespace Dungeon.GridSystem
         {
             return m_BuildingGrid.GetBuildingData(gridPos.x, gridPos.y);
         }
-
-        public BuildingData GetBuildingData(Vector3 worldPos)
-        {
-            var gridPos = WorldToGridPosition(worldPos);
-            return GetBuildingData(gridPos);
-        }
+        
         #endregion
        
         public GridProperties GetGridProperties() => properties;

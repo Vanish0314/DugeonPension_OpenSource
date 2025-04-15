@@ -15,7 +15,7 @@ namespace Dungeon.GOAP.Action
 
         public sealed override IActionRunState Perform(IMonoAgent agent, ActionDataForSkillUsage data, IActionContext context)
         {
-            agent.LowLevelSystem.UseSkill(new SkillDesc(mSkillName),data.DirectionToUseSkill);
+            agent.LowLevelSystem.UseSkill(new SkillDesc(mSkillName),data.PositionToUseSkill,data.DirectionToUseSkill);
 
             return ActionRunState.WaitThenComplete(1.0f);
         }

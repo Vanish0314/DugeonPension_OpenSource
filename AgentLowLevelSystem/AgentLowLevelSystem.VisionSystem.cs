@@ -18,6 +18,8 @@ namespace Dungeon.AgentLowLevelSystem
         {
             m_Viewer ??= GetComponent<Viewer>();
             m_Vision ??= GetComponentInChildren<Vision>();
+
+            m_Vision.Init(this);
         }
         private void UpdateVisionSystem() 
         {
