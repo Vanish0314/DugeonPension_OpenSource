@@ -11,12 +11,12 @@ namespace Dungeon
     {
         public override bool IsInRange(IMonoAgent agent, float distance, IActionData data, IComponentReference references)
         {
-            return agent.LowLevelSystem.IsInSkillRange(new SkillDesc("Melee Attack"), distance);
+            return agent.LowLevelSystem.IsInSkillRange(new SkillDesc("近战猛击"), distance);
         }
 
         public override IActionRunState Perform(IMonoAgent agent, ActionDataForSkillUsage data, IActionContext context)
         {
-            return agent.LowLevelSystem.UseSkill(new SkillDesc("Melee Attack"), data.PositionToUseSkill, data.DirectionToUseSkill);
+            return agent.LowLevelSystem.UseSkill(new SkillDesc("近战猛击"), data.PositionToUseSkill, data.DirectionToUseSkill);
         }
     }
 }

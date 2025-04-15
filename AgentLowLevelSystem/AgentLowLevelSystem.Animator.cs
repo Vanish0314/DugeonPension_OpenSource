@@ -15,69 +15,70 @@ namespace Dungeon.AgentLowLevelSystem
         private const string ANIMATOR_BOOL_MOVING = "Moving";
         private const string ANIMATOR_BOOL_ATTACKING = "Attacking";
         private const string ANIMATOR_BOOL_STUN = "Stunned";
-        private const string ANIMATOR_TRIGGER_INTERACT = "Interacting";
-        private const string ANIMATOR_TRIGGER_Die = "Died";
+        private const string ANIMATOR_BOOL_INTERACT = "Interacting";
+        private const string ANIMATOR_BOOL_DIE = "Died";
 
         private void InitAnimator()
         {
-            var transf = transform.Find("Sprite");
-            if(transf == null)
+            m_AgentAnimator = GetComponentInChildren<Animator>();
+
+            if (m_AgentAnimator == null)
             {
                 var go = new GameObject("Sprite");
-                go.transform.parent = transform;
-                go.transform.localPosition = Vector3.zero;
+                go.transform.SetParent(transform, false);
                 m_AgentAnimator = go.AddComponent<Animator>();
             }
-            else
-            {m_AgentAnimator = transf.gameObject.GetOrAddComponent<Animator>();}
-
 
             m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, true);
             m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, false);
             m_AgentAnimator.SetBool(ANIMATOR_BOOL_ATTACKING, false);
             m_AgentAnimator.SetBool(ANIMATOR_BOOL_STUN, false);
-        }
-        private void SetAnimatorState(string stateName)
-        {
-            switch (stateName)
-            {
-                case ANIMATOR_BOOL_IDLE:
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, true);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_ATTACKING, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_STUN, false);
-                    break;
-                case ANIMATOR_BOOL_MOVING:
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, true);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_ATTACKING, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_STUN, false);
-                    break;
-                case ANIMATOR_BOOL_ATTACKING:
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_ATTACKING, true);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_STUN, false);
-                    break;
-                case ANIMATOR_BOOL_STUN:
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_ATTACKING, false);
-                    m_AgentAnimator.SetBool(ANIMATOR_BOOL_STUN, true);
-                    break;
-            }
+            m_AgentAnimator.SetBool(ANIMATOR_BOOL_INTERACT, false);
+            m_AgentAnimator.SetBool(ANIMATOR_BOOL_DIE, false);
         }
         private void SetAnimatorState(string stateName, float duration)
         {
-            AddToTween((float t) =>
+            void ApplyAnimatorState(string name)
             {
-                SetAnimatorState(stateName);
-            }, 0, 1, duration,
-            () =>
+                m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, false);
+                m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, false);
+                m_AgentAnimator.SetBool(ANIMATOR_BOOL_ATTACKING, false);
+                m_AgentAnimator.SetBool(ANIMATOR_BOOL_STUN, false);
+                m_AgentAnimator.SetBool(ANIMATOR_BOOL_INTERACT, false);
+                m_AgentAnimator.SetBool(ANIMATOR_BOOL_DIE, false);
+
+                switch (name)
+                {
+                    case ANIMATOR_BOOL_IDLE:
+                    case ANIMATOR_BOOL_MOVING:
+                    case ANIMATOR_BOOL_ATTACKING:
+                    case ANIMATOR_BOOL_STUN:
+                    case ANIMATOR_BOOL_INTERACT:
+                    case ANIMATOR_BOOL_DIE:
+                        m_AgentAnimator.SetBool(name, true);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(name), name, null);
+                }
+            }
+
+            AnimatorTween?.Kill();
+
+            ApplyAnimatorState(stateName);
+
+            AnimatorTween = DOVirtual.DelayedCall(duration, () =>
             {
-                SetAnimatorState(ANIMATOR_BOOL_IDLE);
+                ApplyAnimatorState(ANIMATOR_BOOL_IDLE);
+                AnimatorTween = null;
             });
+
+            AnimatorTween.onKill += () =>
+            {
+                ApplyAnimatorState(ANIMATOR_BOOL_IDLE);
+                AnimatorTween = null;
+            };
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -106,7 +107,7 @@ namespace Dungeon.AgentLowLevelSystem
                 tween.onComplete += onComplete;
             }
 
-            tween.onKill += ()=>
+            tween.onKill += () =>
             {
                 WipTweens.Remove(tween);
             };
@@ -124,6 +125,9 @@ namespace Dungeon.AgentLowLevelSystem
 #endif
             m_AgentAnimator.SetTrigger(triggerName);
         }
+
+        private Tween AnimatorTween;
+
 #if UNITY_EDITOR
         [Obsolete]
         private bool CheckIfAnimatorHasParameter(string parameterName)

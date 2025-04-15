@@ -42,9 +42,9 @@ namespace Dungeon.SkillSystem
         [Serializable]
         public enum SkillShootType
         {
-            [LabelText("方向式")] Directional,
-            [LabelText("落点式")] Point,
-            [LabelText("原地式")] Origin
+            [LabelText("方向式"),Tooltip("hitbox中心为技能释放者")] Directional,
+            [LabelText("落点式"),Tooltip("hitbox中心为技能释放点")] Point,
+            [LabelText("原地式"),Tooltip("hitbox中心为技能释放者,方向已经不重要")] Origin
         }
         public enum SkillAoeType
         {

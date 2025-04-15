@@ -164,7 +164,7 @@ namespace Dungeon.DungeonEntity.Monster
             if(!skill.IsInRange(transform.position, target.position) || !m_SkillShooter.CouldFire() || SkillIsCoolingDown())
                 return;
 
-            m_SkillShooter.Fire(skill,transform.position, target.position - transform.position);
+            m_SkillShooter.Fire(skill,target.position, target.position - transform.position);
             m_BtHelper.isAttacking = true;
             skillColdingDownTime = skill.cooldownTimeInSec;
             

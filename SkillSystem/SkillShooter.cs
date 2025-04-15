@@ -24,6 +24,10 @@ namespace Dungeon.SkillSystem
             {
                 Layer = MonsterTeamLayer;
             }
+            else if (layer == "Trap")
+            {
+                Layer = MonsterTeamLayer;
+            }
             else
             {
                 GameFrameworkLog.Error("[SkillShooterLayer] Invalid layer name: " + layer);

@@ -33,6 +33,11 @@ namespace Dungeon.AgentLowLevelSystem
             {
                 m_skillDict.Add(skillData.skillName, skillData);
             }
+
+            #if UNITY_EDITOR
+            if(m_skillDict.Count == 0)
+                GameFrameworkLog.Warning("[AgentLowLevelSystem] 勇者一个技能都没有,你确定吗?:" + name);
+            #endif
         }
 
         public GameObject GetGameObject() => gameObject;
@@ -172,7 +177,7 @@ namespace Dungeon.AgentLowLevelSystem
         [Header("战斗相关")]
         [SerializeField]private CombatorData m_combatorData;
         [SerializeField]private List<SkillData> m_skills;
-        private Dictionary<string, SkillData> m_skillDict;
+        private Dictionary<string, SkillData> m_skillDict = new();
         private SkillShooter m_SkillShooter;
     }
 

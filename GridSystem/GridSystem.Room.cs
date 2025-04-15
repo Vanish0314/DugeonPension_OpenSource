@@ -175,7 +175,7 @@ namespace Dungeon.GridSystem
         {
 #if UNITY_EDITOR
             if(collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>()== null)
-                GameFrameworkLog.Error("[DungeonRoom] An object that is not hero is able to collide with trapTrigger");
+                GameFrameworkLog.Error("[DungeonRoom] An object that is not hero is able to collide with trapTrigger,Object name: " + collision.gameObject.name);
 #endif
 
             var agent = collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();

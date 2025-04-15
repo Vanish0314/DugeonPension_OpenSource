@@ -58,13 +58,13 @@ namespace Dungeon.AgentLowLevelSystem
             if (inRange)
             {
                 m_MoveWayPoints.Clear();
-                SetAnimatorState(ANIMATOR_BOOL_IDLE);
+                SetAnimatorState(ANIMATOR_BOOL_IDLE,99999f);
 
                 return;
             }
 
             MoveTo(target.Position);
-            SetAnimatorState(ANIMATOR_BOOL_MOVING);
+            SetAnimatorState(ANIMATOR_BOOL_MOVING,99999f);
 
         }
 
@@ -81,20 +81,20 @@ namespace Dungeon.AgentLowLevelSystem
         public void TargetInRange(ITarget target)
         {
             m_MoveWayPoints.Clear();
-            SetAnimatorState(ANIMATOR_BOOL_IDLE);
+            SetAnimatorState(ANIMATOR_BOOL_IDLE,999999f);
         }
 
         public void TargetLost()
         {
 
             m_MoveWayPoints.Clear();
-            SetAnimatorState(ANIMATOR_BOOL_IDLE);
+            SetAnimatorState(ANIMATOR_BOOL_IDLE,999999f);
         }
 
         public void TargetNotInRange(ITarget target)
         {
             MoveTo(target.Position);
-            SetAnimatorState(ANIMATOR_BOOL_MOVING);
+            SetAnimatorState(ANIMATOR_BOOL_MOVING,999999f);
         }
 
         private void ReCalculatePath()

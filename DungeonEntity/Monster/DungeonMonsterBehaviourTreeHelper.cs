@@ -44,6 +44,8 @@ namespace Dungeon.DungeonEntity.Monster
         }
         public void MoveToCurrentTarget()
         {
+            if (currentTarget == null) return;
+
             MoveTo(currentTarget.position);
         }
         public void Attack()
