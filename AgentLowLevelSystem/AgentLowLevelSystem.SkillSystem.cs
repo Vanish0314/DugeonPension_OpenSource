@@ -10,20 +10,29 @@ namespace Dungeon.AgentLowLevelSystem
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
-        private void InitSkillSystem()
-        {
-            m_SkillShooter = gameObject.GetOrAddComponent<SkillShooter>();
-        }
-
-        private void UseSkill(Skill skillToUse)
-        {
-            m_SkillShooter.Fire(skillToUse);
-        }
-
         public void TakeSkill(Skill skill)
         {
             // skill.FuckMe()
             skill.FuckMe(this);
+        }
+        public bool IsInSkillRange(SkillDesc skillDesc, float distance)
+        {
+            if(m_skillDict.TryGetValue(skillDesc.name, out var skillData))
+            {
+                return skillData.IsInRange(distance);
+            }
+
+            return false;
+        }
+        
+        private void InitSkillSystem()
+        {
+            m_SkillShooter = gameObject.GetOrAddComponent<SkillShooter>();
+
+            foreach (var skillData in m_skills)
+            {
+                m_skillDict.Add(skillData.skillName, skillData);
+            }
         }
 
         public GameObject GetGameObject() => gameObject;
@@ -114,14 +123,19 @@ namespace Dungeon.AgentLowLevelSystem
 
         public void Stun(float duration)
         {
-            m_StunTween?.Kill();
-
+            StunTween?.Kill();
             m_IsStunned = true;
             this.SendMessage("OnStunned");
 
-            SetAnimatorState(ANIMATOR_BOOL_STUN);
+            currentTween?.Kill();
+            foreach(var tween in WipTweens)
+            {
+                tween.Kill();
+            }
 
-            m_StunTween = DOVirtual.DelayedCall(duration, () =>
+            SetAnimatorState(ANIMATOR_BOOL_STUN, duration);
+
+            StunTween = DOVirtual.DelayedCall(duration, () =>
             {
                 m_IsStunned = false;
                 this.SendMessage("OnStunnedEnd");
@@ -155,7 +169,10 @@ namespace Dungeon.AgentLowLevelSystem
             };
         }
 
-        private CombatorData m_combatorData;
+        [Header("战斗相关")]
+        [SerializeField]private CombatorData m_combatorData;
+        [SerializeField]private List<SkillData> m_skills;
+        private Dictionary<string, SkillData> m_skillDict;
         private SkillShooter m_SkillShooter;
     }
 

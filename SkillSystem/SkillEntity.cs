@@ -61,6 +61,11 @@ namespace Dungeon.SkillSystem
 
         }
 
+        public void ReturnToPool()//TODO
+        {
+            Destroy(gameObject);
+        }
+
         private int LayerToShoot;
         private float m_AliveTime;
         private Skill skill;

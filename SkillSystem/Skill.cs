@@ -54,7 +54,7 @@ namespace Dungeon
                     throw new ArgumentOutOfRangeException();
             }
 
-            var layer = SkillShooterLayer.GetOppsiteLayer(user.mSelfShooterLayer).Layer;
+            var layer = SkillShooterLayer.GetOppsiteLayer(user.ShooterLayer).Layer;
             result.SkillLayerToShootMask = layer;
             result.SkillRangeScaler = desc.range;
 
@@ -68,6 +68,8 @@ namespace Dungeon
         public readonly SkillData skillData;
         public readonly SkillDeployMethod skillDeployMethod;
         public readonly GameObject SkillGO => skillData.deployMethodDesc.hitBoxPrefab;
+        public readonly string SkillName => skillData.skillName;
+        public readonly float TotalUsageTime => skillData.TotalUsageTime;
         public void FuckMe(ICombatable target)
         {
             var calculator = new SkillCalculator(attacker, target, skillDeployMethod);

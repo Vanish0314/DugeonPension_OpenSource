@@ -51,14 +51,19 @@ namespace Dungeon.AgentLowLevelSystem
         }
         public IActionRunState UseSkill(SkillDesc skillDesc, Vector3 posToUse, Vector3 dirToUse)
         {
-            if (StunTween != null && StunTween.IsActive())
+            if (m_SkillShooter.IsUsingSkill(skillDesc.name))
+            {
+                return ActionRunState.Continue;
+            }
+
+            if (m_SkillShooter.IsUsingSkill())
             {
                 return ActionRunState.Stop;
             }
 
             if (currentTween != null && currentTween.IsActive())
             {
-                return ActionRunState.Continue;
+                return m_IsStunned ? ActionRunState.Stop : ActionRunState.Continue;
             }
 
             if (currentTween != null && !currentTween.IsActive())
@@ -67,31 +72,28 @@ namespace Dungeon.AgentLowLevelSystem
                 return ActionRunState.Completed;
             }
 
-            currentTween = DOVirtual.DelayedCall(timeToDisarmTrap, () =>
+            if (m_skillDict.TryGetValue(skillDesc.name, out SkillData data))
             {
-#if UNITY_EDITOR
-                CheckIfAnimatorHasParameter(skillDesc.name);
-#endif
+                GameFrameworkLog.Info("[AgentLowLevelSystem] UseSkill: " + data.name);
+                BumpUseSkillBubbule(data.name);
 
-                m_AgentAnimator.SetTrigger(skillDesc.name);
+                SetAnimatorState(ANIMATOR_BOOL_ATTACKING,data.TotalUsageTime);
 
-                GameFrameworkLog.Info("[AgentLowLevelSystem] UseSkill: " + skillDesc.name);
-                BumpUseSkillBubbule(skillDesc.name);
+                var method = SkillDeployMethod.CreateSkillDeployMethod(data, m_SkillShooter, posToUse, dirToUse);
+                var skill = new Skill(data, method, this);
 
-                var skillData = SkillData.GetFromSkillDesc(skillDesc);
-                var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, m_SkillShooter, posToUse, dirToUse);
+                m_SkillShooter.Fire(skill);
 
-                var skill = new Skill(skillData, method, this);
-            }, false);
+                currentTween = m_SkillShooter.CurrentSkillTween;
+                WipTweens.Add(currentTween);
 
-            currentTween.onKill += () =>
+                return ActionRunState.Continue;
+            }
+            else
             {
-
-            };
-
-            WipTweens.Add(currentTween);
-
-            return ActionRunState.Continue;
+                GameFrameworkLog.Error("[UseSkill] Skill not found: " + skillDesc.name + " 勇者没有这个技能");
+                return ActionRunState.Stop;
+            }
         }
 
         [Header("常量设置")]

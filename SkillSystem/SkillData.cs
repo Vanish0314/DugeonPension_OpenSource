@@ -81,6 +81,7 @@ namespace Dungeon.SkillSystem
         [LabelText("技能前摇时间")] public float preCastTimeInSec;
         [LabelText("技能中摇时间")] public float midCastTimeInSec;
         [LabelText("技能后摇时间")] public float postCastTimeInSec;
+        public float TotalUsageTime => preCastTimeInSec + midCastTimeInSec + postCastTimeInSec;
         [LabelText("法力消耗")] public float magicCost;
 
         [Space]
@@ -117,6 +118,10 @@ namespace Dungeon.SkillSystem
         public bool IsInRange(Vector3 fromInWorldCoord,Vector3 targetInWorldCoord)
         {
             return Vector3.Distance(fromInWorldCoord, targetInWorldCoord) <= deployMethodDesc.radius;
+        }
+        public bool IsInRange(float distance)
+        {
+            return distance <= deployMethodDesc.radius;
         }
     }
 }

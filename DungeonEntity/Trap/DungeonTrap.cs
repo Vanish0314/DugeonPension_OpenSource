@@ -271,7 +271,7 @@ namespace Dungeon.DungeonEntity.Trap
 
         public virtual void OnEffectEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)
         {
-            m_SkillShooter.Fire(skill, agent.transform.position);
+            m_SkillShooter.Fire(skill, transform.position, agent.transform.position - transform.position);
         }
 
         public virtual void OnBuildingEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)

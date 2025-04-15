@@ -11,7 +11,7 @@ namespace Dungeon
     {
         public override bool IsInRange(IMonoAgent agent, float distance, IActionData data, IComponentReference references)
         {
-            return agent.IsInSkillRange(new SkillDesc("Melee Attack"), distance);
+            return agent.LowLevelSystem.IsInSkillRange(new SkillDesc("Melee Attack"), distance);
         }
 
         public override IActionRunState Perform(IMonoAgent agent, ActionDataForSkillUsage data, IActionContext context)

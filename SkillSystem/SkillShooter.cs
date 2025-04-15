@@ -4,7 +4,7 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using GameFramework;
 using System.Threading.Tasks;
-
+using DG.Tweening;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -14,9 +14,6 @@ namespace Dungeon.SkillSystem
 {
     public class SkillShooterLayer
     {
-        public LayerMask Layer { get; set; } = HeroTeamLayer;
-        public static readonly LayerMask HeroTeamLayer = LayerMask.GetMask("Hero");
-        public static readonly LayerMask MonsterTeamLayer = LayerMask.GetMask("Monster");
         public SkillShooterLayer(string layer)
         {
             if (layer == "Hero")
@@ -48,97 +45,133 @@ namespace Dungeon.SkillSystem
                 throw new System.Exception("[SkillShooterLayer] Invalid layer name: " + layer.Layer);
             }
         }
+
+
+        public LayerMask Layer { get; set; } = HeroTeamLayer;
+        public static readonly LayerMask HeroTeamLayer = LayerMask.GetMask("Hero");
+        public static readonly LayerMask MonsterTeamLayer = LayerMask.GetMask("Monster");
     }
     public class SkillShooter : MonoBehaviour
     {
-        public SkillShooterLayer mSelfShooterLayer;
-
-        //TODO (vanish): Register skills could fire to control whether a skill is colded down or not.
-
         void Start()
         {
             var layer = LayerMask.LayerToName(gameObject.layer);
             mSelfShooterLayer = new SkillShooterLayer(layer);
+
             owner = GetComponent<ICombatable>();
-#if UNITY_EDITOR
-            if (owner == null)
-            {
-                GameFrameworkLog.Error("[SkillShooter] owner is null,which is not allowed");
-            }
-#endif
         }
 
-        public bool CouldFire()
+        public void Fire(Skill skill)
         {
-            return isReadyToFire;
-        }
-        public void Fire(Skill skillToFire)
-        {
-            if (!isReadyToFire)
-            {
-                GameFrameworkLog.Info("[SkillShooter] SkillShooter is not ready to fire");
-                return;
-            }
+            if (!isReadyToFire) return;
 
             isReadyToFire = false;
-            StartCoroutine(DelayFire(skillToFire.skillData.preCastTimeInSec, skillToFire));
+            currentSkillName = skill.skillData.name;
 
-            Task.Run(async () =>
+            float pre = skill.skillData.preCastTimeInSec;
+            float mid = skill.skillData.midCastTimeInSec;
+            float post = skill.skillData.postCastTimeInSec;
+
+            currentSequence = DOTween.Sequence();
+            currentSequence.AppendInterval(pre);
+            currentSequence.AppendCallback(() =>
             {
-                await Task.Delay(System.TimeSpan.FromSeconds(skillToFire.skillData.preCastTimeInSec));
-                await Task.Delay(System.TimeSpan.FromSeconds(skillToFire.skillData.midCastTimeInSec));
-                await Task.Delay(System.TimeSpan.FromSeconds(skillToFire.skillData.postCastTimeInSec));
+                currentSkillEntity = Instantiate(skill.SkillGO).GetComponent<SkillEntity>();
+                currentSkillEntity.InitAndFire(skill);
+            });
+
+            currentSequence.AppendInterval(mid);
+            currentSequence.AppendCallback(() =>
+            {
+                if (currentSkillEntity != null)
+                {
+                    currentSkillEntity.ReturnToPool();
+                    currentSkillEntity = null;
+                }
+            });
+
+            currentSequence.AppendInterval(post);
+            currentSequence.OnComplete(() =>
+            {
+                isReadyToFire = true;
+                currentSequence = null;
+                currentSkillName = null;
+
+                GameFrameworkLog.Info("[SkillShooter] Skill casting complete.");
+            });
+
+            currentSequence.OnKill(() =>
+            {
+                if (currentSkillEntity != null)
+                {
+                    currentSkillEntity.ReturnToPool();
+                    currentSkillEntity = null;
+                }
 
                 isReadyToFire = true;
+                currentSkillName = null;
+
+                GameFrameworkLog.Info("[SkillShooter] Skill was interrupted.");
             });
         }
-        public void Fire(SkillData skillData, Vector3 posOrDirToUseSkill)
-        {
-            var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, this, posOrDirToUseSkill);
-            var skill = new Skill(skillData, method, owner);
 
+        public void InterruptSkill()
+        {
+            if (currentSequence != null && currentSequence.IsActive())
+            {
+                currentSequence.Kill();
+                currentSequence = null;
+            }
+        }
+
+        public bool CouldFire() => isReadyToFire;
+
+        public void Fire(SkillData skillData, Vector3 posToUseSkill, Vector3 dirToUseSkill)
+        {
+            var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, this, posToUseSkill, dirToUseSkill);
+            var skill = new Skill(skillData, method, owner);
             Fire(skill);
         }
-
-        private IEnumerator DelayFire(float delayTime, Skill skillToFire)
+        public void OnStunned()
         {
-            yield return new WaitForSeconds(delayTime);
+            isStunned = true;
 
-            var skillGo = Instantiate(skillToFire.SkillGO)?.GetComponent<SkillEntity>();
-#if UNITY_EDITOR
-            if (skillGo == null)
+            if (IsUsingSkill())
             {
-                GameFrameworkLog.Error("SkillShooter.Fire: skillGo is null");
+                InterruptSkill();
+                Debug.Log("[SkillShooter] Interrupted due to stun.");
             }
-#endif
-            skillGo.InitAndFire(skillToFire);
         }
-        private bool isReadyToFire = true;
-        private ICombatable owner;
-
-#if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
+        public bool IsUsingSkill()
         {
-            if (!Application.isPlaying) return;
-            if (mSelfShooterLayer == null || owner == null) return;
-
-            Handles.color = mSelfShooterLayer.Layer == SkillShooterLayer.HeroTeamLayer ? Color.cyan : Color.red;
-            Gizmos.color = new Color(1f, 0.5f, 0f, 1f); // 橙色
-
-            var mockTargetPos = transform.position + transform.forward * 3f;
-
-            Gizmos.DrawLine(transform.position, mockTargetPos);
-
-            Gizmos.DrawSphere(transform.position, 0.2f);
-
-            Gizmos.DrawWireSphere(mockTargetPos, 1.5f);
-
-            Handles.Label(transform.position + Vector3.up * 1.5f, $"Shooter Layer: {LayerMask.LayerToName(gameObject.layer)}");
+            return currentSequence != null && currentSequence.IsActive();
         }
-#endif
+        public bool IsUsingSkill(string name)
+        {
+            return IsUsingSkill() && currentSkillName == name;
+        }
+        public void OnUnStunned() //恢复后不再使用之前未完成的技能
+        {
+            isStunned = false;
+            Debug.Log("[SkillShooter] Unstunned.");
+        }
+
+        private ICombatable owner;
+        private bool isReadyToFire = true;
+        private SkillEntity currentSkillEntity;
+        private Sequence currentSequence;
+        private string currentSkillName = null;
+        private bool isStunned = false;
+        private SkillShooterLayer mSelfShooterLayer;
+
+        public Tween CurrentSkillTween => currentSequence;
+        public SkillShooterLayer ShooterLayer => mSelfShooterLayer;
     }
+}
 
 
+namespace Dungeon.SkillSystem
+{
 #if UNITY_EDITOR
     [CustomEditor(typeof(SkillShooter))]
     public class SkillShooterEditor : Editor

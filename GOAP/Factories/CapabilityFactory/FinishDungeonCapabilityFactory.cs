@@ -81,19 +81,6 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
                 .AddEffect<LocalNearByEntityCountOf<DungeonMonsterBase>>(EffectType.Decrease)
                 .AddCondition<LocalHeroPropertyPointOf<IHealthPointProperty>>(Comparison.GreaterThan, 0)
                 .SetBaseCost(10);
-            
-            builder.AddAction<RangedAttackAction>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<DungeonMonsterBase>>()
-                .AddEffect<LocalNearByEntityCountOf<DungeonMonsterBase>>(EffectType.Decrease)
-                .AddCondition<LocalHeroPropertyPointOf<IHealthPointProperty>>(Comparison.GreaterThan, 0)
-                .AddCondition<LocalHeroPropertyPointOf<IMagicPointProperty>>(Comparison.GreaterThan, 0)
-                .SetBaseCost(10);
-            
-            builder.AddAction<HealMagicAction>()
-                .AddEffect<LocalHeroPropertyPointOf<IHealthPointProperty>>(EffectType.Increase)
-                .AddCondition<LocalHeroPropertyPointOf<IHealthPointProperty>>(Comparison.GreaterThan, 0)
-                .AddCondition<LocalHeroPropertyPointOf<IMagicPointProperty>>(Comparison.GreaterThan, 10)
-                .SetBaseCost(10);
 
 #endregion
 

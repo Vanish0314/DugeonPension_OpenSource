@@ -26,7 +26,7 @@ namespace Dungeon.GOAP.Sensor.Target
             if (monsterTransform == null)
                 return null;
 
-            return new DungeonSkillUsageTarget(monsterTransform.position);
+            return new DungeonSkillUsageTarget(agent.Transform.position, monsterTransform.position - agent.Transform.position);
         }
 
         public override void Update()
