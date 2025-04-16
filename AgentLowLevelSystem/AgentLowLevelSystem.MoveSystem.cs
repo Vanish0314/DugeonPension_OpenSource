@@ -3,6 +3,8 @@ using System.Linq;
 using CrashKonijn.Agent.Core;
 using GameFramework;
 using UnityEngine;
+using DG.Tweening;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -18,8 +20,11 @@ namespace Dungeon.AgentLowLevelSystem
         private Stack<Vector3> m_MoveWayPoints = new();
 
         private void InitMoveSystem() { }
-        private void UpdateMoveSystem()
+        private void FixedUpdateMoveSystem()
         {
+            if(SkillTween != null && SkillTween.IsActive())
+                return;
+
             if (m_MoveWayPoints.Count > 0)
             {
                 var dis = Vector3.Magnitude(m_MoveWayPoints.Peek() - transform.position);
@@ -38,6 +43,8 @@ namespace Dungeon.AgentLowLevelSystem
                 var dir = (nextMove - transform.position).normalized;
                 var v = m_MoveMaxSpeed * dir;
                 m_AgentRigdbody.velocity = new Vector2(v.x, v.y);
+
+                SetAnimatorState(ANIMATOR_BOOL_MOVING,1);
             }
             else
             {

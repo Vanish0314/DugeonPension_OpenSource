@@ -38,6 +38,16 @@ namespace Dungeon.AgentLowLevelSystem
         }
         private void SetAnimatorState(string stateName, float duration)
         {
+            Dictionary<string, int> statePriority = new ()
+            {
+                { ANIMATOR_BOOL_DIE, 0 },
+                { ANIMATOR_BOOL_STUN, 1 },
+                { ANIMATOR_BOOL_ATTACKING, 2 },
+                { ANIMATOR_BOOL_INTERACT, 3 },
+                { ANIMATOR_BOOL_MOVING, 4 },
+                { ANIMATOR_BOOL_IDLE, 5 }
+            };
+
             void ApplyAnimatorState(string name)
             {
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, false);
@@ -50,12 +60,11 @@ namespace Dungeon.AgentLowLevelSystem
                 m_AgentAnimator.SetBool(name, true);
             }
 
-            if(CurrentAnimatorState == ANIMATOR_BOOL_ATTACKING)
+            if (statePriority.ContainsKey(CurrentAnimatorState) &&
+                statePriority.ContainsKey(stateName) &&
+                statePriority[CurrentAnimatorState] <= statePriority[stateName])
             {
-                if(stateName != ANIMATOR_BOOL_ATTACKING && stateName != ANIMATOR_BOOL_STUN)
-                {
-                    return;
-                }
+                return;
             }
 
             AnimatorTween?.Kill();
@@ -66,12 +75,14 @@ namespace Dungeon.AgentLowLevelSystem
             AnimatorTween = DOVirtual.DelayedCall(duration, () =>
             {
                 ApplyAnimatorState(ANIMATOR_BOOL_IDLE);
+                CurrentAnimatorState = ANIMATOR_BOOL_IDLE;
                 AnimatorTween = null;
             });
 
             AnimatorTween.onKill += () =>
             {
                 ApplyAnimatorState(ANIMATOR_BOOL_IDLE);
+                CurrentAnimatorState = ANIMATOR_BOOL_IDLE;
                 AnimatorTween = null;
             };
         }
@@ -123,8 +134,6 @@ namespace Dungeon.AgentLowLevelSystem
             m_AgentAnimator.SetTrigger(triggerName);
         }
 
-        private Tween AnimatorTween;
-        private string CurrentAnimatorState;
 
 #if UNITY_EDITOR
         [Obsolete]

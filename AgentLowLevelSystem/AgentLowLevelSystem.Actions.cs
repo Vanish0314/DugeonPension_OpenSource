@@ -38,6 +38,8 @@ namespace Dungeon.AgentLowLevelSystem
                 return ActionRunState.Completed;
             }
 
+            SetAnimatorState(ANIMATOR_BOOL_INTERACT,timeToDisarmTrap);
+
             currentTween = DOVirtual.DelayedCall(timeToDisarmTrap, () =>
             {
                 Destroy(trap.gameObject);
@@ -85,6 +87,7 @@ namespace Dungeon.AgentLowLevelSystem
                 m_SkillShooter.Fire(skill);
 
                 currentTween = m_SkillShooter.CurrentSkillTween;
+                SkillTween = currentTween;
                 WipTweens.Add(currentTween);
 
                 return ActionRunState.Continue;
@@ -122,5 +125,20 @@ namespace Dungeon.AgentLowLevelSystem
         /// 是否处于Stun状态
         /// </summary>
         private bool m_IsStunned;
+
+        /// <summary>
+        /// 释放技能Tween
+        /// </summary>
+        private Tween SkillTween;
+
+        /// <summary>
+        /// animator Tween ,用于控制动画状态
+        /// </summary>
+        private Tween AnimatorTween;
+
+        /// <summary>
+        /// 当前动画状态
+        /// </summary>
+        private string CurrentAnimatorState = ANIMATOR_BOOL_IDLE;
     }
 }

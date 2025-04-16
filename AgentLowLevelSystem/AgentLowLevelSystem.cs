@@ -54,13 +54,25 @@ namespace Dungeon.AgentLowLevelSystem
             UpdateText();
         }
 
+        private void FixedUpdate()
+        {
+            FixedUpdateSystem();
+        }
+
         private void UpdateSystem()
         {
             if(m_IsStunned)
                 return;
 
-            UpdateMoveSystem();
             UpdateVisionSystem();
+        }
+
+        private void FixedUpdateSystem()
+        {
+            if(m_IsStunned)
+                return;
+
+            FixedUpdateMoveSystem();
         }
         
     }
