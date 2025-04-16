@@ -21,7 +21,7 @@ namespace Dungeon
         private void StartGame()
         {
             // 发送事件
-            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnGameStartButtonClickEventArgs.Create());
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnStartNewGameButtonClickEvent.Create());
         }
 
         private void QuitGame()

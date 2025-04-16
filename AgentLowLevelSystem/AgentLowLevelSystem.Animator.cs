@@ -47,24 +47,21 @@ namespace Dungeon.AgentLowLevelSystem
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_INTERACT, false);
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_DIE, false);
 
-                switch (name)
+                m_AgentAnimator.SetBool(name, true);
+            }
+
+            if(CurrentAnimatorState == ANIMATOR_BOOL_ATTACKING)
+            {
+                if(stateName != ANIMATOR_BOOL_ATTACKING && stateName != ANIMATOR_BOOL_STUN)
                 {
-                    case ANIMATOR_BOOL_IDLE:
-                    case ANIMATOR_BOOL_MOVING:
-                    case ANIMATOR_BOOL_ATTACKING:
-                    case ANIMATOR_BOOL_STUN:
-                    case ANIMATOR_BOOL_INTERACT:
-                    case ANIMATOR_BOOL_DIE:
-                        m_AgentAnimator.SetBool(name, true);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(name), name, null);
+                    return;
                 }
             }
 
             AnimatorTween?.Kill();
 
             ApplyAnimatorState(stateName);
+            CurrentAnimatorState = stateName;
 
             AnimatorTween = DOVirtual.DelayedCall(duration, () =>
             {
@@ -127,6 +124,7 @@ namespace Dungeon.AgentLowLevelSystem
         }
 
         private Tween AnimatorTween;
+        private string CurrentAnimatorState;
 
 #if UNITY_EDITOR
         [Obsolete]

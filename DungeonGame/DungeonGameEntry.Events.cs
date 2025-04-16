@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon.Evnents;
@@ -57,13 +58,14 @@ namespace Dungeon.DungeonGameEntry
 
             Event.Subscribe(OnPlayerSwitchToMetroplisEvent.EventId, OnSwitchToFactory);
             Event.Subscribe(OnPlayerSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
+            Event.Subscribe(OnProcedureInitGameMainLeaveEvent.EventId, OnProcedureInitGameMainLeaveEventHandler);
         }
-
 
         private void UnSubscribleEvents()
         {
             Event.Unsubscribe(OnPlayerSwitchToMetroplisEvent.EventId, OnSwitchToFactory);
             Event.Unsubscribe(OnPlayerSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
+            Event.Unsubscribe(OnProcedureInitGameMainLeaveEvent.EventId, OnProcedureInitGameMainLeaveEventHandler);
         }
         private void OnSwitchToFactory(object sender, GameEventArgs e)
         {
