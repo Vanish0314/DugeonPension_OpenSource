@@ -38,16 +38,6 @@ namespace Dungeon.AgentLowLevelSystem
         }
         private void SetAnimatorState(string stateName, float duration)
         {
-            Dictionary<string, int> statePriority = new ()
-            {
-                { ANIMATOR_BOOL_DIE, 0 },
-                { ANIMATOR_BOOL_STUN, 1 },
-                { ANIMATOR_BOOL_ATTACKING, 2 },
-                { ANIMATOR_BOOL_INTERACT, 3 },
-                { ANIMATOR_BOOL_MOVING, 4 },
-                { ANIMATOR_BOOL_IDLE, 5 }
-            };
-
             void ApplyAnimatorState(string name)
             {
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, false);
@@ -133,6 +123,16 @@ namespace Dungeon.AgentLowLevelSystem
 #endif
             m_AgentAnimator.SetTrigger(triggerName);
         }
+
+        Dictionary<string, int> statePriority = new ()
+            {
+                { ANIMATOR_BOOL_DIE, 0 },
+                { ANIMATOR_BOOL_STUN, 1 },
+                { ANIMATOR_BOOL_ATTACKING, 2 },
+                { ANIMATOR_BOOL_INTERACT, 3 },
+                { ANIMATOR_BOOL_MOVING, 4 },
+                { ANIMATOR_BOOL_IDLE, 5 }
+            };
 
 
 #if UNITY_EDITOR

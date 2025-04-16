@@ -4,6 +4,8 @@ using CrashKonijn.Agent.Core;
 using GameFramework;
 using UnityEngine;
 using DG.Tweening;
+using Sirenix.OdinInspector;
+
 
 
 #if UNITY_EDITOR
@@ -15,7 +17,7 @@ namespace Dungeon.AgentLowLevelSystem
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
         [SerializeField] private bool enableAgentMoveDebug = true;
-        private float m_MoveMaxSpeed = 5f;
+        [SerializeField,LabelText("移动速度")] private float m_MoveMaxSpeed = 5f;
 
         private Stack<Vector3> m_MoveWayPoints = new();
 

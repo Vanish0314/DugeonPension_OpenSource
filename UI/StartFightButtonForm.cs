@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Evnents;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityGameFramework.Runtime;
@@ -19,7 +20,7 @@ namespace Dungeon
         private void StartFight()
         {
             // 发送事件
-            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnStartFightButtonClickEventArgs.Create());
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnPlayerSwitchToDungeonEvent.Create());
         }
     }
 }

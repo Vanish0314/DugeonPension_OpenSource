@@ -28,5 +28,10 @@ namespace Dungeon.GOAP.Action
             }
             
         }
+
+        public override bool IsValid(IActionReceiver agent, ActionDataWithTransform data)
+        {
+            return data.transform != null;
+        }
     }
 }

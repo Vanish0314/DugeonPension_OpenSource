@@ -46,15 +46,13 @@ namespace Dungeon.DungeonGameEntry
             {
                 Destroy(gameObject);
             }
-
-
         }
 
         private void SubscribleEvents()
         {
-            m_DungeonSystem = gameObject.GetComponent<DungeonSystem>();
-            m_MetropolisSystem = gameObject.GetComponent<MetropolisSystem>();
-            m_UniversalSystem = gameObject.GetComponent<UniversalSystem>();
+            m_DungeonSystem = gameObject.GetComponentInChildren<DungeonSystem>();
+            m_MetropolisSystem = gameObject.GetComponentInChildren<MetropolisSystem>();
+            m_UniversalSystem = gameObject.GetComponentInChildren<UniversalSystem>();
 
             Event.Subscribe(OnPlayerSwitchToMetroplisEvent.EventId, OnSwitchToFactory);
             Event.Subscribe(OnPlayerSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
