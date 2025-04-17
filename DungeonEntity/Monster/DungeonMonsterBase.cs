@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DG.Tweening;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.Character.Hero;
+using Dungeon.DungeonGameEntry;
 using Dungeon.SkillSystem;
 using Dungeon.Vision2D;
 using GameFramework;
@@ -68,9 +69,10 @@ namespace Dungeon.DungeonEntity.Monster
             OnTakeSkill(skill);
             skill.FuckMe(this);
         }
-        private void Start()
+
+        protected override void OnEnable()
         {
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             if(LayerMask.NameToLayer("Hero") == -1)
                 GameFrameworkLog.Error("[DungeonMonsterBase] There is no layer named 'Hero' in the project.");
 #endif
@@ -133,16 +135,18 @@ namespace Dungeon.DungeonEntity.Monster
 
             foreach (var result in results)
             {
-                if(result == null)
-                    break;
 #if UNITY_EDITOR
-                if(result.GetComponent<HeroEntityBase>() == null)
+                if(result?.GetComponent<HeroEntityBase>() == null)
                     GameFrameworkLog.Error("[DungeonMonsterBase] Why the fuck there is a GO in Hero layer but not a HeroEntityBase?");
 #endif
-                m_BtHelper.targetsInVision.Add(result.transform);
-            }
+                if(result == null)
+                    break;
+                if(!result.GetComponent<HeroEntityBase>().IsAlive())
+                    continue;
 
-            m_BtHelper.currentTarget = results[0]?.transform;
+                m_BtHelper.targetsInVision.Add(result.transform);
+                m_BtHelper.currentTarget = result.transform;
+            }
         }
         private void UpdateValues()
         {
@@ -176,7 +180,18 @@ namespace Dungeon.DungeonEntity.Monster
                 m_BtHelper.isAttacking = false;
             });
         }
-        protected virtual void Init() { }
+        protected virtual void Init()
+        {
+            DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.RegisterDungeonEntity(this);
+        }
+
+#if UNITY_EDITOR
+        protected override void OnDestroy()
+        {
+            GameFrameworkLog.Warning("[Torch] Destroyed 清不要使用Destory而是对象池");
+            DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.UnregisterDungeonEntity(this);
+        }
+#endif
         protected virtual void OnDead()
         {
             Destroy(gameObject);

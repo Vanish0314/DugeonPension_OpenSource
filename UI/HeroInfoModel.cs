@@ -45,8 +45,6 @@ namespace Dungeon
                 }
                 heroDataDict.Add(data.heroType, data);
             }
-
-            Debug.Log($"成功加载{heroDataDict.Count}种英雄数据");
         }
 
         public HeroInfoData GetCurrentHeroData()

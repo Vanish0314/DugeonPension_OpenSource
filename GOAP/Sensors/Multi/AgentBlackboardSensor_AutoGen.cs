@@ -5,14 +5,13 @@
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.Character.Hero;
 using Dungeon.DungeonEntity.InteractiveObject;
 using Dungeon.DungeonEntity.Monster;
 using Dungeon.DungeonEntity.Trap;
 using Dungeon.GOAP.Keys.WorldKey.Local;
 using GameFramework;
 
-namespace Dungeon.GOAP.Sensor.Multi
+namespace Dungeon.GOAP.Sensors.Multi
 {
     public class AgentBlackboardSensor_AutoGen : MultiSensorBase
     {
@@ -28,42 +27,13 @@ namespace Dungeon.GOAP.Sensor.Multi
 
         public AgentBlackboardSensor_AutoGen()
         {
-            AddLocalWorldSensor<LocalNearByEntityCountOf<DungeonTreasureChest>>(SenseNumInBlackboardDungeonTreasureChest);
-            AddLocalWorldSensor<LocalNearByEntityCountOf<StandardTrap>>(SenseNumInBlackboardStandardTrap);
-            AddLocalWorldSensor<LocalNearByEntityCountOf<Torch>>(SenseNumInBlackboardTorch);
-            AddLocalWorldSensor<LocalNearByEntityCountOf<StandardDungeonMonster>>(SenseNumInBlackboardStandardDungeonMonster);
-            AddLocalWorldSensor<LocalNearByEntityCountOf<HeroEntityBase>>(SenseNumInBlackboardHeroEntityBase);
+        AddLocalWorldSensor<LocalNearByEntityCountOf<StandardTrap>>(SenseNumInBlackboardStandardTrap);
+        AddLocalWorldSensor<LocalNearByEntityCountOf<StandardDungeonMonster>>(SenseNumInBlackboardStandardDungeonMonster);
+        AddLocalWorldSensor<LocalNearByEntityCountOf<StandardTorch>>(SenseNumInBlackboardStandardTorch);
+        AddLocalWorldSensor<LocalNearByEntityCountOf<StandardDungeonTreasureChest>>(SenseNumInBlackboardDungeonTreasureChestBase);
         }
 
 
-
-        private SenseValue SenseNumInBlackboardDungeonTreasureChest(IActionReceiver agent, IComponentReference references)
-        {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
-#if UNITY_EDITOR
-            {
-                if (blackboard == null)
-                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard is null");
-
-                var hasKey = blackboard.CheckIfKeyExists("NumOfDungeonTreasureChestInVision");
-                if (!hasKey)
-                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard key 'NumOfDungeonTreasureChestInVision' does not exist");
-                else
-                {
-                    var Ekey = blackboard.GetOrRegisterKey("NumOfDungeonTreasureChestInVision");
-                    bool getSuccessful = blackboard.TryGetValue<int>(Ekey, out var Evalue);
-                    if (!getSuccessful)
-                        GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Failed to get value from blackboard key 'NumOfDungeonTreasureChestInVision'");
-                }
-            }
-#endif
-            var key = blackboard.GetOrRegisterKey("NumOfDungeonTreasureChestInVision");
-            var hasValue = blackboard.TryGetValue<int>(key, out var value);
-            if (!hasValue)
-                blackboard.SetValue(key, 0);
-
-            return hasValue ? value : 0;
-        }
 
         private SenseValue SenseNumInBlackboardStandardTrap(IActionReceiver agent, IComponentReference references)
         {
@@ -86,34 +56,6 @@ namespace Dungeon.GOAP.Sensor.Multi
             }
 #endif
             var key = blackboard.GetOrRegisterKey("NumOfStandardTrapInVision");
-            var hasValue = blackboard.TryGetValue<int>(key, out var value);
-            if (!hasValue)
-                blackboard.SetValue(key, 0);
-
-            return hasValue ? value : 0;
-        }
-
-        private SenseValue SenseNumInBlackboardTorch(IActionReceiver agent, IComponentReference references)
-        {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
-#if UNITY_EDITOR
-            {
-                if (blackboard == null)
-                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard is null");
-
-                var hasKey = blackboard.CheckIfKeyExists("NumOfTorchInVision");
-                if (!hasKey)
-                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard key 'NumOfTorchInVision' does not exist");
-                else
-                {
-                    var Ekey = blackboard.GetOrRegisterKey("NumOfTorchInVision");
-                    bool getSuccessful = blackboard.TryGetValue<int>(Ekey, out var Evalue);
-                    if (!getSuccessful)
-                        GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Failed to get value from blackboard key 'NumOfTorchInVision'");
-                }
-            }
-#endif
-            var key = blackboard.GetOrRegisterKey("NumOfTorchInVision");
             var hasValue = blackboard.TryGetValue<int>(key, out var value);
             if (!hasValue)
                 blackboard.SetValue(key, 0);
@@ -149,7 +91,7 @@ namespace Dungeon.GOAP.Sensor.Multi
             return hasValue ? value : 0;
         }
 
-        private SenseValue SenseNumInBlackboardHeroEntityBase(IActionReceiver agent, IComponentReference references)
+        private SenseValue SenseNumInBlackboardStandardTorch(IActionReceiver agent, IComponentReference references)
         {
             var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
 #if UNITY_EDITOR
@@ -157,24 +99,53 @@ namespace Dungeon.GOAP.Sensor.Multi
                 if (blackboard == null)
                     GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard is null");
 
-                var hasKey = blackboard.CheckIfKeyExists("NumOfHeroEntityBaseInVision");
+                var hasKey = blackboard.CheckIfKeyExists("NumOfStandardTorchInVision");
                 if (!hasKey)
-                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard key 'NumOfHeroEntityBaseInVision' does not exist");
+                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard key 'NumOfStandardTorchInVision' does not exist");
                 else
                 {
-                    var Ekey = blackboard.GetOrRegisterKey("NumOfHeroEntityBaseInVision");
+                    var Ekey = blackboard.GetOrRegisterKey("NumOfStandardTorchInVision");
                     bool getSuccessful = blackboard.TryGetValue<int>(Ekey, out var Evalue);
                     if (!getSuccessful)
-                        GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Failed to get value from blackboard key 'NumOfHeroEntityBaseInVision'");
+                        GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Failed to get value from blackboard key 'NumOfStandardTorchInVision'");
                 }
             }
 #endif
-            var key = blackboard.GetOrRegisterKey("NumOfHeroEntityBaseInVision");
+            var key = blackboard.GetOrRegisterKey("NumOfStandardTorchInVision");
             var hasValue = blackboard.TryGetValue<int>(key, out var value);
             if (!hasValue)
                 blackboard.SetValue(key, 0);
 
             return hasValue ? value : 0;
         }
+
+        private SenseValue SenseNumInBlackboardDungeonTreasureChestBase(IActionReceiver agent, IComponentReference references)
+        {
+            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
+#if UNITY_EDITOR
+            {
+                if (blackboard == null)
+                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard is null");
+
+                var hasKey = blackboard.CheckIfKeyExists("NumOfDungeonTreasureChestBaseInVision");
+                if (!hasKey)
+                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard key 'NumOfDungeonTreasureChestBaseInVision' does not exist");
+                else
+                {
+                    var Ekey = blackboard.GetOrRegisterKey("NumOfDungeonTreasureChestBaseInVision");
+                    bool getSuccessful = blackboard.TryGetValue<int>(Ekey, out var Evalue);
+                    if (!getSuccessful)
+                        GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Failed to get value from blackboard key 'NumOfDungeonTreasureChestBaseInVision'");
+                }
+            }
+#endif
+            var key = blackboard.GetOrRegisterKey("NumOfDungeonTreasureChestBaseInVision");
+            var hasValue = blackboard.TryGetValue<int>(key, out var value);
+            if (!hasValue)
+                blackboard.SetValue(key, 0);
+
+            return hasValue ? value : 0;
+        }
+
     }
 }

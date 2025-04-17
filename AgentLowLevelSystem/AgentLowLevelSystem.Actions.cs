@@ -14,9 +14,9 @@ namespace Dungeon.AgentLowLevelSystem
     {
         public IActionRunState OpenTreasureChest(Transform chestTransf)
         {
-            var chest = chestTransf.GetComponent<DungeonTreasureChest>();
+            var chest = chestTransf.GetComponent<StandardDungeonTreasureChest>();
             chest.Open(agent.LowLevelSystem);
-            DecreaseBlackboardCountOfIVisible<DungeonTreasureChest>();
+            DecreaseBlackboardCountOfIVisible<StandardDungeonTreasureChest>();
 
             return ActionRunState.Completed;
         }

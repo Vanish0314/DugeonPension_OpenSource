@@ -44,14 +44,10 @@ namespace Dungeon
         // 预览事件
         public event Action<Vector3,GameObject> SelectBuildingPreviewEvent; 
         
-        // 枚举方向
-        public enum Direction { Up, Right, Down, Left }
-        
         public static PlaceManager Instance { get; private set; }
         private void Awake()
         {
             m_CastleBuildingPoolComponent.Init("CastleBuildingPool", m_CastleBuildingPoolItemPrefab,null,16);
-            GameFrameworkLog.Debug(m_CastleBuildingPoolComponent.GetItem(null));
             m_SpikeTrapPoolComponent.Init("SpikeTrapPool", m_SpikeTrapPoolItemPrefab,null,16);
             m_SlimeMonsterPoolComponent.Init("SlimeMonsterPool",m_SlimeMonsterItemPrefab,null,16);
             
@@ -89,6 +85,10 @@ namespace Dungeon
 
         private void Update()
         {
+            if (Input.GetMouseButtonDown(0))
+            {
+                GameEntry.UI.GetComponent<UIComponent>().OpenUIForm(EnumUIForm.BuildForm);
+            }
             // UpdatePreview();
         }
         

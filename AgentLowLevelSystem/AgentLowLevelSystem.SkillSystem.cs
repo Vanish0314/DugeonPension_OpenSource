@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using DG.Tweening;
+using Dungeon.Character.Hero;
 using Dungeon.SkillSystem;
 using GameFramework;
 using UnityEngine;
@@ -17,14 +18,14 @@ namespace Dungeon.AgentLowLevelSystem
         }
         public bool IsInSkillRange(SkillDesc skillDesc, float distance)
         {
-            if(m_skillDict.TryGetValue(skillDesc.name, out var skillData))
+            if (m_skillDict.TryGetValue(skillDesc.name, out var skillData))
             {
                 return skillData.IsInRange(distance);
             }
 
             return false;
         }
-        
+
         private void InitSkillSystem()
         {
             m_SkillShooter = gameObject.GetOrAddComponent<SkillShooter>();
@@ -34,10 +35,10 @@ namespace Dungeon.AgentLowLevelSystem
                 m_skillDict.Add(skillData.skillName, skillData);
             }
 
-            #if UNITY_EDITOR
-            if(m_skillDict.Count == 0)
+#if UNITY_EDITOR
+            if (m_skillDict.Count == 0)
                 GameFrameworkLog.Warning("[AgentLowLevelSystem] 勇者一个技能都没有,你确定吗?:" + name);
-            #endif
+#endif
         }
 
         public GameObject GetGameObject() => gameObject;
@@ -45,85 +46,81 @@ namespace Dungeon.AgentLowLevelSystem
         {
             get
             {
-                m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.CurrentHP, out var value);
-                return value;
+                return m_combatorData.hp;
             }
             set
             {
-                var key = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.HpMax);
-                m_blackboard.SetValue<int>(key, value);
+                value = Mathf.Clamp(value, 0, MaxHp);
+                m_combatorData.hp = value;
+                UpdateCombatorData();
 
-                if (value < 0)
+                if(value <= 0)
                 {
-                    GameFrameworkLog.Info("[AgentLowLevelSystem] Hp < 0, Hero Died");
-                    DungeonGameEntry.DungeonGameEntry.Event.Fire(this, OnDungeonEndEventArgs.Create());
+                    OnDied();
                 }
             }
+                
         }
+
         public int MaxHp
         {
             get
             {
-                m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.HpMax, out var value);
-                return value;
+                return m_combatorData.maxHp;
             }
             set
             {
-                var key = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.HpMax);
-                m_blackboard.SetValue<int>(key, value);
+                m_combatorData.maxHp = value;
+                UpdateCombatorData();
             }
         }
         public int Mp
         {
             get
             {
-                m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.CurrentMP, out var value);
-                return value;
+                return m_combatorData.mp;
             }
             set
             {
-                var key = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentMP);
-                m_blackboard.SetValue<int>(key, value);
+                value = Mathf.Clamp(value, 0, MaxMp);
+                m_combatorData.mp = value;
+                UpdateCombatorData();
             }
         }
         public int MaxMp
         {
             get
             {
-                m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.MpMax, out var value);
-                return value;
+                return m_combatorData.maxMp;
             }
             set
             {
-                var key = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.MpMax);
-                m_blackboard.SetValue<int>(key, value);
+                m_combatorData.maxMp = value;
+                UpdateCombatorData();
             }
-        }
+        }        
         public float AttackSpeed
         {
             get
             {
-                m_BlackboardController.GetValue<float>(AgentBlackBoardEnum.AttackSpeed, out var value);
-                return value;
+                return m_combatorData.attackSpeed;
             }
-            set
+            set 
             {
-                var key = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.AttackSpeed);
-                m_blackboard.SetValue<float>(key, value);
+                m_combatorData.attackSpeed = value;
+                UpdateCombatorData();
             }
         }
         public CombatorData BasicInfo
         {
-            get
-            {
-                UpdateCombatorData();
-                return m_combatorData;
-            }
+            get => m_combatorData;
             set
             {
                 m_combatorData = value;
+                UpdateCombatorData();
             }
         }
+
 
 
         public void Stun(float duration)
@@ -133,7 +130,7 @@ namespace Dungeon.AgentLowLevelSystem
             this.SendMessage("OnStunned");
 
             currentTween?.Kill();
-            foreach(var tween in WipTweens)
+            foreach (var tween in WipTweens)
             {
                 tween.Kill();
             }
@@ -150,33 +147,23 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void UpdateCombatorData()
         {
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.CurrentHP, out var hp);
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.HpMax, out var maxHp);
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.CurrentMP, out var mp);
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.MpMax, out var maxMp);
-            m_BlackboardController.GetValue<float>(AgentBlackBoardEnum.AttackSpeed, out var attackSpeed);
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.FireResistance, out var fireResistance);
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.IceResistance, out var iceResistance);
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.HolyResistance, out var holyResistance);
-            m_BlackboardController.GetValue<int>(AgentBlackBoardEnum.PosionResistance, out var posionResistance);
+            var keyHp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentHP);
+            var keyMaxHp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.HpMax);
+            var keyMp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentMP);
+            var keyMaxMp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.MpMax);
+            var keyAtkSpeed = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.AttackSpeed);
 
-            m_combatorData = new CombatorData
-            {
-                hp = hp,
-                maxHp = maxHp,
-                mp = mp,
-                maxMp = maxMp,
-                attackSpeed = attackSpeed,
-                fireResistance = fireResistance,
-                iceResistance = iceResistance,
-                holyResistance = holyResistance,
-                posionResistance = posionResistance
-            };
+            m_blackboard.SetValue<int>(keyHp, m_combatorData.hp);
+            m_blackboard.SetValue<int>(keyMaxHp, m_combatorData.maxHp);
+            m_blackboard.SetValue<int>(keyMp, m_combatorData.mp);
+            m_blackboard.SetValue<int>(keyMaxMp, m_combatorData.maxMp);
+            m_blackboard.SetValue<float>(keyAtkSpeed, m_combatorData.attackSpeed);
         }
 
+
         [Header("战斗相关")]
-        [SerializeField]private CombatorData m_combatorData;
-        [SerializeField]private List<SkillData> m_skills;
+        [SerializeField] private CombatorData m_combatorData;
+        [SerializeField] private List<SkillData> m_skills;
         private Dictionary<string, SkillData> m_skillDict = new();
         private SkillShooter m_SkillShooter;
     }

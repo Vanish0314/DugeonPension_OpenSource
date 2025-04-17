@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Dungeon
@@ -46,27 +47,35 @@ namespace Dungeon
         /// <summary>
         /// 物理属性抗性
         /// </summary>
-        public int physicalResistance;
+        public ResistanceLevel physicalResistance;
 
         /// <summary>
         /// 火属性抗性
         /// </summary>
-        public int fireResistance;
+        public ResistanceLevel fireResistance;
 
         /// <summary>
         /// 冰属性抗性
         /// </summary>
-        public int iceResistance;
+        public ResistanceLevel iceResistance;
 
         /// <summary>
         /// 圣属性抗性
         /// </summary>
-        public int holyResistance;
+        public ResistanceLevel holyResistance;
 
         /// <summary>
         /// 毒属性抗性
         /// </summary>
-        public int posionResistance;
+        public ResistanceLevel posionResistance;
+    }
+
+    public enum ResistanceLevel
+    {
+        [LabelText("弱点")]Weak,
+        [LabelText("普通")]Normal,
+        [LabelText("抵抗")]Strong,
+        [LabelText("免疫")]Immunity
     }
     
 }

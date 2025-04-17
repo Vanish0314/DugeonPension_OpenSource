@@ -27,9 +27,8 @@ namespace Dungeon.GOAP.Sensor.Target
                     return existingTarget;
             }
 
-            return new DungeonExitTarget(
-                references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().GetUnvisitedRoomCenterPos()
-                );
+            var exitPos = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().GetUnvisitedRoomCenterPos();
+            return exitPos.HasValue ? new DungeonExitTarget(exitPos.Value) : null;
         }
 
         public override void Update()

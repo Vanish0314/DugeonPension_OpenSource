@@ -21,7 +21,7 @@ namespace Dungeon.GOAP.Sensor.Target
         {
             var low = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
 
-            var monster = low.GetNearestMonsterInVision();
+            var monster = low.GetNearestTorchInVision();
             var monsterTransform = monster?.transform;
             if (monsterTransform == null)
                 return null;

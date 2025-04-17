@@ -80,7 +80,7 @@ namespace Dungeon.SkillSystem
             currentSequence.AppendInterval(pre);
             currentSequence.AppendCallback(() =>
             {
-                currentSkillEntity = Instantiate(skill.SkillGO).GetComponent<SkillEntity>();
+                currentSkillEntity = Instantiate(skill.SkillGO).GetComponentInChildren<SkillEntity>();
                 currentSkillEntity.InitAndFire(skill);
             });
 

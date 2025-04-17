@@ -10,13 +10,9 @@ using Dungeon.GOAP.Goals;
 using Dungeon.GOAP.Keys.TargetKey;
 using Dungeon.GOAP.Keys.WorldKey;
 using Dungeon.GOAP.Keys.WorldKey.Local;
-using Dungeon.GOAP.Sensor;
 using Dungeon.GOAP.Sensor.Key;
-using Dungeon.GOAP.Sensor.Multi;
 using Dungeon.GOAP.Sensor.Target;
-using Dungeon.GOAP.Targets;
-using UnityEngine;
-using UnityEngine.SocialPlatforms;
+using Dungeon.GOAP.Sensors.Multi;
 
 namespace Dungeon.GOAP.Factories.CapabilityFactory
 {
@@ -38,11 +34,11 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
             builder.AddGoal<EliminateThreatGoal>()
                 .SetBaseCost(20)
                 .AddCondition<LocalNearByEntityCountOf<StandardTrap>>(Comparison.SmallerThanOrEqual , 0)
-                .AddCondition<LocalNearByEntityCountOf<DungeonMonsterBase>>(Comparison.SmallerThanOrEqual, 0);
+                .AddCondition<LocalNearByEntityCountOf<StandardDungeonMonster>>(Comparison.SmallerThanOrEqual, 0);
 
             builder.AddGoal<LightDungeonRoomGoal>()
                 .SetBaseCost(10)
-                .AddCondition<LocalNearByEntityCountOf<Torch>>(Comparison.GreaterThanOrEqual, 9999);
+                .AddCondition<LocalNearByEntityCountOf<StandardTorch>>(Comparison.GreaterThanOrEqual, 9999);
 
             builder.AddGoal<DesireFulfillmentGoal>()
                 .SetBaseCost(5)
@@ -50,7 +46,7 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
 #endregion
 
 #region Actions
-            //FIXME(vanish): It is a bad practice to just coupling the action and target keys like this.
+            //FIXME: It is a bad practice to just coupling the action and target keys like this.
             //It should be done in a more generic way.
             builder.AddAction<FinishDungeonAction>()
                 .SetTargetKey<DungeonExitTargetKey>()
@@ -65,20 +61,20 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
                 .SetBaseCost(10);
 
             builder.AddAction<LightTorchAction>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<Torch>>()
-                .AddEffect<LocalNearByEntityCountOf<Torch>>(EffectType.Increase)
-                .AddCondition<LocalNearByEntityCountOf<Torch>>(Comparison.GreaterThan, 0)
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardTorch>>()
+                .AddEffect<LocalNearByEntityCountOf<StandardTorch>>(EffectType.Increase)
+                .AddCondition<LocalNearByEntityCountOf<StandardTorch>>(Comparison.GreaterThan, 0)
                 .SetBaseCost(1);
 
             builder.AddAction<OpenTreasureChestAction>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<DungeonTreasureChest>>()
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonTreasureChest>>()
                 .AddEffect<LocalHeroCoinCountKey>(EffectType.Increase)
-                .AddCondition<LocalNearByEntityCountOf<DungeonTreasureChest>>(Comparison.GreaterThan, 0)
+                .AddCondition<LocalNearByEntityCountOf<StandardDungeonTreasureChest>>(Comparison.GreaterThan, 0)
                 .SetBaseCost(10);
 
             builder.AddAction<MeleeAttackAction>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<DungeonMonsterBase>>()
-                .AddEffect<LocalNearByEntityCountOf<DungeonMonsterBase>>(EffectType.Decrease)
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonMonster>>()
+                .AddEffect<LocalNearByEntityCountOf<StandardDungeonMonster>>(EffectType.Decrease)
                 .AddCondition<LocalHeroPropertyPointOf<IHealthPointProperty>>(Comparison.GreaterThan, 0)
                 .SetBaseCost(10);
 
@@ -90,9 +86,9 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
             builder.AddTargetSensor<NearestTrapTargetSensor>()
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardTrap>>();
             builder.AddTargetSensor<NearestTorchTargetSensor>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<Torch>>();
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardTorch>>();
             builder.AddTargetSensor<NearestChestTargetSensor>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<DungeonTreasureChest>>();
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonTreasureChest>>();
             builder.AddTargetSensor<NearestMonsterTargetSensor>()
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<DungeonMonsterBase>>();
             

@@ -16,7 +16,6 @@ namespace Dungeon.GOAP.Action
 
         public override IActionRunState Perform(IMonoAgent agent, ActionDataDungeonExit data, IActionContext context)
         {
-            DungeonGameEntry.DungeonGameEntry.Event.Fire(this,OnDungeonEndEventArgs.Create());
             return ActionRunState.Completed;
         }
 

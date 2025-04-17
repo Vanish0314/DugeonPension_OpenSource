@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.DungeonGameEntry;
 using GameFramework.Event;
 using UnityEngine;
 using UnityGameFramework.Runtime;
@@ -29,7 +28,7 @@ namespace Dungeon
 
         private void OnEnable()
         {
-            DungeonGameEntry.DungeonGameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
         }
 
         private void OnSceneLoaded(object sender, GameEventArgs e)

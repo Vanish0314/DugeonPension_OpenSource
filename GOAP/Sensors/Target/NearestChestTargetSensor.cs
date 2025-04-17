@@ -16,13 +16,14 @@ namespace Dungeon.GOAP.Sensor.Target
 
         public override ITarget Sense(IActionReceiver agent, IComponentReference references, ITarget existingTarget)
         {
-            var lowLevel = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var low = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
 
-            lowLevel.GetNearestTreasureChest(out Transform nearestChest);
-            if (nearestChest == null)
-                return new DungeonTransformTarget(null);
-            else
-                return new DungeonTransformTarget(nearestChest);
+            var chest = low.GetNearestTreasureChest();
+            var chestTransf = chest?.transform;
+            if (chestTransf == null)
+                return null;
+
+            return new DungeonTransformTarget(chestTransf);
         }
 
         public override void Update()

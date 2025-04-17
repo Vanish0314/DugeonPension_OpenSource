@@ -1,16 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Character.Hero;
 using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
 
 namespace Dungeon
 {
-    public sealed class OnDungeonEndEventArgs : GameEventArgs
+    public sealed class OnOneHeroDiedInDungeonEvent : GameEventArgs
     {
-        public static readonly int EventId = typeof(OnDungeonEndEventArgs).GetHashCode();
+        public static readonly int EventId = typeof(OnOneHeroDiedInDungeonEvent).GetHashCode();
+        public HeroEntityBase diedHero;
 
-        public OnDungeonEndEventArgs()
+        public OnOneHeroDiedInDungeonEvent()
         {
         }
         
@@ -22,9 +24,10 @@ namespace Dungeon
             }
         }
         
-        public static OnDungeonEndEventArgs Create()
+        public static OnOneHeroDiedInDungeonEvent Create(HeroEntityBase diedHero)
         {
-            OnDungeonEndEventArgs onDungeonEndEventArgs = ReferencePool.Acquire<OnDungeonEndEventArgs>();
+            OnOneHeroDiedInDungeonEvent onDungeonEndEventArgs = ReferencePool.Acquire<OnOneHeroDiedInDungeonEvent>();
+            onDungeonEndEventArgs.diedHero = diedHero;
             return onDungeonEndEventArgs;
         }
         

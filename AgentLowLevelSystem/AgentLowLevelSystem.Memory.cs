@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Codice.Client.BaseCommands;
 using Dungeon.DungeonEntity.InteractiveObject;
 using Dungeon.DungeonEntity.Monster;
@@ -20,12 +21,17 @@ namespace Dungeon.AgentLowLevelSystem
         {
             return m_BrainMemory.roomsVisited.Contains(room);
         }
-        public Vector3 GetUnvisitedRoomCenterPos()
+        public Vector3? GetUnvisitedRoomCenterPos()
         {
             var room = GetUnvisitedRoom();
-            return DungeonGameEntry.DungeonGameEntry.GridSystem.GridToWorldPosition(room.centerPos);
+            
+            if(room != null)
+                return DungeonGameEntry.DungeonGameEntry.GridSystem.GridToWorldPosition(room.centerPos);
+
+            GameFrameworkLog.Warning("[AgentLowLevelSystem] GetUnvisitedRoomCenterPos: every room has been visited");
+            return null;
         }
-        public DungeonMonsterBase GetNearestMonsterInVision()
+        public DungeonMonsterBase GetNearestTorchInVision()
         {
             if(m_BrainMemory.monstersInVision.Count == 0)
             {
@@ -43,6 +49,44 @@ namespace Dungeon.AgentLowLevelSystem
 
             return result;
         }
+
+        public DungeonTrapBase GetNearestTrapInVision()
+        {
+            if(m_BrainMemory.trapInVision.Count == 0)
+            {
+                return null;
+            }
+
+            var result = m_BrainMemory.trapInVision[0];
+            foreach(var trap in m_BrainMemory.trapInVision)
+            {
+                if(Vector3.Distance(transform.position, trap.transform.position) < Vector3.Distance(transform.position, result.transform.position))
+                {
+                    result = trap;
+                }
+            }
+
+            return result;
+        }
+
+        public StandardDungeonTreasureChest GetNearestTreasureChest()
+        {
+            if(m_BrainMemory.treasureChestInVision.Count == 0)
+            {
+                return null;
+            }
+
+            var result = m_BrainMemory.treasureChestInVision[0];
+            foreach(var treasureChest in m_BrainMemory.treasureChestInVision)
+            {
+                if(Vector3.Distance(transform.position, treasureChest.transform.position) < Vector3.Distance(transform.position, result.transform.position))
+                {
+                    result = treasureChest;
+                }
+            }
+
+            return result;
+        }
         
 
         public void OnSee(GameObject entity)
@@ -51,9 +95,9 @@ namespace Dungeon.AgentLowLevelSystem
             {
                 m_BrainMemory.monstersInVision.Add(entity.GetComponent<DungeonMonsterBase>());
             }
-            else if(entity.GetComponent<DungeonTreasureChest>()!= null)
+            else if(entity.GetComponent<StandardDungeonTreasureChest>()!= null)
             {
-                m_BrainMemory.treasureChestInVision.Add(entity.GetComponent<DungeonTreasureChest>());
+                m_BrainMemory.treasureChestInVision.Add(entity.GetComponent<StandardDungeonTreasureChest>());
             }
             else if(entity.GetComponent<DungeonTrapBase>()!= null)
             {
@@ -70,9 +114,9 @@ namespace Dungeon.AgentLowLevelSystem
             {
                 m_BrainMemory.monstersInVision.Remove(entity.GetComponent<DungeonMonsterBase>());
             }
-            else if(entity.GetComponent<DungeonTreasureChest>()!= null)
+            else if(entity.GetComponent<StandardDungeonTreasureChest>()!= null)
             {
-                m_BrainMemory.treasureChestInVision.Remove(entity.GetComponent<DungeonTreasureChest>());
+                m_BrainMemory.treasureChestInVision.Remove(entity.GetComponent<StandardDungeonTreasureChest>());
             }
             else if(entity.GetComponent<DungeonTrapBase>()!= null)
             {
@@ -148,7 +192,7 @@ namespace Dungeon.AgentLowLevelSystem
         {
             public List<Room> roomsVisited = new ();
             public List<DungeonMonsterBase> monstersInVision = new ();
-            public List<DungeonTreasureChest> treasureChestInVision = new ();
+            public List<StandardDungeonTreasureChest> treasureChestInVision = new ();
             public List<DungeonTrapBase> trapInVision = new ();
         }
     }

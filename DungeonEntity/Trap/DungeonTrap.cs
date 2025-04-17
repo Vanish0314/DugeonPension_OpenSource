@@ -7,6 +7,7 @@ using Codice.Client.Common;
 using DG.Tweening;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.DungeonEntity;
+using Dungeon.DungeonGameEntry;
 using Dungeon.SkillSystem;
 using Dungeon.Vision2D;
 using GameFramework;
@@ -204,8 +205,10 @@ namespace Dungeon.DungeonEntity.Trap
                 transform.position = Vector3.Lerp(oriPos, fourCorners[(int)direction], t);
             },0,1,timeToRotate);
         }
-        void Start()
+        protected override void OnEnable()
         {
+            DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.RegisterDungeonEntity(this);
+
             gameObject.layer = LayerMask.NameToLayer("Trap");
             var rb = GetComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Static;
@@ -215,6 +218,13 @@ namespace Dungeon.DungeonEntity.Trap
             InitCollider2D();
             CalculateFourCorners();
         }
+#if UNITY_EDITOR
+        protected override void OnDestroy()
+        {
+            GameFrameworkLog.Warning("[Torch] Destroyed 清不要使用Destory而是对象池");
+            DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.UnregisterDungeonEntity(this);
+        }
+#endif
 
         private void InitCollider2D()
         {

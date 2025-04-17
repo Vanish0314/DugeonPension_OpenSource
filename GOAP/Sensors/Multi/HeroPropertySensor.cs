@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
@@ -22,47 +23,20 @@ namespace Dungeon
             
         }
 
-        public HeroPropertySensor()
+        public HeroPropertySensor() 
         {
             AddLocalWorldSensor<LocalHeroPropertyPointOf<IHealthPointProperty>>(SenseHP);
             AddLocalWorldSensor<LocalHeroPropertyPointOf<IMagicPointProperty>>(SenseMP);
         }
 
-        private SenseValue SenseHP(IActionReceiver agent, IComponentReference references)
+        private SenseValue SenseMP(IActionReceiver receiver, IComponentReference reference)
         {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
-#if UNITY_EDITOR
-            {
-                if (blackboard == null)
-                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard is null");
-            }
-#endif
-
-            var key = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentHP);
-            var hasValue = blackboard.TryGetValue<int>(key, out var value);
-            if (!hasValue)
-            {
-                blackboard.SetValue(key, 100);
-            }
-            return value;
+            return reference.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().Mp;
         }
-        private SenseValue SenseMP(IActionReceiver agent, IComponentReference references)
-        {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
-#if UNITY_EDITOR
-            {
-                if (blackboard == null)
-                    GameFrameworkLog.Error("[AgentBlackboardSensor_AutoGen] Blackboard is null");
-            }
-#endif
 
-            var key = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentMP);
-            var hasValue = blackboard.TryGetValue<int>(key, out var value);
-            if (!hasValue)
-            {
-                blackboard.SetValue(key, 100);
-            }
-            return value;
+        private SenseValue SenseHP(IActionReceiver receiver, IComponentReference reference)
+        {
+            return reference.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().Hp;
         }
     }
 }

@@ -22,14 +22,14 @@ namespace Dungeon.GOAP.Action
         {
             if(data.Target is DungeonTransformTarget target)
             {
-                var torch = target.transform.GetComponent<Torch>();
+                var torch = target.transform.GetComponent<StandardTorch>();
                 #if UNITY_EDITOR
                 if(torch.IsLightining())
                     GameFrameworkLog.Error("[LightTorchAction] 火把已经点亮!,可能是sensor出错或是没有及时更新状态");
                 #endif
                 torch.LightUp();
                 var low = agent.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
-                low.DecreaseBlackboardCountOfIVisible<Torch>();
+                low.DecreaseBlackboardCountOfIVisible<StandardTorch>();
                 return ActionRunState.Completed;
             }
             else

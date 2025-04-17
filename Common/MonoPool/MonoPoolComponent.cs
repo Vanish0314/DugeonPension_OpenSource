@@ -25,7 +25,7 @@ namespace Dungeon
 		public MonoPoolItem GetItem(object data)
 		{
 			var item = GenItem();
-			item.Init(data);
+			item.OnSpawn(data);
 			return item;
 		}
 

@@ -15,9 +15,13 @@ namespace Dungeon.Character.Hero
     [RequireComponent(typeof(AgentBehaviour))]
     public partial class HeroEntityBase : DungeonVisitorEntity
     {
-        void Start()
+        public void OnSpawn()
         {
-            InitHero();
+            InitHighLevelSystem();
+
+            InitLowLevelSystem();
+
+            InitHeroBase();
         }
 
         void Update()
@@ -25,23 +29,35 @@ namespace Dungeon.Character.Hero
             UpdateGOAP();
         }
 
-        private void InitHero()
+        private void InitHighLevelSystem()
         {
-            InitICharacter();
+            m_HighLevelSystem = GetComponent<AgentHighLevelSystem>();
+            m_HighLevelSystem.OnSpawn();
+        }
+        private void InitLowLevelSystem()
+        {
+            m_LowLevelSystem = GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            m_LowLevelSystem.OnSpawn();
+        }
 
+        private void InitHeroBase()
+        {
             InitGOAP();
 
             InitViewer();
         }
 
-        public override void Init(object data)
+        public override void OnSpawn(object data)
         {
-            
+            throw new System.NotImplementedException();
         }
 
         public override void Reset()
         {
             throw new System.NotImplementedException();
         }
+
+        private AgentHighLevelSystem m_HighLevelSystem;
+        private AgentLowLevelSystem.AgentLowLevelSystem m_LowLevelSystem;
     }
 }

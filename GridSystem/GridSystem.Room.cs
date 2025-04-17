@@ -3,6 +3,9 @@ using System.Linq;
 using System.Net.Http.Headers;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.BlackBoardSystem;
+using Dungeon.Character.Hero;
+using Dungeon.DungeonGameEntry;
+using Dungeon.Evnents;
 using GameFramework;
 using UnityEngine;
 
@@ -33,6 +36,8 @@ namespace Dungeon.GridSystem
         }
         private void BuildRooms()
         {
+            GetRoomAt(DungeonExitPosition, out var exitRoom);
+
             var root = new GameObject("Rooms");
             root.transform.SetParent(transform);
             foreach (var room in m_DungeonRooms)
@@ -41,7 +46,13 @@ namespace Dungeon.GridSystem
                 go.transform.SetParent(root.transform);
                 go.AddComponent<DungeonRoom>();
                 go.GetComponent<DungeonRoom>().Init(room);
+
+                if(room == exitRoom)
+                {
+                    go.GetComponent<DungeonRoom>().SetAsDungeonExitRoom();
+                }
             }
+
         }
 
         private List<Room> m_DungeonRooms;
@@ -76,6 +87,11 @@ namespace Dungeon.GridSystem
             InitTransform(room);
             InitCollider(room);
             InitRigidbody();
+        }
+
+        public void SetAsDungeonExitRoom()
+        {
+            isDungeonExit = true;
         }
 
         private void InitTransform(GridSystem.Room room)
@@ -174,15 +190,28 @@ namespace Dungeon.GridSystem
         void OnTriggerEnter2D(Collider2D collision)
         {
 #if UNITY_EDITOR
-            if(collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>()== null)
-                GameFrameworkLog.Error("[DungeonRoom] An object that is not hero is able to collide with trapTrigger,Object name: " + collision.gameObject.name);
+            if (collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>() == null)
+                GameFrameworkLog.Warning("[DungeonRoom] An object that is not hero is able to collide with trapTrigger,Object name: " + collision.gameObject.name);
 #endif
+            var hero = collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            if (hero == null)
+                return;//TODO(vanish): 检测房间内怪物有多少
 
-            var agent = collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
-            if (agent == null) return;
+            if (isDungeonExit)
+            {
+                hero.GetComponent<HeroEntityBase>().OnArrivedAtDungeonExit();
 
-            agent.OnVisitedRoom(room);
+                if (DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.IsAllHeroHappyingAtDungeonExit())
+                {
+                    DungeonGameEntry.DungeonGameEntry.Event.Fire(this, OnHeroTeamFinishDungeonExploreEvent.Create());
+                }
+            }
+            else
+            {
+                hero.OnVisitedRoom(room);
+            }
         }
         private GridSystem.Room room;
+        private bool isDungeonExit;
     }
 }

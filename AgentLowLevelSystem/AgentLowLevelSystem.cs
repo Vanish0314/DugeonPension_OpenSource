@@ -14,7 +14,7 @@ namespace Dungeon.AgentLowLevelSystem
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(Viewer))]
     [RequireComponent(typeof(BlackboardController))]
-    public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem,ICombatable
+    public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
         private Rigidbody2D m_AgentRigdbody;
         private BoxCollider2D m_AgentCollider;
@@ -23,14 +23,7 @@ namespace Dungeon.AgentLowLevelSystem
         private Blackboard m_blackboard => m_BlackboardController.GetBlackboard();
 
         public BlackboardController GetBlackboard() => m_BlackboardController;
-
-        void OnValidate()
-        {
-            this.m_AgentRigdbody = GetComponent<Rigidbody2D>();
-            this.m_BlackboardController = GetComponent<BlackboardController>();
-        }
-
-        private void Awake()
+        public void OnSpawn()
         {
             m_AgentRigdbody ??= GetComponent<Rigidbody2D>();
             m_BlackboardController ??= gameObject.GetOrAddComponent<BlackboardController>();
@@ -51,7 +44,6 @@ namespace Dungeon.AgentLowLevelSystem
         private void Update()
         {
             UpdateSystem();
-            UpdateText();
         }
 
         private void FixedUpdate()
@@ -61,7 +53,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void UpdateSystem()
         {
-            if(m_IsStunned)
+            if (m_IsStunned)
                 return;
 
             UpdateVisionSystem();
@@ -69,11 +61,19 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void FixedUpdateSystem()
         {
-            if(m_IsStunned)
+            if (m_IsStunned)
                 return;
 
             FixedUpdateMoveSystem();
         }
-        
+
+
+#if UNITY_EDITOR
+        void OnValidate()
+        {
+            this.m_AgentRigdbody = GetComponent<Rigidbody2D>();
+            this.m_BlackboardController = GetComponent<BlackboardController>();
+        }
+#endif
     }
 }

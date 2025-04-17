@@ -54,6 +54,9 @@ namespace Dungeon.DungeonGameEntry
             m_MetropolisSystem = gameObject.GetComponentInChildren<MetropolisSystem>();
             m_UniversalSystem = gameObject.GetComponentInChildren<UniversalSystem>();
 
+            m_DungeonSystem.gameObject.SetActive(false);
+            m_MetropolisSystem.gameObject.SetActive(false);
+
             Event.Subscribe(OnPlayerSwitchToMetroplisEvent.EventId, OnSwitchToFactory);
             Event.Subscribe(OnPlayerSwitchToDungeonEvent.EventId, OnSwitchToDungeon);
             Event.Subscribe(OnProcedureInitGameMainLeaveEvent.EventId, OnProcedureInitGameMainLeaveEventHandler);

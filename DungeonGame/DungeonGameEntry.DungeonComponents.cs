@@ -26,6 +26,16 @@ namespace Dungeon.DungeonGameEntry
             get;
             private set;
         }
+        public static AdvanturersGuildSystem AdvanturersGuildSystem
+        {
+            get;
+            private set;
+        }
+        public static DungeonEntityManager DungeonEntityManager
+        {
+            get;
+            private set;
+        }
         private static void InitDungeonComponents()
         {
             // GOAP
@@ -50,6 +60,12 @@ namespace Dungeon.DungeonGameEntry
 
             // Grid System
             GridSystem = FindObjectOfType<GridSystem.GridSystem>();
+
+            // Advanturers Guild System
+            AdvanturersGuildSystem = FindObjectOfType<AdvanturersGuildSystem>();
+
+            // Dungeon Entity Manager
+            DungeonEntityManager = FindObjectOfType<DungeonEntityManager>();
         }
     }
 

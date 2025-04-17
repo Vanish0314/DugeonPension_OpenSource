@@ -17,19 +17,14 @@ namespace Dungeon.GOAP.Sensor.Target
 
         public override ITarget Sense(IActionReceiver agent, IComponentReference references, ITarget existingTarget)
         {
-            if (existingTarget is DungeonTransformTarget target)
-            {
-                if (target.transform != null)
-                    return target;
-            }
+            var low = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
 
-            var lowLevel = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var trap = low.GetNearestTrapInVision();
+            var trapTransf = trap?.transform;
+            if (trapTransf == null)
+                return null;
 
-            lowLevel.GetNearestTrap(out Transform nearestTrap);
-            if (nearestTrap == null)
-                return new DungeonTransformTarget(null);
-            else
-                return new DungeonTransformTarget(nearestTrap);
+            return new DungeonTransformTarget(trapTransf);
         }
 
         public override void Update()

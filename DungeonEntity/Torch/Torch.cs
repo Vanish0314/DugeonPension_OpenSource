@@ -1,24 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.DungeonGameEntry;
 using Dungeon.Vision2D;
+using GameFramework;
 using UnityEngine;
 
 namespace Dungeon.DungeonEntity.InteractiveObject
 {
-    public class Torch : DungeonVisibleEntity
+    public class StandardTorch : DungeonVisibleEntity
     {
         public Sprite LightTorch;
         public Sprite DarkTorch;
         public bool IsLit;
         private SpriteRenderer spriteRenderer;
 
-        private void Start()
+#if UNITY_EDITOR
+        protected override void OnDestroy()
         {
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            IsLit = false;
-            spriteRenderer.sprite = DarkTorch;
+            GameFrameworkLog.Warning("[Torch] Destroyed 清不要使用Destory而是对象池");
+            DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.UnregisterDungeonEntity(this);
         }
-        private void Update() {
+#endif
+        private void Update()
+        {
             if (IsLit)
             {
                 spriteRenderer.color = new Color(1, 1, 1, 1);
@@ -36,7 +40,7 @@ namespace Dungeon.DungeonEntity.InteractiveObject
         public bool IsLightining() => IsLit;
         public override VisitInformation OnUnvisited(VisitInformation visiter)
         {
-            if(IsLit)
+            if (IsLit)
                 return visiter;
 
             visiter.visited = this.gameObject;
@@ -52,14 +56,30 @@ namespace Dungeon.DungeonEntity.InteractiveObject
             return visiter;
         }
 
-        public override void Init(object data)
+        public override void OnSpawn(object data)
         {
-            throw new System.NotImplementedException();
+            DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.RegisterDungeonEntity(this);
         }
-
         public override void Reset()
         {
-            throw new System.NotImplementedException();
+            IsLit = false;
+        }
+
+        public override void OnReturnToPool()
+        {
+            DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.UnregisterDungeonEntity(this);
+        }
+
+        protected override void OnEnable()
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+            IsLit = false;
+            spriteRenderer.sprite = DarkTorch;
+        }
+
+        protected override void OnDisable()
+        {
+            
         }
     }
 }

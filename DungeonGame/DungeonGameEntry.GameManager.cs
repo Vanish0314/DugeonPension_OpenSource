@@ -27,12 +27,14 @@ namespace Dungeon.DungeonGameEntry
             if(mDungeonScene == null || mDungeonScene.buildIndex == -1)
                 GetScene();
             DisableScene(mDungeonScene);
+            m_DungeonSystem.gameObject.SetActive(false);
         }
         public void EnableDungeon()
         {
             if(mDungeonScene == null || mDungeonScene.buildIndex == -1)
                 GetScene();
             EnableScene(mDungeonScene);
+            m_DungeonSystem.gameObject.SetActive(true);
         }
         public void PauseMetroplis()
         {
@@ -51,12 +53,14 @@ namespace Dungeon.DungeonGameEntry
             if(mMetropolisScene == null || mMetropolisScene.buildIndex == -1)
                 GetScene();
             DisableScene(mMetropolisScene);
+            m_MetropolisSystem.gameObject.SetActive(false);
         }
         public void EnableMetroplis()
         {
             if(mMetropolisScene == null || mMetropolisScene.buildIndex == -1)
                 GetScene();
             EnableScene(mMetropolisScene);
+            m_MetropolisSystem.gameObject.SetActive(true);
         }
 
         private void DisableScene(UnityEngine.SceneManagement.Scene scene)

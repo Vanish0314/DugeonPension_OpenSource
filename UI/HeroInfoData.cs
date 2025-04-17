@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Dungeon
 {
-    [CreateAssetMenu(fileName = "NewHeroInfoData", menuName = "Hero/Hero Config Data")]
+    [CreateAssetMenu(fileName = "NewHeroInfoData", menuName = "Hero/HeroInfoData")]
     public class HeroInfoData : ScriptableObject
     {
         public HeroType heroType; // 英雄唯一标识

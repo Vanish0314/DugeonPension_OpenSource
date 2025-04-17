@@ -6,14 +6,24 @@ namespace Dungeon.DungeonEntity.Monster
 {
     public class StandardDungeonMonster : DungeonMonsterBase
     {
-        public override void Init(object data)
+        public override void OnReturnToPool()
         {
-            throw new System.NotImplementedException();
+
+        }
+
+        public override void OnSpawn(object data)
+        {
+
         }
 
         public override void Reset()
         {
-            throw new System.NotImplementedException();
+            
+        }
+
+        protected override void OnDisable()
+        {
+
         }
 
         protected override void OnTakeSkill(Skill skill)

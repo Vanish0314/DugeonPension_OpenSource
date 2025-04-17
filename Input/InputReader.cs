@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
@@ -9,7 +10,10 @@ namespace Dungeon
     public class InputReader : ScriptableObject, GameInput.IUIActions, GameInput.IPlaceActions
     {
         private GameInput m_GameInput;
-
+        private Camera m_MainCamera;
+        private LayerMask m_BuildingLayer;
+        private LayerMask m_HeroLayer;
+        
         private bool m_isBuilding;
         private void OnEnable()
         {
@@ -76,6 +80,10 @@ namespace Dungeon
         public event Action<Vector2> OnCameraMoveEvent;
         public event Action OnCameraMoveEndEvent;
         public event Action<float> OnCameraZoomEvent;
+        
+        // 经营场景事件
+        public event Action<GameObject> OnBuildingClickedEvent;
+        public event Action<GameObject> OnHeroClickedEvent;
         public void OnMousePosition(InputAction.CallbackContext context)
         {
             if (context.phase == InputActionPhase.Performed)
@@ -140,6 +148,27 @@ namespace Dungeon
             else if (context.phase == InputActionPhase.Canceled)
             {
                 OnCameraMoveEndEvent?.Invoke();
+            }
+        }
+
+        private void DetectClickedObject()
+        {
+            Vector2 clickPos = Mouse.current.position.ReadValue();
+            Ray ray = m_MainCamera.ScreenPointToRay(clickPos);
+
+            // 优先检测建筑点击
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, m_BuildingLayer))
+            {
+                OnBuildingClickedEvent?.Invoke(hit.collider.gameObject);
+                return;
+            }
+
+            // 然后检测英雄点击
+            RaycastHit2D hit2D = Physics2D.GetRayIntersection(ray, Mathf.Infinity, m_HeroLayer);
+            if (hit2D.collider != null)
+            {
+                OnHeroClickedEvent?.Invoke(hit2D.collider.gameObject);
             }
         }
 

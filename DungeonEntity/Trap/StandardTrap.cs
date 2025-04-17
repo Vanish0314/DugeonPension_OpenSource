@@ -8,7 +8,7 @@ namespace Dungeon.DungeonEntity.Trap
 {
     public class StandardTrap : DungeonTrapBase
     {
-        public override void Init(object data)
+        public override void OnSpawn(object data)
         {
             throw new System.NotImplementedException();
         }

@@ -5,6 +5,7 @@ using Dungeon.Data;
 using Dungeon.DungeonEntity;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
+using DungoenProcedure;
 using GameFramework;
 using GameFramework.Event;
 using GameFramework.Procedure;
@@ -17,6 +18,27 @@ using UnityEngine.SceneManagement;
 using UnityGameFramework.Runtime;
 using ProcedureOwner = GameFramework.Fsm.IFsm<GameFramework.Procedure.IProcedureManager>;
 
+namespace DungoenProcedure
+{
+    public abstract class DungeonProcedure : ProcedureBase
+    {
+        protected override void OnEnter(ProcedureOwner procedureOwner)
+        {
+            base.OnEnter(procedureOwner);
+
+            var className = GetType().Name;
+            GameFrameworkLog.Info($"[{className}] 进入流程: 「{className}」");
+        }
+        protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
+        {
+            base.OnLeave(procedureOwner, isShutdown);
+
+            var className = GetType().Name;
+            GameFrameworkLog.Info($"[{className}] 离开流程: 「{className}」");
+        }
+    }
+}
+
 namespace Dungeon.Procedure
 {
     /// <summary>
@@ -26,7 +48,7 @@ namespace Dungeon.Procedure
     /// 3. 一帧后切换到ProcedureOpenning
     /// 4. 配置全局初始静态数据
     /// </summary>
-    public class ProcedureLauch : ProcedureBase
+    public class ProcedureLauch : DungeonProcedure
     {
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -60,7 +82,7 @@ namespace Dungeon.Procedure
 
     }
 
-    public class ProcedurePreload : ProcedureBase
+    public class ProcedurePreload : DungeonProcedure
     {
         private DataBase[] datas;
 
@@ -226,7 +248,7 @@ namespace Dungeon.Procedure
     /// 2. 播放完毕切换到ProcedureStartScene
     /// 3. 播放动画时可以进行一些加载工作
     /// </summary>
-    public class ProcedureOpenning : ProcedureBase
+    public class ProcedureOpenning : DungeonProcedure
     {
         private ProcedureOwner mOwner;
         protected override void OnEnter(ProcedureOwner procedureOwner)
@@ -263,7 +285,7 @@ namespace Dungeon.Procedure
 
     }
 
-    public class ProcedureChangeToStartScene : ProcedureBase
+    public class ProcedureChangeToStartScene : DungeonProcedure
     {
         private bool m_IsLoadSceneComplete = false;
         private AsyncOperation m_LoadSceneAsyncOperation = null;
@@ -316,7 +338,7 @@ namespace Dungeon.Procedure
     }
 
 
-    public class ProcedureStartScene : ProcedureBase
+    public class ProcedureStartScene : DungeonProcedure
     {
         private ProcedureOwner mOwner;
         protected override void OnEnter(ProcedureOwner procedureOwner)
@@ -353,7 +375,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 1. 加载存档信息
     /// </summary>
-    public class ProcedureLoadSavedGame : ProcedureBase
+    public class ProcedureLoadSavedGame : DungeonProcedure
     {
         //TODO(vanish): 加载存档信息
 
@@ -367,7 +389,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 1. 创建新存档
     /// </summary>
-    public class ProcedureCreateNewGame : ProcedureBase
+    public class ProcedureCreateNewGame : DungeonProcedure
     {
         override protected void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -379,7 +401,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 1. 根据存档信息初始化游戏数据
     /// </summary>
-    public class ProcedureInitGameMain : ProcedureBase
+    public class ProcedureInitGameMain : DungeonProcedure
     {
         private AsyncOperation metroplisSceneLoadAsyncOperation = null;
         private AsyncOperation dungeonSceneLoadAsyncOperation = null;
@@ -481,7 +503,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 进入模拟经营部分
     /// </summary>
-    public class ProcedureMetroplisStage : ProcedureBase
+    public class ProcedureMetroplisStage : DungeonProcedure
     {
         /// <summary>
         /// 1. 暂停地牢场景
@@ -511,9 +533,11 @@ namespace Dungeon.Procedure
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
-            base.OnLeave(procedureOwner, isShutdown);
+            GameEntry.UI.CloseAllLoadedUIForms();
 
             UnsubscribeEvents();
+
+            base.OnLeave(procedureOwner, isShutdown);
         }
 
         private void SubscribeEvents()
@@ -544,7 +568,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 进入地牢建造部分
     /// </summary>
-    public class ProcedureDungeonPlacingStage : ProcedureBase
+    public class ProcedureDungeonPlacingStage : DungeonProcedure
     {
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -601,7 +625,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 当勇者到达地牢时
     /// </summary>
-    public class ProcedureDungeonPreHeroArrivedStage : ProcedureBase
+    public class ProcedureDungeonPreHeroArrivedStage : DungeonProcedure
     {
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -641,7 +665,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 当勇者开始攻略地牢时
     /// </summary>
-    public class ProcedureHeroExploringDungeonStage : ProcedureBase
+    public class ProcedureHeroExploringDungeonStage : DungeonProcedure
     {
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -663,7 +687,7 @@ namespace Dungeon.Procedure
 
         private void SubscribeEvents()
         {
-            GameEntry.Event.Subscribe(OnHeroFinishDungeonExploreEvent.EventId, OnHeroFinishDungeonExploreEventHandler);
+            GameEntry.Event.Subscribe(OnHeroTeamFinishDungeonExploreEvent.EventId, OnHeroFinishDungeonExploreEventHandler);
             GameEntry.Event.Subscribe(OnHeroTeamDiedInDungeonEvent.EventId, OnHeroTeamDiedInDungeonEventHandler);
         }
 
@@ -679,7 +703,7 @@ namespace Dungeon.Procedure
 
         private void UnsubscribeEvents()
         {
-            GameEntry.Event.Unsubscribe(OnHeroFinishDungeonExploreEvent.EventId, OnHeroFinishDungeonExploreEventHandler);
+            GameEntry.Event.Unsubscribe(OnHeroTeamFinishDungeonExploreEvent.EventId, OnHeroFinishDungeonExploreEventHandler);
             GameEntry.Event.Unsubscribe(OnHeroTeamDiedInDungeonEvent.EventId, OnHeroTeamDiedInDungeonEventHandler);
         }
 
@@ -691,7 +715,7 @@ namespace Dungeon.Procedure
     /// 2. 开始对话
     /// 3. 对话完毕结算后恢复游戏
     /// </summary>
-    public class ProcedureDialogueStage : ProcedureBase
+    public class ProcedureDialogueStage : DungeonProcedure
     {
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -706,7 +730,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 地牢攻略结束,进行结算
     /// </summary>
-    public class ProcedureDungeonCalculationStage : ProcedureBase
+    public class ProcedureDungeonCalculationStage : DungeonProcedure
     {
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -1032,9 +1056,12 @@ namespace Dungeon.Evnents
         }
     }
 
-    public sealed class OnHeroFinishDungeonExploreEvent : GameEventArgs
+    /// <summary>
+    /// 当有一个勇者到达了地牢终点房间时触发
+    /// </summary>
+    public sealed class OnOneHeroArrivedAtDungeonEvent : GameEventArgs
     {
-        public static readonly int EventId = typeof(OnHeroFinishDungeonExploreEvent).GetHashCode();
+        public static readonly int EventId = typeof(OnOneHeroArrivedAtDungeonEvent).GetHashCode();
 
         public override int Id
         {
@@ -1044,9 +1071,35 @@ namespace Dungeon.Evnents
             }
         }
 
-        public static OnHeroFinishDungeonExploreEvent Create()
+        public static OnOneHeroArrivedAtDungeonEvent Create()
         {
-            OnHeroFinishDungeonExploreEvent a = ReferencePool.Acquire<OnHeroFinishDungeonExploreEvent>();
+            OnOneHeroArrivedAtDungeonEvent a = ReferencePool.Acquire<OnOneHeroArrivedAtDungeonEvent>();
+            return a;
+        }
+
+        public override void Clear()
+        {
+        }
+    }
+
+    /// <summary>
+    /// 当整个勇者小队完成了探险,终点房安全,该结算时触发
+    /// </summary>
+    public sealed class OnHeroTeamFinishDungeonExploreEvent : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnHeroTeamFinishDungeonExploreEvent).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+
+        public static OnHeroTeamFinishDungeonExploreEvent Create()
+        {
+            OnHeroTeamFinishDungeonExploreEvent a = ReferencePool.Acquire<OnHeroTeamFinishDungeonExploreEvent>();
             return a;
         }
 

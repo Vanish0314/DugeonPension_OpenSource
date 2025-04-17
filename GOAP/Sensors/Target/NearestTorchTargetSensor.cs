@@ -17,13 +17,14 @@ namespace Dungeon.GOAP.Sensor.Target
 
         public override ITarget Sense(IActionReceiver agent, IComponentReference references, ITarget existingTarget)
         {
-            var lowLevel = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var low = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
 
-            lowLevel.GetNearestTorch(out Transform nearestTorch);
-            if (nearestTorch == null)
-                return new DungeonTransformTarget(null);
-            else
-                return new DungeonTransformTarget(nearestTorch);
+            var torch = low.GetNearestTorchInVision();
+            var torchTransf = torch?.transform;
+            if (torchTransf == null)
+                return null;
+
+            return new DungeonTransformTarget(torchTransf);
         }
 
         public override void Update()
