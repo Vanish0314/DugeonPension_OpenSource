@@ -11,6 +11,7 @@ namespace Dungeon.GridSystem
         public int height;     // 网格高度
         public const float cellSize = 1;     // 每个单元格的大小
         public Vector3 originPoint; // 网格原点(即左下角)
+        public Vector2Int exitPosition;
     }
     public struct LogicalCell
     {

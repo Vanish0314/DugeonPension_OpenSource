@@ -136,8 +136,8 @@ namespace Dungeon.DungeonEntity.Monster
             foreach (var result in results)
             {
 #if UNITY_EDITOR
-                if(result?.GetComponent<HeroEntityBase>() == null)
-                    GameFrameworkLog.Error("[DungeonMonsterBase] Why the fuck there is a GO in Hero layer but not a HeroEntityBase?");
+                if(result?.GetComponent<HeroEntityBase>() == null && result != null)
+                    GameFrameworkLog.Error($"[DungeonMonsterBase] Why the fuck there is a GO in Hero layer but not a HeroEntityBase?\n collider name: {result.name}");
 #endif
                 if(result == null)
                     break;

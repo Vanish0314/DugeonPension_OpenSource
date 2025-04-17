@@ -25,13 +25,18 @@ namespace Dungeon.Character.Hero
         {
             m_IsHappyingAtDungeonExit = true;
 
-            DOVirtual.DelayedCall(0.5f,()=>{
+            DOVirtual.DelayedCall(1.5f,()=>{
                 //TODO(vanish): 设置动画为 happy
 
                 m_LowLevelSystem.enabled = false;
                 m_HighLevelSystem.enabled = false;
                 m_GoapActionProvider.enabled = false;
                 m_GoapAgent.enabled = false;
+                
+                var rb= GetComponent<Rigidbody2D>();
+                rb.bodyType = RigidbodyType2D.Static;
+                rb.velocity = Vector2.zero;
+                rb.angularVelocity = 0;
             });
         }
 

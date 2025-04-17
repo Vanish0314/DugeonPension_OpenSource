@@ -85,7 +85,8 @@ namespace Dungeon.GridSystem
                 {
                     width = bounds.size.x,
                     height = bounds.size.y,
-                    originPoint = unityGrid.CellToWorld(bounds.min)
+                    originPoint = unityGrid.CellToWorld(bounds.min),
+                    exitPosition = gridSystem.GetExitGridPosition()
                 }
             };
 

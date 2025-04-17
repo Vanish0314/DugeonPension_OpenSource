@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Dungeon
 {
+    [Serializable]
     public class GridData
     {
         public GridProperties properties;

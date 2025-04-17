@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Codice.Client.BaseCommands.Merge.IncomingChanges;
 using Dungeon.Data;
+using Dungeon.DUngeonCalculator;
 using Dungeon.DungeonEntity;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
@@ -742,10 +743,18 @@ namespace Dungeon.Procedure
 
             SubscribeEvents();
         }
+        protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
+        {
+            GameFrameworkLog.Info("[ProcedureDungeonCalculationStage] 不知道如何结算,直接进入工厂阶段");
+            GameEntry.Event.Fire(this, OnDungeonCalculationFinishedEvent.Create(null));
+        }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
+
+            // 恢复地牢
+            // 把勇者干回去
 
             UnsubscribeEvents();
         }
@@ -757,7 +766,7 @@ namespace Dungeon.Procedure
 
         private void OnDungeonCalculationFinishedEventHandler(object sender, GameEventArgs e)
         {
-
+            ChangeState<ProcedureMetroplisStage>(mOwner);
         }
 
         private void UnsubscribeEvents()
@@ -1155,6 +1164,7 @@ namespace Dungeon.Evnents
     public sealed class OnDungeonCalculationFinishedEvent : GameEventArgs
     {
         public static readonly int EventId = typeof(OnDungeonCalculationFinishedEvent).GetHashCode();
+        public DungeonCalculationResult Result { get; private set; }
 
         public override int Id
         {
@@ -1164,9 +1174,10 @@ namespace Dungeon.Evnents
             }
         }
 
-        public static OnDungeonCalculationFinishedEvent Create()
+        public static OnDungeonCalculationFinishedEvent Create(DungeonCalculationResult result)
         {
             OnDungeonCalculationFinishedEvent a = ReferencePool.Acquire<OnDungeonCalculationFinishedEvent>();
+            a.Result = result;
             return a;
         }
 

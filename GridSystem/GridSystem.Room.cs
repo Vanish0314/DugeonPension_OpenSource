@@ -13,6 +13,10 @@ namespace Dungeon.GridSystem
 {
     public partial class GridSystem : MonoBehaviour, IBlackBoardWriter
     {
+        public Vector2Int GetExitGridPosition()
+        {
+            return gridData.properties.exitPosition;
+        }
         public void GetRoomAt(Vector2Int gridPos, out Room room)
         {
             m_LogicalGrid.GetRoomAt(gridPos, out room);
@@ -36,7 +40,10 @@ namespace Dungeon.GridSystem
         }
         private void BuildRooms()
         {
-            GetRoomAt(DungeonExitPosition, out var exitRoom);
+            GetRoomAt(GetExitGridPosition(), out var exitRoom);
+            #if UNITY_EDITOR
+            if (exitRoom == null) GameFrameworkLog.Error("[GridSystem] 设置的出口位置没有对应的房间");
+            #endif
 
             var root = new GameObject("Rooms");
             root.transform.SetParent(transform);
@@ -56,7 +63,6 @@ namespace Dungeon.GridSystem
         }
 
         private List<Room> m_DungeonRooms;
-        [SerializeField] private Vector2Int DungeonExitPosition;
 
         public class Room
         {

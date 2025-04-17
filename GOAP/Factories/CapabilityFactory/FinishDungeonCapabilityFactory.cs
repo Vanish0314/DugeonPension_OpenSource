@@ -90,7 +90,7 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
             builder.AddTargetSensor<NearestChestTargetSensor>()
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonTreasureChest>>();
             builder.AddTargetSensor<NearestMonsterTargetSensor>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<DungeonMonsterBase>>();
+                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonMonster>>();
             
 
             builder.AddWorldSensor<HeroIsAtDungeonExitSensor>()
