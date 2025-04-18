@@ -60,6 +60,8 @@ namespace Dungeon.GridSystem
             
             GameEntry.Event.GetComponent<EventComponent>().Subscribe(TryPlaceTrapEventArgs.EventId,HandleTrapPlacement);
             GameEntry.Event.GetComponent<EventComponent>().Subscribe(TryPlaceMonsterEventArgs.EventId,HandleMonsterPlacement);
+
+            SubscribEvents();
         }
         private void OnDisable()
         {
@@ -67,6 +69,8 @@ namespace Dungeon.GridSystem
             
             GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(TryPlaceTrapEventArgs.EventId,HandleTrapPlacement);
             GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(TryPlaceMonsterEventArgs.EventId,HandleMonsterPlacement);
+
+            UnSubscribEvents();
         }
 
         [SerializeField] private GridData gridData;

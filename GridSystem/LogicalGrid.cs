@@ -10,6 +10,8 @@ using static Dungeon.GridSystem.GridSystem;
 using System.Linq;
 using System;
 using NUnit.Framework;
+using Dungeon.DungeonEntity.Monster;
+
 
 
 
@@ -75,6 +77,35 @@ namespace Dungeon.GridSystem
 
             interactMap.Add(gridPos, interactiveObject);
         }
+        public void AddMonster(Vector2Int gridPos, DungeonMonsterBase monster)
+        {
+            if (monsterMap.ContainsKey(gridPos))
+                return;
+
+            monsterMap.Add(gridPos, monster);
+        }
+        public void RemoveTrap(Vector2Int gridPos)
+        {
+            if (trapMap.ContainsKey(gridPos))
+            {
+                wallMap.Set(gridPos.x, gridPos.y, new LogicalCell(TilePathBlockType.Ground));        
+                trapMap.Remove(gridPos);
+            }
+        }
+        public void RemoveInteractiveObject(Vector2Int gridPos)
+        {
+            if (interactMap.ContainsKey(gridPos))
+            {
+                interactMap.Remove(gridPos);
+            }
+        }
+        public void RemoveMonster(Vector2Int gridPos)
+        {
+            if (monsterMap.ContainsKey(gridPos))
+            {
+                monsterMap.Remove(gridPos);
+            }
+        }
         public bool IsUnReachable(Vector2Int gridPos)
         {
             return wallMap.Get(gridPos.x, gridPos.y).type == TilePathBlockType.Wall;
@@ -98,6 +129,10 @@ namespace Dungeon.GridSystem
             else if (trapMap.ContainsKey(gridPos))
             {
                 return trapMap[gridPos];
+            }
+            else if (monsterMap.ContainsKey(gridPos))
+            {
+                return monsterMap[gridPos];
             }
 
             return null;
@@ -447,10 +482,11 @@ namespace Dungeon.GridSystem
                    y < gridProperties.height;
         }
 
+        [HideInInspector] public Dictionary<Vector2Int, DungeonInteractiveObjectBase> interactMap = new();
+        [HideInInspector] public Dictionary<Vector2Int, DungeonTrapBase> trapMap = new();
+        [HideInInspector] public Dictionary<Vector2Int, DungeonMonsterBase> monsterMap = new();
         private GridProperties gridProperties;
         private Map2D<LogicalCell> wallMap;
-        private Dictionary<Vector2Int, DungeonInteractiveObjectBase> interactMap = new();
-        private Dictionary<Vector2Int, DungeonTrapBase> trapMap = new();
         private Dictionary<Vector2Int, Room> positionToRoom = new();
 
         private Vector3 originPoint => gridProperties.originPoint;

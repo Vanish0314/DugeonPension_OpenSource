@@ -11,17 +11,28 @@ namespace Dungeon.Common.MonoPool
 	/// </summary>
 	public abstract class MonoPoolItem : MonoBehaviour
 	{
-		private MonoPoolComponent m_Owner;
+		public bool isInPool = true;
+		protected MonoPoolComponent m_Owner;
+		protected object mData;
+		public MonoPoolItem Duplicate()
+		{
+			return m_Owner.GetItem(mData);
+		}
+
 		protected virtual void Awake() { } // 请不要使用Awake来初始化，请使用Init来初始化
 		protected virtual void Start() { } // 请不要使用Start来初始化，请使用Init来初始化
 		protected virtual void OnDestroy() { } // 请不要使用OnDestroy来清理，请使用ReturnToPool来清理
 		public void Init(object data, MonoPoolComponent owner)
 		{
 			m_Owner = owner;
+			mData = data;
+			isInPool = false;
 			OnSpawn(data);
 		}
 		public void ReturnToPool()
 		{
+			isInPool = true;
+			mData = null;
 			OnReturnToPool();
 			m_Owner.ReturnItem(this);
 		}
