@@ -634,6 +634,9 @@ namespace Dungeon.Procedure
 
             mOwner = procedureOwner;
 
+            DungeonGameEntry.DungeonGameEntry.Instance.DisableMetroplis();
+            DungeonGameEntry.DungeonGameEntry.Instance.EnableDungeon();
+
             GameEntry.Event.Fire(this, OnSwitchedToDungeonPreHeroArrivedProcedureEvent.Create());
 
             SubscribeEvents();

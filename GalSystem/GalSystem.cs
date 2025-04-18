@@ -18,8 +18,13 @@ namespace Dungeon
         private void Start()
         {
             m_GalPrefab = transform.GetChild(0).gameObject;
-            m_GalPrefab.SetActive(false);
+            m_Dto = transform.GetComponentInChildren<DtoManager>().gameObject;
+            m_Dao = transform.GetComponentInChildren<DaoManager>().gameObject;
 
+            m_GalPrefab.SetActive(false);
+            m_Dto.SetActive(false);
+            m_Dao.SetActive(false);
+            
             SubscribeEvents();
         }
         void OnDestroy()
@@ -30,19 +35,32 @@ namespace Dungeon
         private void SubscribeEvents()
         {
             GameEntry.Event.Subscribe(OnHeroArrivedInDungeonEvent.EventId, OnHeroArrivedInDungeonEventHandler);
+            GameEntry.Event.Subscribe(OnHeroStartExploreDungeonEvent.EventId, OnHeroStartExploreDungeonEventHandler);
         }
 
         private void OnHeroArrivedInDungeonEventHandler(object sender, GameEventArgs e)
         {
             m_GalPrefab.SetActive(true);
+            m_Dto.SetActive(true);
+            m_Dao.SetActive(true);
+        }
+
+        private void OnHeroStartExploreDungeonEventHandler(object sender, GameEventArgs e)
+        {
+            m_GalPrefab.SetActive(false);
+            m_Dto.SetActive(false);
+            m_Dao.SetActive(false);
         }
 
         private void UnSubscribeEvents()
         {
             GameEntry.Event.Unsubscribe(OnHeroArrivedInDungeonEvent.EventId, OnHeroArrivedInDungeonEventHandler);
+            GameEntry.Event.Unsubscribe(OnHeroStartExploreDungeonEvent.EventId, OnHeroStartExploreDungeonEventHandler);
         }
 
         private GameObject m_GalPrefab;
+        private GameObject m_Dto;
+        private GameObject m_Dao;
         
     }
 }

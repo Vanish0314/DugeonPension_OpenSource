@@ -47,6 +47,8 @@ namespace Dungeon.AgentLowLevelSystem
                 m_AgentRigdbody.velocity = new Vector2(v.x, v.y);
 
                 SetAnimatorState(ANIMATOR_BOOL_MOVING,1);
+
+                SetSpriteDirection(dir.x > -0.1); // prevent sprite flip when moving diagonally
             }
             else
             {
@@ -114,6 +116,15 @@ namespace Dungeon.AgentLowLevelSystem
             var targetPosInWorldCoord = m_MoveWayPoints.Pop();
 
             MoveTo(targetPosInWorldCoord);
+        }
+        private void FlipSprite()
+        {
+            m_AgentAnimator.transform.localScale = 
+                new Vector3(m_AgentAnimator.transform.localScale.x * -1, m_AgentAnimator.transform.localScale.y, m_AgentAnimator.transform.localScale.z);
+        }
+        private void SetSpriteDirection(bool right)
+        {
+            m_AgentAnimator.transform.localScale = new Vector3(right? 1 : -1, m_AgentAnimator.transform.localScale.y, m_AgentAnimator.transform.localScale.z);
         }
 #if UNITY_EDITOR
         private void OnDrawGizmos()
