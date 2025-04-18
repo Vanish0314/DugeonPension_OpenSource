@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Dungeon.Character.Hero;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
 using GameFramework.Event;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using ReadOnlyAttribute = Sirenix.OdinInspector.ReadOnlyAttribute;
 
 namespace Dungeon
 {
@@ -14,10 +17,32 @@ namespace Dungeon
         void Start()
         {
             SubscribeEvents();
+
+            foreach(var hero in heroPrefabs)
+            {
+                var heroType = hero.GetComponent<HeroEntityBase>();
+
+                var pool = gameObject.AddComponent<MonoPoolComponent>();
+                pool.Init(hero.name, heroType, transform, 10);
+
+                heroMonoPool.Add(hero.name, pool);
+            }
         }
         private void SubscribeEvents()
         {
             GameEntry.Event.Subscribe(OnHeroStartExploreDungeonEvent.EventId, OnHeroStartExploreDungeonEventHandler);
+            GameEntry.Event.Subscribe(OnHeroTeamFinishDungeonExploreEvent.EventId, OnHeroTeamFinishDungeonExploreEventHandler);
+            GameEntry.Event.Subscribe(OnHeroTeamDiedInDungeonEvent.EventId, OnHeroTeamDiedInDungeonEventHandler);
+        }
+
+        private void OnHeroTeamDiedInDungeonEventHandler(object sender, GameEventArgs e)
+        {
+
+        }
+
+        private void OnHeroTeamFinishDungeonExploreEventHandler(object sender, GameEventArgs e)
+        {
+
         }
 
         private void OnHeroStartExploreDungeonEventHandler(object sender, GameEventArgs e)
@@ -37,8 +62,9 @@ namespace Dungeon
         }
         public void SpawnHero(Vector3 worldPos)
         {
-            var go = Instantiate(heroPrefabs[Random.Range(0, heroPrefabs.Count)], worldPos, Quaternion.identity);
-            SceneManager.MoveGameObjectToScene(go, SceneManager.GetSceneByName("DungeonGameScene"));
+            heroMonoPool.TryGetValue(heroPrefabs[Random.Range(0, heroPrefabs.Count)].name, out var pool);
+            var go = pool.GetItem(null);
+            // SceneManager.MoveGameObjectToScene(go.gameObject, SceneManager.GetSceneByName("DungeonGameScene"));
             go.transform.parent = null;
 
             go.GetComponent<HeroEntityBase>().OnSpawn();
@@ -60,6 +86,7 @@ namespace Dungeon
         }
 
         [SerializeField] private List<GameObject> heroPrefabs = new ();
-        public List<HeroEntityBase> currentHeroTeam = new ();
+        [ReadOnly] public List<HeroEntityBase> currentHeroTeam = new ();
+        private Dictionary<string,MonoPoolComponent> heroMonoPool = new();
     }
 }

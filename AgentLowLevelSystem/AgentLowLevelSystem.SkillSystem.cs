@@ -11,14 +11,16 @@ namespace Dungeon.AgentLowLevelSystem
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
-        public void TakeSkill(Skill skill)
+        public bool TakeSkill(Skill skill)
         {
             // skill.FuckMe()
             skill.FuckMe(this);
+
+            return Hp < 0;
         }
         public bool IsInSkillRange(SkillDesc skillDesc, float distance)
         {
-            if (m_skillDict.TryGetValue(skillDesc.name, out var skillData))
+            if (m_SkillDict.TryGetValue(skillDesc.name, out var skillData))
             {
                 return skillData.IsInRange(distance);
             }
@@ -30,13 +32,13 @@ namespace Dungeon.AgentLowLevelSystem
         {
             m_SkillShooter = gameObject.GetOrAddComponent<SkillShooter>();
 
-            foreach (var skillData in m_skills)
+            foreach (var skillData in CurrentOwnedSkills())
             {
-                m_skillDict.Add(skillData.skillName, skillData);
+                m_SkillDict.Add(skillData.skillName, skillData);
             }
 
 #if UNITY_EDITOR
-            if (m_skillDict.Count == 0)
+            if (m_SkillDict.Count == 0)
                 GameFrameworkLog.Warning("[AgentLowLevelSystem] 勇者一个技能都没有,你确定吗?:" + name);
 #endif
         }
@@ -46,12 +48,12 @@ namespace Dungeon.AgentLowLevelSystem
         {
             get
             {
-                return m_combatorData.hp;
+                return CombatorData.hp;
             }
             set
             {
                 value = Mathf.Clamp(value, 0, MaxHp);
-                m_combatorData.hp = value;
+                CombatorData.hp = value;
                 UpdateCombatorData();
 
                 if(value <= 0)
@@ -66,11 +68,11 @@ namespace Dungeon.AgentLowLevelSystem
         {
             get
             {
-                return m_combatorData.maxHp;
+                return CombatorData.maxHp;
             }
             set
             {
-                m_combatorData.maxHp = value;
+                CombatorData.maxHp = value;
                 UpdateCombatorData();
             }
         }
@@ -78,12 +80,12 @@ namespace Dungeon.AgentLowLevelSystem
         {
             get
             {
-                return m_combatorData.mp;
+                return CombatorData.mp;
             }
             set
             {
                 value = Mathf.Clamp(value, 0, MaxMp);
-                m_combatorData.mp = value;
+                CombatorData.mp = value;
                 UpdateCombatorData();
             }
         }
@@ -91,11 +93,11 @@ namespace Dungeon.AgentLowLevelSystem
         {
             get
             {
-                return m_combatorData.maxMp;
+                return CombatorData.maxMp;
             }
             set
             {
-                m_combatorData.maxMp = value;
+                CombatorData.maxMp = value;
                 UpdateCombatorData();
             }
         }        
@@ -103,20 +105,20 @@ namespace Dungeon.AgentLowLevelSystem
         {
             get
             {
-                return m_combatorData.attackSpeed;
+                return CombatorData.attackSpeed;
             }
             set 
             {
-                m_combatorData.attackSpeed = value;
+                CombatorData.attackSpeed = value;
                 UpdateCombatorData();
             }
         }
         public CombatorData BasicInfo
         {
-            get => m_combatorData;
+            get => CombatorData;
             set
             {
-                m_combatorData = value;
+                m_Properties.combatorData = value;
                 UpdateCombatorData();
             }
         }
@@ -153,18 +155,14 @@ namespace Dungeon.AgentLowLevelSystem
             var keyMaxMp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.MpMax);
             var keyAtkSpeed = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.AttackSpeed);
 
-            m_blackboard.SetValue<int>(keyHp, m_combatorData.hp);
-            m_blackboard.SetValue<int>(keyMaxHp, m_combatorData.maxHp);
-            m_blackboard.SetValue<int>(keyMp, m_combatorData.mp);
-            m_blackboard.SetValue<int>(keyMaxMp, m_combatorData.maxMp);
-            m_blackboard.SetValue<float>(keyAtkSpeed, m_combatorData.attackSpeed);
+            m_blackboard.SetValue<int>(keyHp, CombatorData.hp);
+            m_blackboard.SetValue<int>(keyMaxHp, CombatorData.maxHp);
+            m_blackboard.SetValue<int>(keyMp, CombatorData.mp);
+            m_blackboard.SetValue<int>(keyMaxMp, CombatorData.maxMp);
+            m_blackboard.SetValue<float>(keyAtkSpeed, CombatorData.attackSpeed);
         }
 
-
-        [Header("战斗相关")]
-        [SerializeField] private CombatorData m_combatorData;
-        [SerializeField] private List<SkillData> m_skills;
-        private Dictionary<string, SkillData> m_skillDict = new();
+        [SerializeField] private CombatorData CombatorData => m_Properties.combatorData;
         private SkillShooter m_SkillShooter;
     }
 

@@ -1,3 +1,4 @@
+using System;
 using GameFramework;
 using UnityEngine;
 
@@ -5,17 +6,17 @@ namespace Dungeon.SkillSystem
 {
     public class SkillEntity : MonoBehaviour
     {
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         private void Validate()
         {
 
         }
-        #endif
+#endif
         public void InitAndFire(Skill skill)
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             Validate();
-            #endif
+#endif
 
             var deploy = skill.skillDeployMethod;
 
@@ -47,11 +48,19 @@ namespace Dungeon.SkillSystem
 
         public void OnTriggerEnter2D(Collider2D collision)
         {
-            if (((1 << collision.gameObject.layer)&LayerToShoot) > 0)
+            if (((1 << collision.gameObject.layer) & LayerToShoot) > 0)
             {
                 var obj = collision.GetComponent<ICombatable>();
                 if (obj != null)
-                    obj.TakeSkill(skill);
+                {
+                    OnSkillHitEvent?.Invoke(obj);
+                    if (obj.TakeSkill(skill))
+                    {
+                        OnSkillKilledEvent?.Invoke(obj);
+                    }
+                    OnSkillHitEvent = null;
+                    OnSkillKilledEvent = null;// TODO(vanish) : 对于如毒属性的伤害,需要延迟调用event
+                }
             }
 
             GameFrameworkLog.Info($"[SkillEntity] {collision.gameObject.name} 收到了技能 {skill.skillData.skillName}");
@@ -65,6 +74,9 @@ namespace Dungeon.SkillSystem
         {
             Destroy(gameObject);
         }
+
+        public event Action<ICombatable> OnSkillHitEvent;
+        public event Action<ICombatable> OnSkillKilledEvent;
 
         private int LayerToShoot;
         private float m_AliveTime;

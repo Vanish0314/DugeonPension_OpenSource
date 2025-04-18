@@ -168,7 +168,7 @@ namespace Dungeon.AgentLowLevelSystem
         Dexterity, // 敏捷
         Constitution, // 体质
         Intelligence, // 智力
-        Wisdom, // 知识
+        Wisdom, // 感知
         Charisma // 魅力
     }
 

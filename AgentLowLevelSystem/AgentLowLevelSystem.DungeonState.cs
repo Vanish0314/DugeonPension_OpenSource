@@ -18,6 +18,7 @@ namespace Dungeon.AgentLowLevelSystem
         private void OnDied()
         {
             SetAnimatorState(ANIMATOR_BOOL_DIE,99999);
+            m_Vision.gameObject.SetActive(false);
             this.GetComponent<HeroEntityBase>().OnDie();
         }
     }

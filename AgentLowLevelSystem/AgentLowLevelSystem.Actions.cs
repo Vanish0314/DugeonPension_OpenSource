@@ -74,7 +74,7 @@ namespace Dungeon.AgentLowLevelSystem
                 return ActionRunState.Completed;
             }
 
-            if (m_skillDict.TryGetValue(skillDesc.name, out SkillData data))
+            if (m_SkillDict.TryGetValue(skillDesc.name, out SkillData data))
             {
                 GameFrameworkLog.Info("[AgentLowLevelSystem] UseSkill: " + data.name);
                 BumpUseSkillBubbule(data.name);

@@ -19,6 +19,18 @@ namespace Dungeon.Character.Hero
         public void OnDie()
         {
             m_GoapActionProvider.enabled = false;
+
+            DOVirtual.DelayedCall(0.5f,()=>{
+                m_LowLevelSystem.enabled = false;
+                m_HighLevelSystem.enabled = false;
+                m_GoapActionProvider.enabled = false;
+                m_GoapAgent.enabled = false;
+                
+                var rb= GetComponent<Rigidbody2D>();
+                rb.bodyType = RigidbodyType2D.Static;
+                rb.velocity = Vector2.zero;
+                rb.angularVelocity = 0;
+            });
         }
 
         public void OnArrivedAtDungeonExit()

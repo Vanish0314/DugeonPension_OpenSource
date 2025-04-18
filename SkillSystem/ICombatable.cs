@@ -21,7 +21,13 @@ namespace Dungeon
         public CombatorData BasicInfo{get;set;}
         
         public GameObject GetGameObject();
-        public void TakeSkill(Skill skill);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="skill"></param>
+        /// <returns>返回是否死亡</returns>
+        public bool TakeSkill(Skill skill);
 
         /// <summary>
         /// 进入僵直状态
@@ -30,6 +36,17 @@ namespace Dungeon
         public void Stun(float duration);
     }
 
+
+    [Serializable]
+    public class DndSkillData
+    {
+        [LabelText("力量"),Range(1,20)] public int Strength;
+        [LabelText("敏捷"),Range(1,20)] public int Dexterity;
+        [LabelText("体质"),Range(1,20)] public int Constitution;
+        [LabelText("智力"),Range(1,20)] public int Intelligence;
+        [LabelText("感知"),Range(1,20)] public int Wisdom;
+        [LabelText("魅力"),Range(1,20)] public int Charisma;
+    }
 
     [Serializable]
     public class CombatorData
@@ -70,6 +87,7 @@ namespace Dungeon
         public ResistanceLevel posionResistance;
     }
 
+    [Serializable]
     public enum ResistanceLevel
     {
         [LabelText("弱点")]Weak,

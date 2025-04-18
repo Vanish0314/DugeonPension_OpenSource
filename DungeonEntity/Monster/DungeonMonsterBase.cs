@@ -64,10 +64,12 @@ namespace Dungeon.DungeonEntity.Monster
             }
         }
 
-        public void TakeSkill(Skill skill)
+        public bool TakeSkill(Skill skill)
         {
             OnTakeSkill(skill);
             skill.FuckMe(this);
+
+            return Hp <= 0;
         }
 
         protected override void OnEnable()
@@ -81,7 +83,7 @@ namespace Dungeon.DungeonEntity.Monster
             m_BtHelper = GetComponent<DungeonMonsterBehaviourTreeHelper>();
             m_Animator = GetComponent<Animator>();
             m_Motor = GetComponent<DungeonEntityMotor>();
-            m_Motor.InitMotor(moveSpeed);
+            m_Motor.InitMotor(moveSpeed,m_Animator.transform);
             m_BtHelper.Init(this, skill);
             Init();
         }

@@ -61,7 +61,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void FixedUpdateSystem()
         {
-            if (m_IsStunned)
+            if (m_IsStunned || Hp <= 0)
                 return;
 
             FixedUpdateMoveSystem();

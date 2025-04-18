@@ -14,12 +14,14 @@ namespace Dungeon
     {
         private Stack<Vector3> m_Path = new();
         private Rigidbody2D rb;
+        private Transform spriteTransform;
         private float speed;
 
-        public void InitMotor(float speed)
+        public void InitMotor(float speed, Transform spriteTransform)
         {
             rb = GetComponent<Rigidbody2D>();
             this.speed = speed;
+            this.spriteTransform = spriteTransform;
         }
         public void Stun(float duration)
         {
@@ -77,6 +79,8 @@ namespace Dungeon
                     var dir = (nextMove - transform.position).normalized;
                     var v = speed * dir;
                     rb.velocity = new Vector2(v.x, v.y);
+
+                    FlipSpriteTowards(dir.x > 0.1); // prevent flip when moving diagonally
                 }
                 else
                 {
@@ -93,6 +97,11 @@ namespace Dungeon
             var targetPosInWorldCoord = m_Path.Pop();
 
             MoveTo(targetPosInWorldCoord);
+        }
+
+        private void FlipSpriteTowards(bool right)
+        {
+            spriteTransform.localScale = new Vector3(right? 1 : -1, 1, 1);
         }
 
     }

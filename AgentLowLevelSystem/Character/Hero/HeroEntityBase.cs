@@ -5,6 +5,7 @@ using CrashKonijn.Goap.Runtime;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.Character.Hero;
 using Dungeon.Vision2D;
+using GameFramework;
 using UnityEngine;
 
 namespace Dungeon.Character.Hero
@@ -49,12 +50,12 @@ namespace Dungeon.Character.Hero
 
         public override void OnSpawn(object data)
         {
-            throw new System.NotImplementedException();
+            GameFrameworkLog.Warning("[HeroEntityBase.OnSpawn] Not implemented");
         }
 
         public override void Reset()
         {
-            throw new System.NotImplementedException();
+            GameFrameworkLog.Warning("[HeroEntityBase.Reset] Not implemented");
         }
 
         private AgentHighLevelSystem m_HighLevelSystem;
