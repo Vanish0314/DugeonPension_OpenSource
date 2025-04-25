@@ -26,7 +26,7 @@ namespace Dungeon
         /// 
         /// </summary>
         /// <param name="skill"></param>
-        /// <returns>返回是否死亡</returns>
+        /// <returns>返回是否死亡</returns> //FIXME: 有的技能不会立即死亡
         public bool TakeSkill(Skill skill);
 
         /// <summary>

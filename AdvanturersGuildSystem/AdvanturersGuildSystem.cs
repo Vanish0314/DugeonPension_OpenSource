@@ -37,7 +37,10 @@ namespace Dungeon
 
         private void OnHeroTeamDiedInDungeonEventHandler(object sender, GameEventArgs e)
         {
-
+            foreach(var hero in currentHeroTeam)
+            {
+                hero.ReturnToPool();   
+            }
         }
 
         private void OnHeroTeamFinishDungeonExploreEventHandler(object sender, GameEventArgs e)

@@ -14,7 +14,7 @@ namespace Dungeon.SkillSystem
 {
     public class SkillShooterLayer
     {
-        public SkillShooterLayer(string layer)
+        public SkillShooterLayer(string layer,string name = "unknown")
         {
             if (layer == "Hero")
             {
@@ -30,7 +30,7 @@ namespace Dungeon.SkillSystem
             }
             else
             {
-                GameFrameworkLog.Error("[SkillShooterLayer] Invalid layer name: " + layer);
+                GameFrameworkLog.Error("[SkillShooterLayer] Invalid layer name: " + layer + " 名字: " + name);
             }
         }
 
@@ -60,7 +60,7 @@ namespace Dungeon.SkillSystem
         void Start()
         {
             var layer = LayerMask.LayerToName(gameObject.layer);
-            mSelfShooterLayer = new SkillShooterLayer(layer);
+            mSelfShooterLayer = new SkillShooterLayer(layer,gameObject.name);
 
             owner = GetComponent<ICombatable>();
         }

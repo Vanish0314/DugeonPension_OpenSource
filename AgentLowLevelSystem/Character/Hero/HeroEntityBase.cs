@@ -23,6 +23,8 @@ namespace Dungeon.Character.Hero
             InitLowLevelSystem();
 
             InitHeroBase();
+            
+            ValidateHeroBase();
         }
 
         void Update()
@@ -60,5 +62,26 @@ namespace Dungeon.Character.Hero
 
         private AgentHighLevelSystem m_HighLevelSystem;
         private AgentLowLevelSystem.AgentLowLevelSystem m_LowLevelSystem;
+    }
+
+    public partial class HeroEntityBase : DungeonVisitorEntity
+    {
+        private void ValidateHeroBase()
+        {
+            #if UNITY_EDITOR
+            if(m_LowLevelSystem.Hp <= 0)
+            {
+                GameFrameworkLog.Warning("[HeroEntityBase.ValidateHeroBase] 英雄hp被设置为0,你确定吗?");
+            }
+            if(m_LowLevelSystem.Mp <= 0)
+            {
+                GameFrameworkLog.Warning("[HeroEntityBase.ValidateHeroBase] 英雄mp被设置为0,你确定吗?");
+            }
+            if(m_LowLevelSystem.AttackSpeed != 1)
+            {
+                GameFrameworkLog.Warning("[HeroEntityBase.ValidateHeroBase] 英雄攻击速度不是100%,你确定吗?");
+            }
+            #endif
+        }
     }
 }

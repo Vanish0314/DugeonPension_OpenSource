@@ -120,6 +120,18 @@ namespace Dungeon.GridSystem
         {
             return new Vector3(x * GridProperties.cellSize + gridProperties.originPoint.x, y * GridProperties.cellSize + gridProperties.originPoint.y, 0) + offset;
         }
+        public Vector3 SnapToGridCorner(Vector3 worldPosition)
+        {
+            int x = Mathf.RoundToInt(worldPosition.x / GridProperties.cellSize) * (int)GridProperties.cellSize;
+            int y = Mathf.RoundToInt(worldPosition.y / GridProperties.cellSize) * (int)GridProperties.cellSize;
+            return new Vector3(x, y, 0);
+        }
+
+        public Vector3 SnapToGridCenter(Vector3 worldPosition)
+        {
+            return SnapToGridCorner(worldPosition) + new Vector3(GridProperties.cellSize / 2, GridProperties.cellSize / 2, 0);
+        }
+        
         public System.Object GetStaticEntity(Vector2Int gridPos)
         {
             if (interactMap.ContainsKey(gridPos))
