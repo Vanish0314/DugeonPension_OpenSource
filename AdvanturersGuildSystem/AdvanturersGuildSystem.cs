@@ -6,6 +6,7 @@ using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
 using GameFramework.Event;
 using Sirenix.OdinInspector;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ReadOnlyAttribute = Sirenix.OdinInspector.ReadOnlyAttribute;
@@ -33,14 +34,23 @@ namespace Dungeon
             GameEntry.Event.Subscribe(OnHeroStartExploreDungeonEvent.EventId, OnHeroStartExploreDungeonEventHandler);
             GameEntry.Event.Subscribe(OnHeroTeamFinishDungeonExploreEvent.EventId, OnHeroTeamFinishDungeonExploreEventHandler);
             GameEntry.Event.Subscribe(OnHeroTeamDiedInDungeonEvent.EventId, OnHeroTeamDiedInDungeonEventHandler);
+            GameEntry.Event.Subscribe(OnOneHeroDiedInDungeonEvent.EventId, OnOneHeroDiedInDungeonEventHandler);
+        }
+
+        private void OnOneHeroDiedInDungeonEventHandler(object sender, GameEventArgs e)
+        {
+            currentBehavouringHeroTeam.Remove((e as OnOneHeroDiedInDungeonEvent).diedHero);
+            //TODO(vanish): 降低所有活着勇者的san值
         }
 
         private void OnHeroTeamDiedInDungeonEventHandler(object sender, GameEventArgs e)
         {
-            foreach(var hero in currentHeroTeam)
+            foreach(var hero in currentGameProgressingHeroTeam)
             {
-                hero.ReturnToPool();   
+                hero.ReturnToPool();
             }
+            currentGameProgressingHeroTeam.Clear();
+            currentBehavouringHeroTeam.Clear();
         }
 
         private void OnHeroTeamFinishDungeonExploreEventHandler(object sender, GameEventArgs e)
@@ -55,12 +65,12 @@ namespace Dungeon
 
         private void Update() 
         {
-            foreach(var hero in currentHeroTeam)
+            foreach(var hero in currentGameProgressingHeroTeam)
             {
                 if(hero.IsAlive()) return;
             }    
 
-            if(currentHeroTeam.Count != 0)
+            if(currentGameProgressingHeroTeam.Count != 0)
                 DungeonGameEntry.DungeonGameEntry.Event.Fire(this,OnHeroTeamDiedInDungeonEvent.Create());
         }
         public void SpawnHero(Vector3 worldPos)
@@ -71,16 +81,17 @@ namespace Dungeon
             go.transform.parent = null;
 
             go.GetComponent<HeroEntityBase>().OnSpawn();
-            currentHeroTeam.Add(go.GetComponent<HeroEntityBase>());
+            currentBehavouringHeroTeam.Add(go.GetComponent<HeroEntityBase>());
+            currentGameProgressingHeroTeam.Add(go.GetComponent<HeroEntityBase>());
         }
 
         /// <summary>
-        /// 是否所有勇者都已经到达地牢出口进入happy状态 
+        /// 是否所有活着的勇者都已经到达地牢出口进入happy状态 
         /// </summary>
         /// <returns></returns>
         public bool IsAllHeroHappyingAtDungeonExit()
         {
-            foreach(var hero in currentHeroTeam)
+            foreach(var hero in currentBehavouringHeroTeam)
             {
                 if(!hero.IsHappyingAtDungeonExit()) return false;
             }
@@ -89,7 +100,8 @@ namespace Dungeon
         }
 
         [SerializeField] private List<GameObject> heroPrefabs = new ();
-        [ReadOnly] public List<HeroEntityBase> currentHeroTeam = new ();
+        [ReadOnly] public List<HeroEntityBase> currentBehavouringHeroTeam = new ();//地牢中还能动的勇者
+        [ReadOnly] public List<HeroEntityBase> currentGameProgressingHeroTeam = new();//当前流程的勇者小队
         private Dictionary<string,MonoPoolComponent> heroMonoPool = new();
     }
 }

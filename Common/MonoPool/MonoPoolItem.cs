@@ -33,6 +33,7 @@ namespace Dungeon.Common.MonoPool
 			isInPool = true;
 			mData = null;
 			OnReturnToPool();
+			gameObject.SetActive(false);
 			m_Owner.ReturnItem(this);
 		}
 		public abstract void OnSpawn(object data); /// 初始化物体

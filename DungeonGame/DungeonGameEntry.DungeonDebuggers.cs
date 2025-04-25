@@ -38,7 +38,7 @@ namespace Dungeon.DungeonGameEntry
         [DungeonGridWindow("杀死所有勇者")]
         public static void KillAllHeros()
         {
-            foreach (var hero in AdvanturersGuildSystem.currentHeroTeam)
+            foreach (var hero in AdvanturersGuildSystem.currentBehavouringHeroTeam)
             {
                 hero.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>().Hp = -1;
             }

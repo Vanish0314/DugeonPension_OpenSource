@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Dungeon.Character.Hero;
 using Dungeon.Character.Struct;
+using Dungeon.DungeonGameEntry;
 using Dungeon.Vision2D;
 using UnityEngine;
 
@@ -19,7 +20,8 @@ namespace Dungeon.Character.Hero
         public void OnDie()
         {
             m_GoapActionProvider.enabled = false;
-
+            DungeonGameEntry.DungeonGameEntry.Event.Fire(OnOneHeroDiedInDungeonEvent.EventId, OnOneHeroDiedInDungeonEvent.Create(this));
+            
             DOVirtual.DelayedCall(0.5f,()=>{
                 m_LowLevelSystem.enabled = false;
                 m_HighLevelSystem.enabled = false;

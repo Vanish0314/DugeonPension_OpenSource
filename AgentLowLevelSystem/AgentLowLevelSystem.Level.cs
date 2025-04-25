@@ -66,7 +66,7 @@ namespace Dungeon.AgentLowLevelSystem
         [DungeonGridWindow("升级")]
         public static void Temp()
         {
-            var hero = DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.currentHeroTeam.FirstOrDefault<HeroEntityBase>();
+            var hero = DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.currentBehavouringHeroTeam.FirstOrDefault<HeroEntityBase>();
 
             hero.GetComponent<AgentLowLevelSystem>().GetExperience(100);
         }
