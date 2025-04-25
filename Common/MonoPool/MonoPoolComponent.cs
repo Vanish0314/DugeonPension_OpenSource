@@ -24,7 +24,7 @@ namespace Dungeon
 
 		public MonoPoolItem GetItem(object data)
 		{
-			var item = GenItem();
+			var item = GenItem(data);
 			item.OnSpawn(data);
 			return item;
 		}
@@ -35,7 +35,7 @@ namespace Dungeon
 			m_ItemObjectPool.Unspawn(item);
 		}
 
-		private MonoPoolItem GenItem()
+		private MonoPoolItem GenItem(object data)
 		{
 			MonoPoolItem cellItem;
 			MonoPoolObject cellItemObject = m_ItemObjectPool.Spawn();
@@ -46,6 +46,7 @@ namespace Dungeon
 			else
 			{
 				cellItem = Instantiate(m_ItemTemplate);
+				cellItem.FirstInit(data, this);
 				Transform transf = cellItem.GetComponent<Transform>();
 				transf.SetParent(m_InstanceRoot);
 				transf.localScale = Vector3.one;

@@ -38,7 +38,6 @@ namespace Dungeon.DungeonEntity
                 var type = component.GetType();
                 var asmName = type.Assembly.GetName().Name;
 
-                // 只处理属于 "DungeonScript" 程序集的组件
                 if (asmName == "DungeonScripts")
                 {
                     DeepCloneScriptableObjects(component);
@@ -123,7 +122,7 @@ namespace Dungeon.DungeonEntity
             clonedMap[original] = clone;
 
 #if UNITY_EDITOR
-            LogClonedSO(containerFieldName, original, component);  // 传入当前脚本
+            LogClonedSO(containerFieldName, original, component);
 #endif
 
             DeepCloneScriptableObjects(clone);
@@ -133,8 +132,9 @@ namespace Dungeon.DungeonEntity
 
         private void LogClonedSO(string containerFieldName, ScriptableObject original, System.Object component)
         {
-            string scriptName = component.GetType().Name;  // 获取当前脚本的名称
+            string scriptName = component.GetType().Name;
             GameFrameworkLog.Info($"[Cloned SO] Name: {original.name}, Type: {original.GetType().Name}, From Field: {containerFieldName}, Script: {scriptName}", original);
+            GameFrameworkLog.Info("[Cloned SO] SO拷贝只支持三种类型: ScriptableObject, List<ScriptableObject>, Dictionary<string, ScriptableObject>");
         }
 
     }
