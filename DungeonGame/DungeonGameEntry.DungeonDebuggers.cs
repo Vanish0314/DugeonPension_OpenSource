@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Dungeon.AgentLowLevelSystem;
 using Dungeon.Common;
 using Dungeon.Evnents;
@@ -12,7 +14,7 @@ namespace Dungeon.DungeonGameEntry
     {
         private static void InitDungeonDebuggers()
         {
-            
+
         }
 
         [DungeonGridWindow("切换到地牢")]
@@ -42,6 +44,24 @@ namespace Dungeon.DungeonGameEntry
             {
                 hero.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>().Hp = -1;
             }
+        }
+        [DungeonGridWindow("进入战斗流程")]
+        public static void EnterCombatProcedure()
+        {
+            Task.Run(async () =>
+            {
+                Event.Fire(OnOpenningLogoEndEvent.EventId, OnOpenningLogoEndEvent.Create());
+                await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+                Event.Fire(OnContinueGameButtonClickEvent.EventId, OnContinueGameButtonClickEvent.Create());
+                await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+                Event.Fire(OnHeroArrivedInDungeonEvent.EventId, OnHeroArrivedInDungeonEvent.Create());
+                await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+                Event.Fire(OnHeroStartExploreDungeonEvent.EventId, OnHeroStartExploreDungeonEvent.Create());
+            });
+
         }
     }
 }
