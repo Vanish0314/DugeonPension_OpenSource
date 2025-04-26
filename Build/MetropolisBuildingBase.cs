@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using Dungeon.Common.MonoPool;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Dungeon
 {
-    // 工作建筑类型枚举（建议放在全局）
+    // 工作建筑类型枚举
     public enum WorkplaceType
     {
         Farm,       // 农场
@@ -14,16 +15,52 @@ namespace Dungeon
         Factory,    // 工厂
         Laboratory  // 实验室
     }
+    
+    // 建筑当前状态
+    public enum BuildingState
+    {
+        None,
+        Area,
+        Construction,
+        Completed,
+    }
+    
     public class MetropolisBuildingBase : MonoPoolItem
     {
-       [Header("工作设置")]
+        [Header("当前状态")] 
+        private BuildingState currentState;
+        public BuildingState CurrentState
+        {
+            get => currentState;
+            set
+            {
+                if (currentState != value)
+                {
+                    ExitState(currentState);
+                    currentState = value;
+                    EnterState(value);
+                }
+            }
+        }
+        
+        [Header("外观设置")]
+        public Sprite constructionSprite;
+        public Sprite completedSprite;
+
+        [Header("建造设置")] 
+        public float constructionProgress;
+        [SerializeField] private float constructionDuration;
+        [SerializeField] private float constructionSpeed;
+        
+        
+        [Header("工作设置")]
         public WorkplaceType workplaceType;
         public ResourceType resourceType;
         public int baseOutput = 1;
         public int maxWorkers = 3;
         public float productionInterval = 5f; // 生产间隔(秒)
         
-        [Header("当前状态")]
+        [Header("工作状态")]
         public List<MetropolisHeroBase> workingHeroes = new List<MetropolisHeroBase>();
         public int currentStock = 0;
         public int maxStock = 100;
@@ -118,6 +155,7 @@ namespace Dungeon
         {
             if (workingHeroes.Remove(hero))
             {
+                hero.EndWorking();
                 UpdateEfficiency();
                 
                 if (workingHeroes.Count == 0 && productionCoroutine != null)
@@ -159,12 +197,83 @@ namespace Dungeon
             currentStock = 0;
         }
 
+        #region ChangeState
+
+        private void EnterState(BuildingState newState)
+        {
+            switch (newState)
+            {
+                case BuildingState.Area:
+                    SetUpAreaState();
+                    break;
+                case BuildingState.Construction:
+                    //StartConstruction();
+                    break;
+                case BuildingState.Completed:
+                    //CompleteBuilding();
+                    break;
+            }
+        }
+
+        private void ExitState(BuildingState oldState)
+        {
+            switch (oldState)
+            {
+                case BuildingState.Construction:
+                    StopAllCoroutines();
+                    break;
+            }
+        }
+
+        private void SetupPreviewState()
+        {
+            // 禁用碰撞和功能
+            GetComponent<Collider2D>().enabled = false;
+        }
+
+        private void SetUpAreaState()
+        {
+            GetComponent<Collider2D>().enabled = true;
+        }
+
+        private void StartConstruction()
+        {
+            // 启动施工协程
+            StartCoroutine(ConstructionProcess());
+        }
+
+        private IEnumerator ConstructionProcess()
+        {
+            constructionProgress = 0;
+            while (constructionProgress < 1f)
+            {
+                // 根据工人数量加速
+                constructionSpeed = workingHeroes.Count > 0 ? currentEfficiency : 0;
+                constructionProgress += Time.deltaTime / constructionDuration * constructionSpeed;
+                //UpdateConstructionProgress(constructionProgress);
+                yield return null;
+            }
+    
+            CurrentState = BuildingState.Completed;
+        }
+
+        private void CompleteBuilding()
+        {
+
+        }
+        
+        #endregion
+        
+        #region Override
         public override void OnSpawn(object data) 
         {
+            currentState = BuildingState.Area;
         }
 
         public override void Reset()
         {
+            currentState = BuildingState.None;
+            
             // 清退所有工人
             foreach (var hero in workingHeroes.ToArray()) // ToArray避免修改集合
             {
@@ -175,5 +284,7 @@ namespace Dungeon
             currentStock = 0;
             currentEfficiency = 0f;
         }
+        #endregion
+        
     }
 }

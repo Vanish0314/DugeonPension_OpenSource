@@ -26,22 +26,23 @@ namespace Dungeon
     }
     public class MetropolisHeroBehaviorTreeHelper : MonoBehaviour
     {
-        [ReadOnly] public MetropolisHeroAIState state;
-        [ReadOnly] public MetropolisHeroAIState previousState;
-        [ReadOnly] public CommandType commandType;
+        public MetropolisHeroAIState state;
+        public MetropolisHeroAIState previousState;
+        public CommandType commandType;
         
         public int hungerLevel;
         public int energyLevel;
         public int tiredLevel;
-        public bool isCommandale;
-        public bool hasCommand;
-        public bool hasFoodAvailable;
-        public bool hasDormitoryAvailable;
-        public bool hasWorkAvailable;
+        public bool isCommandale = false;
+        public bool hasCommand = false;
+        public bool hasFoodAvailable = false;
+        public bool hasDormitoryAvailable = false;
+        public bool hasWorkAvailable = false;
+        public bool workComplete = false;
         public Vector3 nearestFood;
         public Vector3 nearestDormitory;
         public Vector3 workPosition;
-        public bool canTalk;
+        public bool canTalk = false;
         public float talkTime;
         public float lastCheckTime;
         private MetropolisHeroBase m_HeroBase;
@@ -52,6 +53,7 @@ namespace Dungeon
         {
             m_HeroBase = heroBase;
             m_Motor = GetComponent<MetropolisHeroMotor>();
+            state = MetropolisHeroAIState.Idle;
         }
     
         // 带冷却时间的随机检查

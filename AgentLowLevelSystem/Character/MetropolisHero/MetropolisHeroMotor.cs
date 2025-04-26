@@ -13,7 +13,7 @@ namespace Dungeon
         [SerializeField] private Vector3 targetPos;
         private Rigidbody2D m_Rigidbody;
         private float m_Speed;
-        private float stoppingDistance = 0.1f; // 停止距离阈值
+        [SerializeField] private float stoppingDistance = 0.1f; // 停止距离阈值
 
         public void InitMotor(float speed)
         {

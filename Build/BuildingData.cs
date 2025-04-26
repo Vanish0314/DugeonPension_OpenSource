@@ -11,7 +11,7 @@ namespace Dungeon
     public class BuildingData : ScriptableObject, IPlaceableData
     {
         public BuildingType buildingType; // 建筑唯一标识
-        public GameObject buildingPrefab;  // 关联的Prefab
+        //public GameObject buildingPrefab;  // 关联的Prefab
         public Vector2Int size = Vector2Int.one; // 占用格子大小
         public BuildingCost cost;
 
@@ -24,10 +24,10 @@ namespace Dungeon
             public int material;
         }
 
-        public GameObject GetPrefab()
-        {
-            return buildingPrefab;
-        }
+        // public GameObject GetPrefab()
+        // {
+        //     return buildingPrefab;
+        // }
 
         public Vector2Int GetSize()
         {

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Codice.Client.BaseCommands.Merge.IncomingChanges;
 using Dungeon.Data;
-using Dungeon.DUngeonCalculator;
 using Dungeon.DungeonEntity;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
@@ -469,7 +468,7 @@ namespace Dungeon.Procedure
                 GameFrameworkLog.Info("所有场景已加载完毕并禁用，可根据需要启用场景。");
 
                 //TODO: Init Scene by saved data
-                ChangeState<ProcedureMetroplisStage>(procedureOwner); // 可根据实际流程改为等待手动切换
+                ChangeState<ProcedureMetropolisStage>(procedureOwner); // 可根据实际流程改为等待手动切换
             }
         }
 
@@ -504,7 +503,7 @@ namespace Dungeon.Procedure
     /// <summary>
     /// 进入模拟经营部分
     /// </summary>
-    public class ProcedureMetroplisStage : DungeonProcedure
+    public class ProcedureMetropolisStage : DungeonProcedure
     {
         /// <summary>
         /// 1. 暂停地牢场景
@@ -513,6 +512,7 @@ namespace Dungeon.Procedure
         /// 4. 开启模拟经营系统
         /// </summary>
         /// <param name="procedureOwner"></param>
+        private BusinessControl m_MetropolisControl;
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
@@ -524,9 +524,11 @@ namespace Dungeon.Procedure
             DungeonGameEntry.DungeonGameEntry.Instance.DisableDungeon();
             DungeonGameEntry.DungeonGameEntry.Instance.EnableMetroplis();
 
+            m_MetropolisControl = BusinessControl.Create(PlaceManager.Instance);
+            m_MetropolisControl.OnEnter();
+            
             GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
             GameEntry.UI.OpenUIForm(EnumUIForm.TimelineForm);
-            GameEntry.UI.OpenUIForm(EnumUIForm.BusinessSettlementForm);
             GameEntry.UI.OpenUIForm(EnumUIForm.StartFightButtonForm);
 
             SubscribeEvents();
@@ -534,6 +536,8 @@ namespace Dungeon.Procedure
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
+            m_MetropolisControl.OnLeave();
+            
             GameEntry.UI.CloseAllLoadedUIForms();
 
             UnsubscribeEvents();
@@ -606,7 +610,7 @@ namespace Dungeon.Procedure
 
         private void OnPlayerSwitchToMetroplisEventHandler(object sender, GameEventArgs e)
         {
-            ChangeState<ProcedureMetroplisStage>(mOwner);
+            ChangeState<ProcedureMetropolisStage>(mOwner);
         }
 
         private void OnHeroArrivedInDungeonEventHandler(object sender, GameEventArgs e)
@@ -633,9 +637,6 @@ namespace Dungeon.Procedure
             base.OnEnter(procedureOwner);
 
             mOwner = procedureOwner;
-
-            DungeonGameEntry.DungeonGameEntry.Instance.DisableMetroplis();
-            DungeonGameEntry.DungeonGameEntry.Instance.EnableDungeon();
 
             GameEntry.Event.Fire(this, OnSwitchedToDungeonPreHeroArrivedProcedureEvent.Create());
 
@@ -746,18 +747,17 @@ namespace Dungeon.Procedure
 
             SubscribeEvents();
         }
+
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
-            GameFrameworkLog.Info("[ProcedureDungeonCalculationStage] 不知道如何结算,直接进入工厂阶段");
-            GameEntry.Event.Fire(this, OnDungeonCalculationFinishedEvent.Create(null));
+            base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
+
+            ChangeState<ProcedureMetropolisStage>(mOwner);
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
-
-            // 恢复地牢
-            // 把勇者干回去
 
             UnsubscribeEvents();
         }
@@ -769,7 +769,7 @@ namespace Dungeon.Procedure
 
         private void OnDungeonCalculationFinishedEventHandler(object sender, GameEventArgs e)
         {
-            ChangeState<ProcedureMetroplisStage>(mOwner);
+
         }
 
         private void UnsubscribeEvents()
@@ -1167,7 +1167,6 @@ namespace Dungeon.Evnents
     public sealed class OnDungeonCalculationFinishedEvent : GameEventArgs
     {
         public static readonly int EventId = typeof(OnDungeonCalculationFinishedEvent).GetHashCode();
-        public DungeonCalculationResult Result { get; private set; }
 
         public override int Id
         {
@@ -1177,10 +1176,9 @@ namespace Dungeon.Evnents
             }
         }
 
-        public static OnDungeonCalculationFinishedEvent Create(DungeonCalculationResult result)
+        public static OnDungeonCalculationFinishedEvent Create()
         {
             OnDungeonCalculationFinishedEvent a = ReferencePool.Acquire<OnDungeonCalculationFinishedEvent>();
-            a.Result = result;
             return a;
         }
 
@@ -1238,4 +1236,3 @@ namespace Dungeon.Evnents
 }
 
 #endregion
-

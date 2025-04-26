@@ -1,6 +1,7 @@
 using System;
+using Dungeon.Evnents;
+using GameFramework.Event;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
@@ -10,9 +11,7 @@ namespace Dungeon
     public class InputReader : ScriptableObject, GameInput.IUIActions, GameInput.IPlaceActions
     {
         private GameInput m_GameInput;
-        private Camera m_MainCamera;
-        private LayerMask m_BuildingLayer;
-        private LayerMask m_HeroLayer;
+        [SerializeField] private Camera m_MainCamera;
         
         private bool m_isBuilding;
         private void OnEnable()
@@ -25,15 +24,18 @@ namespace Dungeon
                 m_GameInput.Place.SetCallbacks(this);
                 SetUIActions();
             }
+        }
 
+        public void Subscribe()
+        {
             // 订阅场景加载事件
-            SceneManager.sceneLoaded += OnSceneLoaded;
+            GameEntry.Event.Subscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnSceneLoaded);
         }
 
         private void OnDisable()
         {
             // 取消订阅事件，避免内存泄漏
-            SceneManager.sceneLoaded -= OnSceneLoaded;
+            GameEntry.Event.Unsubscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnSceneLoaded);
 
             // 清理输入系统
             if (m_GameInput != null)
@@ -56,9 +58,10 @@ namespace Dungeon
             m_GameInput.Place.Enable();
         }
         // 场景加载时的回调
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        private void OnSceneLoaded(object sender, GameEventArgs gameEventArgs)
         {
             // 每次场景加载时重置状态
+            m_MainCamera = Camera.main;
             m_isBuilding = false;
         }
         
@@ -84,6 +87,8 @@ namespace Dungeon
         // 经营场景事件
         public event Action<GameObject> OnBuildingClickedEvent;
         public event Action<GameObject> OnHeroClickedEvent;
+        public event Action OnNoBuildingClickedEvent;
+        public event Action OnNoHeroClickedEvent;
         public void OnMousePosition(InputAction.CallbackContext context)
         {
             if (context.phase == InputActionPhase.Performed)
@@ -96,6 +101,7 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Started)
             {
+                DetectClickedObject();
                 OnLeftPressBeginEvent?.Invoke();
             }
 
@@ -153,23 +159,78 @@ namespace Dungeon
 
         private void DetectClickedObject()
         {
+            if (m_MainCamera == null )
+                return;
+            
             Vector2 clickPos = Mouse.current.position.ReadValue();
-            Ray ray = m_MainCamera.ScreenPointToRay(clickPos);
+            Vector2 worldPos = m_MainCamera.ScreenToWorldPoint(clickPos);
 
-            // 优先检测建筑点击
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, m_BuildingLayer))
+            // 获取所有2D碰撞体（优化GC）
+            RaycastHit2D[] hits = new RaycastHit2D[10];
+            int hitCount = Physics2D.RaycastNonAlloc(worldPos, Vector2.zero, hits, 
+                Mathf.Infinity);
+
+            // 点击空白区域
+            if (hitCount == 0)
             {
-                OnBuildingClickedEvent?.Invoke(hit.collider.gameObject);
+                OnNoBuildingClickedEvent?.Invoke(); 
+                OnNoHeroClickedEvent?.Invoke();
                 return;
             }
 
-            // 然后检测英雄点击
-            RaycastHit2D hit2D = Physics2D.GetRayIntersection(ray, Mathf.Infinity, m_HeroLayer);
-            if (hit2D.collider != null)
+
+            // 找出最顶层的物体
+            RaycastHit2D topHit = hits[0];
+            float topPriority = GetRenderPriority(topHit.collider);
+
+            for (int i = 1; i < hitCount; i++)
             {
-                OnHeroClickedEvent?.Invoke(hit2D.collider.gameObject);
+                float currentPriority = GetRenderPriority(hits[i].collider);
+                if (currentPriority > topPriority)
+                {
+                    topHit = hits[i];
+                    topPriority = currentPriority;
+                }
             }
+
+            // 触发事件
+            GameObject clickedObj = topHit.collider.gameObject;
+            if (clickedObj.layer == LayerMask.NameToLayer("MetropolisBuilding"))
+            {
+                OnBuildingClickedEvent?.Invoke(clickedObj);
+                OnNoHeroClickedEvent?.Invoke();
+            }
+            else if (clickedObj.layer == LayerMask.NameToLayer("MetropolisHero"))
+            {
+                OnHeroClickedEvent?.Invoke(clickedObj);
+                OnNoBuildingClickedEvent?.Invoke();
+            }
+            else
+            {
+                OnNoBuildingClickedEvent?.Invoke();
+                OnNoHeroClickedEvent?.Invoke();
+            }
+        }
+
+        // 综合计算渲染优先级（值越大越靠前）
+        private float GetRenderPriority(Collider2D collider)
+        {
+            const float Y_SCALE = 0.01f; // Y轴权重系数
+    
+            // 基础值：sortingOrder * 1000（确保order是主要因素）
+            float priority = GetSortingOrder(collider) * 1000f;
+    
+            // 叠加Y轴影响：Y越小，附加值越大（模拟2D透视）
+            priority += (1f - collider.transform.position.y * Y_SCALE);
+    
+            return priority;
+        }
+
+        // 获取物体的sortingOrder
+        private int GetSortingOrder(Collider2D collider)
+        {
+            var sr = collider.GetComponent<SpriteRenderer>();
+            return sr != null ? sr.sortingOrder : 0;
         }
 
         /// <summary>

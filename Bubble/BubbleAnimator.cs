@@ -28,8 +28,7 @@ namespace Dungeon
                 yield return null;
             }
         }
-
-        // 修改8：接收显式target参数
+        
         public IEnumerator FollowTarget(GameObject obj, Transform target, BubbleProfile profile)
         {
             RectTransform rt = obj.GetComponent<RectTransform>();

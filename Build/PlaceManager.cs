@@ -1,56 +1,50 @@
 using System;
 using System.Collections.Generic;
 using Dungeon.Common.MonoPool;
+using Dungeon.GridSystem;
 using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityGameFramework.Runtime;
-using static UnityGameFramework.Runtime.DebuggerComponent;
+
 
 namespace Dungeon
 {
-    public class PlaceManager : MonoBehaviour
+    public partial class PlaceManager : MonoBehaviour
     {
-        [SerializeField] public InputReader inputReader;
-        
-        // BuildingPool
-        [SerializeField] private MonoPoolComponent m_CastleBuildingPoolComponent;
-        [SerializeField] private MonoPoolItem m_CastleBuildingPoolItemPrefab;
-        
-        // TrapPool
-        [SerializeField] private MonoPoolComponent m_SpikeTrapPoolComponent;
-        [SerializeField] private MonoPoolItem m_SpikeTrapPoolItemPrefab;
-        
-        // MonsterPool
-        [SerializeField] private MonoPoolComponent m_SlimeMonsterPoolComponent;
-        [SerializeField] private MonoPoolItem m_SlimeMonsterItemPrefab;
+        [SerializeField] public InputReader inputReader; 
+        [SerializeField] private PreviewHelper previewHelper;
         
         // 字典存储对应 放置物 信息
         private Dictionary<BuildingType, BuildingData> m_BuildingDataDict = new Dictionary<BuildingType, BuildingData>();
         private Dictionary<TrapType, TrapData> m_TrapDataDict = new Dictionary<TrapType, TrapData>();
         private Dictionary<MonsterType, MonsterData> m_MonsterDataDict = new Dictionary<MonsterType, MonsterData>();
         
+        
+        // 字典对应 对象池 信息
+        private Dictionary<BuildingData, MonoPoolComponent> m_BuildingMonoPoolComponentDict = new Dictionary<BuildingData, MonoPoolComponent>();
+        private Dictionary<TrapData, MonoPoolComponent> m_TrapMonoPoolComponentDict = new Dictionary<TrapData, MonoPoolComponent>();
+        private Dictionary<MonsterData, MonoPoolComponent> m_MonsterMonoPoolComponentDict = new Dictionary<MonsterData, MonoPoolComponent>();
+        
         // 存储当前拿到的放置物信息
+        private MonoPoolComponent m_SelectedBuildingMonoPoolComponent;
         private BuildingData m_SelectedBuildingData;
+        private MonoPoolComponent m_SelectedTrapMonoPoolComponent;
         private TrapData m_SelectedTrapData;
+        private MonoPoolComponent m_SelectedMonsterMonoPoolComponent;
         private MonsterData m_SelectedMonsterData;
         
-        // 预览物体
-        private GameObject m_PreviewInstance;
-        private float m_CurrentRotationAngle;
-        private Vector3 m_CurrentMouseWorldPos;
+        // 存储当前拿到的item
+        private MonoPoolItem m_SelectedPoolItem;
         
-        // 预览事件
-        public event Action<Vector3,GameObject> SelectBuildingPreviewEvent; 
+        private Vector3 m_CurrentMouseWorldPos;
+
+        private int m_Flag = 0;
         
         public static PlaceManager Instance { get; private set; }
         private void Awake()
         {
-            m_CastleBuildingPoolComponent.Init("CastleBuildingPool", m_CastleBuildingPoolItemPrefab,null,16);
-            m_SpikeTrapPoolComponent.Init("SpikeTrapPool", m_SpikeTrapPoolItemPrefab,null,16);
-            m_SlimeMonsterPoolComponent.Init("SlimeMonsterPool",m_SlimeMonsterItemPrefab,null,16);
-            
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -58,14 +52,32 @@ namespace Dungeon
             }
 
             Instance = this;
-            inputReader = Resources.Load<InputReader>("InputReader");
-            DontDestroyOnLoad(gameObject);
+            transform.position = Vector3.zero;
         }
-
+        
         private void OnEnable()
         {
+            if (m_Flag == 0)
+            {
+                m_Flag = 1;
+            }
+            else if (m_Flag ==  1)
+            {
+                Subscribe();
+            }
+        }
+
+        public void Initialize()
+        {
+            Subscribe();
+            InitMonoPool();
             LoadPlacementData();
-            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            inputReader = Resources.Load<InputReader>("InputReader");
+            inputReader.Subscribe();
+        }
+        private void Subscribe()
+        {
+            GameEntry.Event.Subscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
             GameEntry.Event.Subscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
             GameEntry.Event.Subscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
             GameEntry.Event.Subscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
@@ -73,7 +85,7 @@ namespace Dungeon
 
         private void OnDisable()
         {
-            GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            GameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
             GameEntry.Event.Unsubscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
             GameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
             GameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
@@ -85,11 +97,16 @@ namespace Dungeon
 
         private void Update()
         {
-            if (Input.GetMouseButtonDown(0))
+            if (m_SelectedBuildingMonoPoolComponent != null)
             {
-                GameEntry.UI.GetComponent<UIComponent>().OpenUIForm(EnumUIForm.BuildForm);
+                // 调用BuildGridSystem的计算方法
+                var (previewPos, isValid) = BuildGridSystem.Instance.CalculatePreviewPosition(
+                    m_CurrentMouseWorldPos,
+                    m_SelectedBuildingData
+                );
+                            
+                previewHelper.UpdatePreview(previewPos, isValid);
             }
-            // UpdatePreview();
         }
         
         #region Data Loading
@@ -103,11 +120,44 @@ namespace Dungeon
         private void LoadBuildings()
         {
             m_BuildingDataDict.Clear();
+            m_BuildingMonoPoolComponentDict.Clear();
             var buildingDatas = Resources.LoadAll<BuildingData>("BuildingData");
             foreach (var data in buildingDatas)
             {
                 m_BuildingDataDict.TryAdd(data.buildingType, data);
+                
+                switch (data.buildingType)
+                {
+                    case BuildingType.Castle:
+                        m_BuildingMonoPoolComponentDict[data] = m_CastlePoolComponent;
+                        break;
+                    case BuildingType.MonsterLair:
+                        m_BuildingMonoPoolComponentDict[data] = m_MonsterLairPoolComponent;
+                        break;
+                    case BuildingType.ControlCenter:
+                        m_BuildingMonoPoolComponentDict[data] = m_ControlCenterPoolComponent;
+                        break;
+                    case BuildingType.Quarry:
+                        m_BuildingMonoPoolComponentDict[data] = m_QuarryPoolComponent;
+                        break;
+                    case BuildingType.LoggingCamp:
+                        m_BuildingMonoPoolComponentDict[data] = m_LoggingCampPoolComponent;
+                        break;
+                    case BuildingType.FarmLand:
+                        m_BuildingMonoPoolComponentDict[data] = m_FarmlandPoolComponent;
+                        break;
+                    case BuildingType.Canteen:
+                        m_BuildingMonoPoolComponentDict[data] = m_CanteenPoolComponent;
+                        break;
+                    case BuildingType.Dormitory:
+                        m_BuildingMonoPoolComponentDict[data] = m_DormitoryPoolComponent;
+                        break;
+                    default:
+                        Debug.LogError($"No pool mapped for {data.buildingType}");
+                        break;
+                }
             }
+            Debug.Log(m_BuildingMonoPoolComponentDict.Count);
         }
 
         private void LoadTraps()
@@ -173,17 +223,21 @@ namespace Dungeon
             {
                 case BuildingData building:
                     m_SelectedBuildingData = building;
+                    if (m_BuildingMonoPoolComponentDict.TryGetValue(m_SelectedBuildingData,
+                            out MonoPoolComponent monoPoolComponent))
+                    {
+                        m_SelectedBuildingMonoPoolComponent = monoPoolComponent;
+                    }
+                    // previewHelper.Initialize(m_SelectedBuildingMonoPoolComponent.GetPreviewSprite());// 初始化预览 //FIXME(xy)
                     break;
                 case TrapData trap:
                     m_SelectedTrapData = trap;
-                    m_CurrentRotationAngle = 0f;
                     break;
                 case MonsterData monster:
                     m_SelectedMonsterData = monster;
                     break;
             }
             
-            SetupPreview(data);
             RegisterInputEvents();
         }
 
@@ -200,6 +254,30 @@ namespace Dungeon
             {
                 //inputReader.OnTrapRotateEvent += HandleTrapRotation;
             }
+        }
+        
+        // 放置结束
+        private void FinalizePlacement(object sender, GameEventArgs gameEventArgs)
+        {
+            CancelPlacement();
+        }
+
+        // 取消放置
+        private void CancelPlacement()
+        {
+            inputReader.OnPlacePositionEvent -= OnMouseMoved;
+            inputReader.OnTryPlaceEvent -= TryPlace;
+            inputReader.OnCancelPlaceEvent -= CancelPlacement;
+
+            inputReader.SetUIActions();
+            
+            previewHelper.HidePreview();
+            m_SelectedBuildingData = null;
+            m_SelectedBuildingMonoPoolComponent = null;
+            m_SelectedTrapData = null;
+            m_SelectedTrapMonoPoolComponent = null;
+            m_SelectedMonsterData = null;
+            m_SelectedMonsterMonoPoolComponent = null;
         }
 
         private void TryPlace()
@@ -227,10 +305,14 @@ namespace Dungeon
             if (!CanAffordBuilding())
                 return;
 
-            var buildingItem = m_CastleBuildingPoolComponent.GetItem(null);
-
-            GameEntry.Event.GetComponent<EventComponent>().Fire(this,
-                TryPlaceBuildingEventArgs.Create(m_CurrentMouseWorldPos, buildingItem, m_SelectedBuildingData));
+            if (m_SelectedBuildingMonoPoolComponent != null)
+            {
+                m_SelectedPoolItem = m_SelectedBuildingMonoPoolComponent.GetItem(null);
+                m_SelectedPoolItem.OnSpawn(null);
+            }
+            
+            GameEntry.Event.Fire(this,
+                TryPlaceBuildingEventArgs.Create(m_CurrentMouseWorldPos, m_SelectedPoolItem, m_SelectedBuildingData));
         }
         
         // 检查资源是否足够
@@ -252,8 +334,8 @@ namespace Dungeon
 
             var trapItem = m_SpikeTrapPoolComponent.GetItem(null);
 
-            GameEntry.Event.GetComponent<EventComponent>()
-                .Fire(this, TryPlaceTrapEventArgs.Create(m_CurrentMouseWorldPos, trapItem, m_SelectedTrapData));
+            GameEntry.Event.Fire(this, 
+                TryPlaceTrapEventArgs.Create(m_CurrentMouseWorldPos, trapItem, m_SelectedTrapData));
         }
 
         private bool CanAffordTrap()
@@ -268,10 +350,10 @@ namespace Dungeon
         {
             if (!CanAffordMonster())
                 return;
-            
+
             var monsterItem = m_SlimeMonsterPoolComponent.GetItem(null);
 
-            GameEntry.Event.GetComponent<EventComponent>().Fire(this,
+            GameEntry.Event.Fire(this,
                 TryPlaceMonsterEventArgs.Create(m_CurrentMouseWorldPos, monsterItem, m_SelectedMonsterData));
         }
         
@@ -282,36 +364,6 @@ namespace Dungeon
         #endregion
         
         #region Common Logic
-        
-        // 放置结束
-        private void FinalizePlacement(object sender, GameEventArgs gameEventArgs)
-        {
-            Destroy(m_PreviewInstance);
-            CancelPlacement();
-        }
-
-        // 取消放置
-        private void CancelPlacement()
-        {
-            inputReader.OnPlacePositionEvent -= OnMouseMoved;
-            inputReader.OnTryPlaceEvent -= TryPlace;
-            inputReader.OnCancelPlaceEvent -= CancelPlacement;
-            
-            //inputReader.OnTrapRotateEvent -= HandleTrapRotation;
-
-            inputReader.SetUIActions();
-            
-            m_SelectedBuildingData = null;
-            m_SelectedTrapData = null;
-            m_SelectedMonsterData = null;
-            m_CurrentRotationAngle = 0f;
-            
-            if (m_PreviewInstance != null)
-            {
-                Destroy(m_PreviewInstance);
-                m_PreviewInstance = null;
-            }
-        }
         
         private Vector2Int GetCurrentSize()
         {
@@ -327,99 +379,12 @@ namespace Dungeon
                 m_CurrentMouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
             m_CurrentMouseWorldPos.z = 0; // 确保z坐标为0
         }
-
-        private void SetupPreview(IPlaceableData data)
-        {
-            m_PreviewInstance = Instantiate(data.GetPrefab(), new Vector3(-10000, -10000, 0), Quaternion.identity);
-            SelectBuildingPreviewEvent?.Invoke(m_CurrentMouseWorldPos,m_PreviewInstance); 
-            DisablePreviewComponents();
-            // ApplyPreviewEffect();
-        }
-
-        private void DisablePreviewComponents()
-        {
-            // 获取所有Behaviour组件（包括MonoBehaviour和其他可禁用组件）
-            Behaviour[] behaviours = m_PreviewInstance.GetComponents<Behaviour>();
-    
-            foreach (Behaviour behaviour in behaviours)
-            {
-                behaviour.enabled = false;
-            }
-        }
-
+        
         private void OnSceneLoaded(object sender, GameEventArgs e)
         {
             CancelPlacement();
         }
         
-        #endregion
-        
-        #region 暂留
-
-        // private void DisablePreviewComponents()
-        // {
-        //     if (m_PreviewInstance.GetComponent<ProducingBuildingBase>())
-        //         m_PreviewInstance.GetComponent<ProducingBuildingBase>().enabled = false;
-        // }
-        //
-        // private void ApplyPreviewEffect()
-        // {
-        //     var previewRenderer = m_PreviewInstance.GetComponent<SpriteRenderer>();
-        //     if (previewRenderer != null)
-        //         previewRenderer.color *= new Color(1, 1, 1, 0.3f); // 半透明效果
-        // }
-
-        // private void UpdatePreview()
-        // {
-        //     if (m_PreviewInstance == null) return;
-        //
-        //     var gridPos = GetCurrentGridPosition();
-        //     Vector3 targetPos = CalculateWorldPosition(gridPos, GetCurrentSize());
-        //     m_PreviewInstance.transform.position = targetPos;
-        // }
-        
-        // // 计算建筑左下角原点（网格坐标）--------------后续可能放到grid里
-        // private Vector2Int GetBuildingOrigin(Vector2Int centerGridPos, Vector2Int buildingSize)
-        // {
-        //     int offsetX = (buildingSize.x - 1) / 2;
-        //     int offsetY = (buildingSize.y - 1) / 2;
-        //
-        //     return new Vector2Int(
-        //         centerGridPos.x - offsetX,
-        //         centerGridPos.y - offsetY
-        //     );
-        // }
-        //
-        // // 获取当前鼠标位置网格坐标
-        // private Vector2Int GetCurrentGridPosition()
-        // {
-        //     return buildGridSystem.WorldToGridPosition(m_CurrentMouseWorldPos);
-        // }
-        //
-        // // 计算建筑中心偏移量（单位：格子数）
-        // private Vector2 GetBuildingCenterOffset(Vector2Int buildingSize)
-        // {
-        //     // 奇数列：不需要水平偏移 (1,3,5...)
-        //     // 偶数列：需要偏移0.5格 (2,4,6...)
-        //     float offsetX = (buildingSize.x % 2 == 0) ? 0.5f : 0f;
-        //     float offsetY = (buildingSize.y % 2 == 0) ? 0.5f : 0f;
-        //
-        //     return new Vector2(offsetX, offsetY);
-        // }
-        //
-        // // 计算出建筑放置的世界坐标
-        // private Vector3 CalculateWorldPosition(Vector2Int gridPos, Vector2Int size)
-        // {
-        //     Vector2 centerOffset = GetBuildingCenterOffset(size);
-        //
-        //     return buildGridSystem.GridToWorldPosition(gridPos) + 
-        //            new Vector3(
-        //                centerOffset.x,
-        //                centerOffset.y,
-        //                0
-        //            );
-        // }
-
         #endregion
     }
 }

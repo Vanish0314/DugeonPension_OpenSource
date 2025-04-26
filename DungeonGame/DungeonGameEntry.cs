@@ -35,9 +35,11 @@ namespace Dungeon.DungeonGameEntry
             SubscribleEvents();
         }
 
-        void Sart()
+        void Start()
         {
             InitGameFramwork(); //Prevent init order issue
+            
+            InitUniversalSystem();
         }
     }
 }

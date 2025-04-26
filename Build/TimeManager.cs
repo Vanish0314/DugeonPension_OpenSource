@@ -20,6 +20,7 @@ namespace Dungeon
         // 游戏暂停控制
         public bool IsPaused { get; private set; }
         private bool _isFiveMinute;
+        private int m_Flag = 0;
         
         private void Awake()
         {
@@ -28,24 +29,24 @@ namespace Dungeon
 
         private void OnEnable()
         {
-            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
-        }
-
-        private void OnSceneLoaded(object sender, GameEventArgs e)
-        {
-            OnSceneLoadedEventArgs sceneLoadedEventArgs = e as OnSceneLoadedEventArgs;
-            if (sceneLoadedEventArgs.SceneID == 2)
+            if (m_Flag == 0)
             {
-                fiveMinuteTimer = FiveMinutes;
-                _isFiveMinute = true;
+                m_Flag = 1;
+            }
+            else if (m_Flag == 1)
+            {
+                Subscribe();
             }
         }
-
+        
+        public void Subscribe()
+        {
+            GameEntry.Event.Subscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
+        }
         private void OnDisable()
         {
-            GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            GameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
         }
-
         private void Update()
         {
             if (IsPaused) return;
@@ -68,6 +69,16 @@ namespace Dungeon
         {
             IsPaused = paused;
             Time.timeScale = paused ? 0f : 1f;
+        }
+        
+        private void OnSceneLoaded(object sender, GameEventArgs e)
+        {
+            OnSceneLoadedEventArgs sceneLoadedEventArgs = e as OnSceneLoadedEventArgs;
+            if (sceneLoadedEventArgs.SceneID == 2)
+            {
+                fiveMinuteTimer = FiveMinutes;
+                _isFiveMinute = true;
+            }
         }
         
         // 用于UI显示

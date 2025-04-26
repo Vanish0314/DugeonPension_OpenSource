@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,62 +8,59 @@ namespace Dungeon
 {
     public class Quarry : MetropolisBuildingBase
     {
+        [SerializeField] private InputReader m_inputReader;
+        
         [Header("UI Settings")] [SerializeField]
         private GameObject resourceUIPrefab; // UI预制体
 
         [SerializeField] private Vector3 uiOffset = new Vector3(0, 2f, 0); // UI显示偏移
-        private GameObject currentUIInstance;
 
-        // 点击检测（需要建筑有Collider）
-        private void OnMouseDown()
+        protected override void OnEnable()
         {
-            if (!EventSystem.current.IsPointerOverGameObject()) // 排除点击UI的情况
+            base.OnEnable();
+            m_inputReader.OnBuildingClickedEvent += OnBuildingClicked;
+            m_inputReader.OnNoBuildingClickedEvent += HideResourceUI;
+        }
+
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            m_inputReader.OnBuildingClickedEvent -= OnBuildingClicked;
+            m_inputReader.OnNoBuildingClickedEvent -= HideResourceUI;
+        }
+        
+        private void OnBuildingClicked(GameObject clickedBuilding)
+        {
+            // if(EventSystem.current.IsPointerOverGameObject())
+            //     return;
+            
+            if (clickedBuilding != this.gameObject)
             {
-                ShowResourceUI();
+                HideResourceUI();
+                return;
             }
+            ShowResourceUI();
         }
 
         // 显示资源UI
-        public void ShowResourceUI()
+        private void ShowResourceUI()
         {
-            // 如果已有UI则关闭
-            if (currentUIInstance != null)
-            {
-                Destroy(currentUIInstance);
-                return;
-            }
-
-            // 创建UI实例
-            currentUIInstance = Instantiate(resourceUIPrefab, transform.position + uiOffset, Quaternion.identity);
-            currentUIInstance.transform.SetParent(transform); // 设为建筑子物体
-
             // 获取UI组件
-            ResourceUI uiComponent = currentUIInstance.GetComponent<ResourceUI>();
+            ResourceUI uiComponent = resourceUIPrefab.GetComponent<ResourceUI>();
             if (uiComponent != null)
             {
-                uiComponent.Setup(this);
+                uiComponent.ShowAllUI();
             }
-
-            // 点击其他地方关闭UI
-            StartCoroutine(CloseUIOnClickOutside());
         }
 
-        private IEnumerator CloseUIOnClickOutside()
+        private void HideResourceUI()
         {
-            while (currentUIInstance != null)
+            ResourceUI uiComponent = resourceUIPrefab.GetComponent<ResourceUI>();
+            if (uiComponent != null)
             {
-                if (Input.GetMouseButtonDown(0) &&
-                    !RectTransformUtility.RectangleContainsScreenPoint(
-                        currentUIInstance.GetComponent<RectTransform>(),
-                        Input.mousePosition,
-                        Camera.main))
-                {
-                    Destroy(currentUIInstance);
-                }
-
-                yield return null;
+                uiComponent.HideAllUI();
             }
         }
-        
     }
 }

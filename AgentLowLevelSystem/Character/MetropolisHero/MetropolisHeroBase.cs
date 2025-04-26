@@ -13,7 +13,7 @@ namespace Dungeon
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(Animator), typeof(Rigidbody2D), typeof(MetropolisHeroBehaviorTreeHelper))]
     [RequireComponent(typeof(MetropolisHeroMotor), typeof(BoxCollider2D), typeof(SpriteRenderer))]
-    public class MetropolisHeroBase : MonoBehaviour, IPointerClickHandler
+    public class MetropolisHeroBase : MonoBehaviour 
     {
         #region BaseVariables
 
@@ -112,6 +112,18 @@ namespace Dungeon
             m_Motor = GetComponent<MetropolisHeroMotor>();
             m_Motor.InitMotor(moveSpeed);
             m_BTHelper.Init(this);
+        }
+
+        private void OnEnable()
+        {
+            m_InputReader.OnHeroClickedEvent += OnHeroClicked;
+            m_InputReader.OnNoHeroClickedEvent += HideCommandUI;
+        }
+
+        private void OnDisable()
+        {
+            m_InputReader.OnHeroClickedEvent -= OnHeroClicked;
+            m_InputReader.OnNoHeroClickedEvent -= HideCommandUI;
         }
 
         private void Update()
@@ -218,6 +230,7 @@ namespace Dungeon
             m_BTHelper.hasDormitoryAvailable = HasDormitoryAvailable();
 
             m_BTHelper.hasWorkAvailable = HasWorkplaceAvailable();
+            m_BTHelper.workComplete = !m_IsWorking;
         }
 
         #region PublicAPI
@@ -293,14 +306,10 @@ namespace Dungeon
         }
 
         // 点击角色时触发
-        public void OnPointerClick(PointerEventData eventData)
+        public void OnHeroClicked(GameObject clickedHero)
         {
-            // 临时调试代码：打印当前悬停的UI对象
-            if (EventSystem.current.IsPointerOverGameObject())
-            {
-                Debug.Log("当前悬停的UI对象: " + EventSystem.current.currentSelectedGameObject?.name);
-            }
-
+            if (clickedHero != this.gameObject)
+                return;
             m_BTHelper.isCommandale = true;
             ToggleCommandUI();
         }
@@ -310,6 +319,11 @@ namespace Dungeon
         {
             commandUIPrefab.gameObject.SetActive(true);
             commandUIPrefab.GetComponent<CommandUIComponent>().Setup(this, uiOffsetY);
+        }
+
+        private void HideCommandUI()
+        {
+            commandUIPrefab.gameObject.SetActive(false);
         }
 
         // 接收指令
@@ -538,12 +552,13 @@ namespace Dungeon
         }
 
 
-        private void EndWorking()
+        public void EndWorking()
         {
             if (!m_IsWorking) return;
             m_IsWorking = false;
             StopCoroutine(m_WorkRoutine);
             m_WorkRoutine = null;
+            m_CurrentWorkBuilding = null;
         }
 
         private const string WORKPLACE_TAG = "WorkPlace"; // 工作建筑标签
@@ -610,6 +625,7 @@ namespace Dungeon
 
         #endregion
 
+        [SerializeField] private InputReader m_InputReader;
         [SerializeField, LabelText("基本属性")] protected MetropolisHeroData basicInfo;
         [SerializeField, LabelText("移动速度")] protected float moveSpeed = 5f;
         [Header("指令设置")] [SerializeField] private GameObject commandUIPrefab; // 指令UI预制体

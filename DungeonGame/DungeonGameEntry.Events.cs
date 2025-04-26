@@ -70,14 +70,14 @@ namespace Dungeon.DungeonGameEntry
         }
         private void OnSwitchToFactory(object sender, GameEventArgs e)
         {
-            m_DungeonSystem.enabled = false;
-            m_MetropolisSystem.enabled = false;
+            m_DungeonSystem.gameObject.SetActive(false);
+            m_MetropolisSystem.gameObject.SetActive(true);
         }
 
         private void OnSwitchToDungeon(object sender, GameEventArgs e)
         {
-            m_DungeonSystem.enabled = true;
-            m_MetropolisSystem.enabled = false;
+            m_DungeonSystem.gameObject.SetActive(true);
+            m_MetropolisSystem.gameObject.SetActive(false);
         }
 
         private DungeonSystem m_DungeonSystem;

@@ -99,54 +99,6 @@ namespace Dungeon
 
             return true;
         }
-        
-        // 陷阱放置判断------------------------------------------------------------暂时
-        public bool CanBuildAt(int originX, int originY, TrapData trapData)
-        {
-            // 检查建筑是否超出网格边界
-            if (originX < 0 || originY < 0 ||
-                originX + trapData.size.x > gridProperties.width ||
-                originY + trapData.size.y > gridProperties.height)
-                return false;
-
-            // 检查区域内所有格子
-            for (int x = originX; x < originX + trapData.size.x; x++)
-            {
-                for (int y = originY; y < originY + trapData.size.y; y++)
-                {
-                    if (!IsValidCoordinate(x, y)) return false;
-                    var cell = grid.Get(x, y);
-                    if (!cell.IsBuildable || cell.HasBuilding)
-                        return false;
-                }
-            }
-
-            return true;
-        }
-        
-        // 怪物放置判断--------------------------------------------------------------暂时
-        public bool CanBuildAt(int originX, int originY, MonsterData monsterData)
-        {
-            // 检查建筑是否超出网格边界
-            if (originX < 0 || originY < 0 ||
-                originX + monsterData.size.x > gridProperties.width ||
-                originY + monsterData.size.y > gridProperties.height)
-                return false;
-
-            // 检查区域内所有格子
-            for (int x = originX; x < originX + monsterData.size.x; x++)
-            {
-                for (int y = originY; y < originY + monsterData.size.y; y++)
-                {
-                    if (!IsValidCoordinate(x, y)) return false;
-                    var cell = grid.Get(x, y);
-                    if (!cell.IsBuildable || cell.HasBuilding)
-                        return false;
-                }
-            }
-
-            return true;
-        }
 
         /// <summary>
         /// 尝试放置建筑
@@ -219,7 +171,6 @@ namespace Dungeon
         /// </summary>
         public Vector2Int WorldToGridPosition(Vector3 worldPosition)
         { 
-            worldPosition -= offset;
             int x = Mathf.FloorToInt((worldPosition.x - gridProperties.originPoint.x) / GridProperties.cellSize);
             int y = Mathf.FloorToInt((worldPosition.y - gridProperties.originPoint.y) / GridProperties.cellSize);
             return new Vector2Int(x, y);

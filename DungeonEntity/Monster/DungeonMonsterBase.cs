@@ -132,6 +132,8 @@ namespace Dungeon.DungeonEntity.Monster
         }
         private void UpdateVision()
         {
+            m_BtHelper.targetsInVision.Clear();
+
             var results = new Collider2D[6];
             Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, results, m_HeroLayerMask);
 

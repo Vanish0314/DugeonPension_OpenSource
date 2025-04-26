@@ -37,8 +37,13 @@ namespace Dungeon.Common.MonoPool
 			m_Owner.ReturnItem(this);
 		}
 		public abstract void OnSpawn(object data); /// 初始化物体
-		public abstract void Reset();/// 重置物体
-		public virtual void OnReturnToPool(){}/// 物体回收时调用
+		public abstract void Reset();
+
+		/// 重置物体
+		public virtual void OnReturnToPool()
+		{
+			this.gameObject.SetActive(false);
+		}/// 物体回收时调用
 		protected virtual void OnEnable(){}/// 物体激活时调用,而不是从池子中取出时调用
 		protected virtual void OnDisable(){}/// 物体禁用时调用,而不是回到池子调用
 		protected virtual void OnAwake(){}/// Awake时调用

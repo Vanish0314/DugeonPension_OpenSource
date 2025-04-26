@@ -48,7 +48,6 @@ namespace Dungeon.GridSystem
             }
 
             _instance = this;
-            DontDestroyOnLoad(gameObject);
             
             m_Grid = GetComponent<Grid>();
             m_BuildingGrid = GetComponent<BuildingGrid>();
@@ -61,12 +60,12 @@ namespace Dungeon.GridSystem
 
         private void OnEnable()
         {
-            GameEntry.Event.GetComponent<EventComponent>().Subscribe(TryPlaceBuildingEventArgs.EventId,HandleTryPlaceBuildingEventArgs);
+            GameEntry.Event.Subscribe(TryPlaceBuildingEventArgs.EventId,HandleTryPlaceBuildingEventArgs);
         }
 
         private void OnDisable()
         {
-           GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(TryPlaceBuildingEventArgs.EventId,HandleTryPlaceBuildingEventArgs);
+           GameEntry.Event.Unsubscribe(TryPlaceBuildingEventArgs.EventId,HandleTryPlaceBuildingEventArgs);
         }
         
         private void InitializeForCurrentScene()
@@ -89,7 +88,7 @@ namespace Dungeon.GridSystem
                 originPoint = m_CurrentTilemap.origin
             };
 
-            // 初始化建筑网格 -----------------------------------------仅经营部分会用到
+            // 初始化建筑网格 
             m_BuildingGrid.Init(m_CurrentTilemap);
         }
         
@@ -99,14 +98,16 @@ namespace Dungeon.GridSystem
             
             Vector3 worldPos = args.WorldPosition;
             MonoPoolItem buildingItem = args.BuildingItem;
+            BuildingData buildingData = args.BuildingData;
             
             Vector2Int gridPos = WorldToGridPosition(worldPos);
-    
+            Vector3 cellLocalPos = GetCellLocalPosition(worldPos, gridPos);
+            
             GameObject buildingGo = buildingItem.gameObject;
 
-            if (TryPlaceBuilding(gridPos,args.BuildingData,buildingGo))
+            if (TryPlaceBuilding(gridPos, cellLocalPos, buildingData, buildingGo))
             {
-                GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnBuildingPlacedEventArgs.Create(args.BuildingData));
+                GameEntry.Event.Fire(this, OnBuildingPlacedEventArgs.Create(buildingData));
             }
             else
             {
@@ -136,14 +137,20 @@ namespace Dungeon.GridSystem
         /// <summary>
         /// 尝试在指定位置放置建筑
         /// </summary>
-        public bool TryPlaceBuilding(Vector2Int gridPos, BuildingData buildingData,GameObject buildingGameObject)
+        public bool TryPlaceBuilding(Vector2Int gridPos, Vector3 cellLocalPos, BuildingData buildingData, GameObject buildingGameObject)
         {
-            if (!CanBuildAt(gridPos, buildingData)) return false;
+            Vector2Int originGridPos = GetBuildingOrigin(gridPos, buildingData.size, cellLocalPos);
+            Debug.Log(originGridPos);
+            
+            if (!CanBuildAt(originGridPos, buildingData)) return false;
+            
+            Vector3 centerWorldPosition = CalculateWorldPosition(gridPos, cellLocalPos, buildingData.size);
+            Debug.Log(centerWorldPosition);
 
             // 更新建筑网格
-            if (m_BuildingGrid.TryPlaceBuilding(gridPos.x, gridPos.y, buildingData))
+            if (m_BuildingGrid.TryPlaceBuilding(originGridPos.x, originGridPos.y, buildingData))
             {
-                buildingGameObject.transform.position = GridToWorldPosition(gridPos);
+                buildingGameObject.transform.position = centerWorldPosition;
                 return true;
             }
             return false;
@@ -164,13 +171,106 @@ namespace Dungeon.GridSystem
             }
             return false;
         }
-
-        /// <summary>
-        /// 获取指定位置的建筑数据
-        /// </summary>
-        public BuildingData GetBuildingData(Vector2Int gridPos)
+        
+        // 预览位置
+        public (Vector3 worldPos, bool isValid) CalculatePreviewPosition(
+            Vector3 mouseWorldPos, 
+            BuildingData buildingData)
         {
-            return m_BuildingGrid.GetBuildingData(gridPos.x, gridPos.y);
+            // 转换为网格坐标
+            Vector2Int gridPos = WorldToGridPosition(mouseWorldPos);
+            Vector2 cellLocalPos = GetCellLocalPosition(mouseWorldPos, gridPos);
+    
+            // 计算建筑原点
+            Vector2Int originGridPos = GetBuildingOrigin(gridPos, buildingData.size, cellLocalPos);
+    
+            // 检查是否可建造
+            bool canBuild = CanBuildAt(originGridPos, buildingData);
+    
+            // 计算中心坐标
+            Vector3 centerWorldPos = CalculateWorldPosition(gridPos, cellLocalPos, buildingData.size);
+    
+            return (centerWorldPos, canBuild);
+        }
+        
+        private Vector2Int GetBuildingOrigin(Vector2Int clickGridPos, Vector2Int buildingSize, Vector2 cellLocalPos)
+        {
+            int offsetX = 0;
+            int offsetY = 0;
+
+            // 水平方向偏移判断
+            if (buildingSize.x % 2 == 0) // 偶数列
+            {
+                offsetX = (cellLocalPos.x >= 0.5f) ? -(buildingSize.x - 1) / 2 : -buildingSize.x / 2;
+            }
+            else // 奇数列
+            {
+                offsetX = -(buildingSize.x - 1) / 2; // 保持中心对齐
+            }
+
+            // 垂直方向偏移判断
+            if (buildingSize.y % 2 == 0) // 偶数行
+            {
+                offsetY = (cellLocalPos.y >= 0.5f) ? -(buildingSize.y - 1) / 2 : -buildingSize.y / 2;
+            }
+            else // 奇数行
+            {
+                offsetY = -(buildingSize.y - 1) / 2; // 保持中心对齐
+            }
+
+            return new Vector2Int(
+                clickGridPos.x + offsetX,
+                clickGridPos.y + offsetY
+            );
+        }
+        
+        // 在 BuildGridSystem 类中添加以下方法
+        private Vector2 GetCellLocalPosition(Vector3 worldPosition,Vector2Int gridPos)
+        {
+            Vector3 cellWorldPos = GridToWorldPosition(gridPos);
+            Vector3 relativePos = worldPosition - cellWorldPos;
+
+            // 归一化到 [0,1) 范围
+            float localX = (relativePos.x / m_Grid.cellSize.x) + 0.5f;
+            float localY = (relativePos.y / m_Grid.cellSize.y) + 0.5f;
+
+            return new Vector2(localX, localY);
+        }
+        
+        
+        // 动态偏移计算
+        private Vector2 GetBuildingCenterOffset(Vector2Int buildingSize, Vector2 cellLocalPos)
+        {
+            float offsetX = 0f;
+            float offsetY = 0f;
+
+            // 处理偶数尺寸的建筑
+            if (buildingSize.x % 2 == 0)
+            {
+                // 根据点击位置在单元格内的局部坐标决定水平偏移方向
+                offsetX = (cellLocalPos.x >= 0.5f) ? 0.5f : -0.5f;
+            }
+
+            if (buildingSize.y % 2 == 0)
+            {
+                // 根据点击位置在单元格内的局部坐标决定垂直偏移方向
+                offsetY = (cellLocalPos.y >= 0.5f) ? 0.5f : -0.5f;
+            }
+
+            return new Vector2(offsetX, offsetY);
+        }
+        
+        // 计算出建筑放置的世界坐标
+        private Vector3 CalculateWorldPosition(Vector2Int gridPos, Vector3 cellLocalPos, Vector2Int size)
+        {
+            Vector2 centerOffset = GetBuildingCenterOffset(size, cellLocalPos);
+        
+            return GridToWorldPosition(gridPos) + 
+                   new Vector3(
+                       centerOffset.x,
+                       centerOffset.y,
+                       0
+                   );
         }
         
         #endregion

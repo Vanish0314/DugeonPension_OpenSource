@@ -130,24 +130,28 @@ namespace Dungeon.AgentLowLevelSystem
         {
             checkResult = result;
             checkResultTime = 5f;
+            BubbleManager.Instance.ShowBubble(transform, result, BubbleID.DiceBubble);
         }
 
         public void BumpDiscoveryBubbule(string saying)
         {
             discoveryResult = saying;
             discoveryResultTime = 5f;
+            BubbleManager.Instance.ShowBubble(transform, saying, BubbleID.DialogueBubble);
         }
 
         public void BumpActioningBubbule(string action,float progress)
         {
             performingAction = action;
             performingActionProgress = progress;
+            //BubbleManager.Instance.ShowBubble()
         }
 
         public void BumpUseSkillBubbule(string skillName)
         {
             skillUsing = skillName;
             skillUsingTime = 5f;
+            BubbleManager.Instance.ShowBubble(transform, skillUsing, BubbleID.DialogueBubble);
         }
 
     }

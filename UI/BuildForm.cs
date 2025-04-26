@@ -7,10 +7,12 @@ namespace Dungeon
     public enum BuildingType
     {
         Castle,
-        Quarry,
-        Factory,
         MonsterLair,
-        Monitor,
+        ControlCenter,
+        Quarry,
+        LoggingCamp,
+        FarmLand,
+        Canteen,
         Dormitory,
     }
 

@@ -17,7 +17,6 @@ namespace Dungeon
             if (m_Timer >= interval)
             {
                 m_Timer = 0;
-                BuildModel.Instance.ModifyCount(BuildingType.Factory,Random.Range(0,3));
                 BuildModel.Instance.ModifyCount(BuildingType.MonsterLair,Random.Range(0,3));
                 BuildModel.Instance.ModifyCount(BuildingType.Quarry,Random.Range(1,4));
                 FeelSystem.Instance.FloatingText("随机图纸", transform, produceData.productionGradient);
