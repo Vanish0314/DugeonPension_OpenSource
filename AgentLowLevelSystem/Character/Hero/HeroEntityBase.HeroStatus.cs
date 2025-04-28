@@ -14,7 +14,7 @@ namespace Dungeon.Character.Hero
     {
         public bool IsAlive()
         {
-            return m_LowLevelSystem.Hp > 0;
+            return m_LowLevelSystem.IsAlive();
         }
 
         public void OnDie()

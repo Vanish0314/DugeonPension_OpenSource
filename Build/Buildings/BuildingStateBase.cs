@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GameFramework.Event;
 using GameFramework.Fsm;
 using UnityEngine;
 
@@ -9,58 +10,67 @@ namespace Dungeon
     {
         // 状态进入时调用
         protected override void OnEnter(IFsm<MetropolisBuildingBase> fsm) { }
+        
+        // 状态更新时调用
+        protected override void OnUpdate(IFsm<MetropolisBuildingBase> fsm, float elapseSeconds, float realElapseSeconds) { }
     
         // 状态退出时调用
         protected override void OnLeave(IFsm<MetropolisBuildingBase> fsm, bool isShutdown) { }
-    
-        // 状态更新时调用
-        protected override void OnUpdate(IFsm<MetropolisBuildingBase> fsm, float elapseSeconds, float realElapseSeconds) { }
     }
     
     // 待施工状态
-    public class AreaState : BuildingStateBase
+    public class UnBuiltState : BuildingStateBase
     {
+        private IFsm<MetropolisBuildingBase> m_Fsm;
         protected override void OnEnter(IFsm<MetropolisBuildingBase> fsm)
         {
+            m_Fsm = fsm;
+            
             MetropolisBuildingBase building = fsm.Owner;
             building.GetComponent<Collider2D>().enabled = true;
-            Debug.Log($"进入待施工状态: {building.name}");
+            building.GetComponent<SpriteRenderer>().sprite = building.constructionSprite;
+            
+            // 订阅
+            GameEntry.Event.Subscribe(OnConstructionCompletedEvent.EventId, OnConstructionCompleted);
+            
+            // 粒子特效之类的
+            // 其他……
+            base.OnEnter(fsm);
         }
-    }
 
-    // 施工中状态
-    public class ConstructionState : BuildingStateBase
-    {
-        private IEnumerator m_ConstructionCoroutine;
+        private void OnConstructionCompleted(object sender, GameEventArgs gameEventArgs)
+        {
+            ChangeState<CompletedState>(m_Fsm);
+        }
 
-        protected override void OnEnter(IFsm<MetropolisBuildingBase> fsm)
+        protected override void OnUpdate(IFsm<MetropolisBuildingBase> fsm, float elapseSeconds, float realElapseSeconds)
         {
             MetropolisBuildingBase building = fsm.Owner;
-           // m_ConstructionCoroutine = ConstructionProcess(building);
-            building.StartCoroutine(m_ConstructionCoroutine);
+            
+            if (building.constructionProgress < 1 && building.workingHeroes.Count > 0)
+            {
+                // hero进来施工
+                building.StartConstructionProcess();
+            }
+            else
+            {
+                building.StopCurrentCoroutine();
+            }
+            
+            base.OnUpdate(fsm, elapseSeconds, realElapseSeconds);
         }
 
         protected override void OnLeave(IFsm<MetropolisBuildingBase> fsm, bool isShutdown)
         {
-            if (m_ConstructionCoroutine != null)
-            {
-                fsm.Owner.StopCoroutine(m_ConstructionCoroutine);
-            }
-        }
+            MetropolisBuildingBase building = fsm.Owner;
 
-        // private IEnumerator ConstructionProcess(MetropolisBuildingBase building)
-        // {
-        //     building.constructionProgress = 0;
-        //     while (building.constructionProgress < 1f)
-        //     {
-        //        // building.constructionSpeed = building.workingHeroes.Count > 0 ? 
-        //             building.currentEfficiency : 0;
-        //         building.constructionProgress += Time.deltaTime / 
-        //             building.constructionDuration * building.constructionSpeed;
-        //         yield return null;
-        //     }
-        //     ChangeState<CompletedState>(fsm);
-        // }
+            building.StopCurrentCoroutine();
+            
+            // 取消订阅
+            GameEntry.Event.Unsubscribe(OnConstructionCompletedEvent.EventId, OnConstructionCompleted);
+            
+            base.OnLeave(fsm, isShutdown);
+        }
     }
 
     // 完成状态
@@ -68,9 +78,26 @@ namespace Dungeon
     {
         protected override void OnEnter(IFsm<MetropolisBuildingBase> fsm)
         {
+            base.OnEnter(fsm);
+            
             MetropolisBuildingBase building = fsm.Owner;
             building.GetComponent<SpriteRenderer>().sprite = building.completedSprite;
-            Debug.Log($"建筑完成: {building.name}");
+        }
+        
+        protected override void OnUpdate(IFsm<MetropolisBuildingBase> fsm, float elapseSeconds, float realElapseSeconds)
+        {
+            MetropolisBuildingBase building = fsm.Owner;
+            
+            base.OnUpdate(fsm, elapseSeconds, realElapseSeconds);
+        }
+
+        protected override void OnLeave(IFsm<MetropolisBuildingBase> fsm, bool isShutdown)
+        {
+            MetropolisBuildingBase building = fsm.Owner;
+
+            base.OnLeave(fsm, isShutdown);
         }
     }
+    
+    
 }

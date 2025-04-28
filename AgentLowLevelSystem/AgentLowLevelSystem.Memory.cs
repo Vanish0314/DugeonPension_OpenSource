@@ -94,14 +94,21 @@ namespace Dungeon.AgentLowLevelSystem
             if(entity.GetComponent<DungeonMonsterBase>()!= null)
             {
                 m_BrainMemory.monstersInVision.Add(entity.GetComponent<DungeonMonsterBase>());
+                BumpSeeAMonsterBubble(entity.GetComponent<DungeonMonsterBase>());
             }
             else if(entity.GetComponent<StandardDungeonTreasureChest>()!= null)
             {
                 m_BrainMemory.treasureChestInVision.Add(entity.GetComponent<StandardDungeonTreasureChest>());
+                BumpSeeATreasureChestBubble(entity.GetComponent<StandardDungeonTreasureChest>());
             }
             else if(entity.GetComponent<DungeonTrapBase>()!= null)
             {
                 m_BrainMemory.trapInVision.Add(entity.GetComponent<DungeonTrapBase>());
+                BumpSeeATrapBubble(entity.GetComponent<DungeonTrapBase>());
+            }
+            else if(entity.GetComponent<StandardTorch>()!= null)
+            {
+                BumpSeeATorchBubble(entity.GetComponent<StandardTorch>());
             }
             else
             {

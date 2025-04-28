@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using Codice.Client.Commands;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -9,18 +10,17 @@ namespace Dungeon
 {
     public interface ICombatable
     {
-        // public UInt16 GetCurrentHP();
-        // public UInt16 GetMaxHP();
-        // public UInt16 GetCurrentMP();
-        // public UInt16 GetMaxMP();
         public int Hp{get;set;}
         public int MaxHp{get;set;}
         public int Mp{get;set;}
         public int MaxMp{get;set;}
         public float AttackSpeed{get;set;}
         public CombatorData BasicInfo{get;set;}
+        public StatusBarSetting StatusBarSetting{get;set;}
         
         public GameObject GetGameObject();
+        public bool IsAlive();
+        public void OnKillSomebody(ICombatable killed);
 
         /// <summary>
         /// 
@@ -62,6 +62,11 @@ namespace Dungeon
         public float attackSpeed;
 
         /// <summary>
+        /// 当前的等级
+        /// </summary>
+        [LabelText("等级"),Range(1,20)] public int currentLevel;
+
+        /// <summary>
         /// 物理属性抗性
         /// </summary>
         public ResistanceLevel physicalResistance;
@@ -85,6 +90,11 @@ namespace Dungeon
         /// 毒属性抗性
         /// </summary>
         public ResistanceLevel posionResistance;
+    }
+    [Serializable]
+    public struct StatusBarSetting
+    {
+        [LabelText("血条位置偏移")] public Vector3 offset;
     }
 
     [Serializable]

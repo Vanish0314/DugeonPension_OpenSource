@@ -16,21 +16,24 @@ namespace Dungeon.AgentLowLevelSystem
     {
         public void GetExperience(int exp)
         {
+            BumpGetExperienceBubble(exp);
+
             m_Properties.currentExp += exp;
 
             var calculator = DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator;
 
-            var upgradeRule = calculator.UpgradeExperienceNeedRule;
-            int currentLevel = m_Properties.currentLevel;
+            int currentLevel = m_Properties.combatorData.currentLevel;
             int currentExp = m_Properties.currentExp;
 
             while (currentLevel < 20)
             {
-                int requiredExp = upgradeRule.GetExpForLevel(currentLevel + 1);
+                int requiredExp = calculator.GetUpgradeExperienceNeed(currentLevel + 1);
                 if (currentExp >= requiredExp)
                 {
                     currentExp -= requiredExp;
                     currentLevel++;
+
+                    BumpLevelUpBubble(currentLevel);
                 }
                 else
                 {
@@ -38,9 +41,9 @@ namespace Dungeon.AgentLowLevelSystem
                 }
             }
 
-            UnlockNewSkills(m_Properties.currentLevel, currentLevel);
+            UnlockNewSkills(m_Properties.combatorData.currentLevel, currentLevel);
 
-            m_Properties.currentLevel = currentLevel;
+            m_Properties.combatorData.currentLevel = currentLevel;
             m_Properties.currentExp = currentExp;
         }
         private void UnlockNewSkills(int fromLevel, int toLevel)
@@ -63,7 +66,7 @@ namespace Dungeon.AgentLowLevelSystem
                 .ForEach(skill => m_SkillDict[skill.name] = skill);
         }
 
-        [DungeonGridWindow("升级")]
+        [DungeonGridWindow("给勇者升级")]
         public static void Temp()
         {
             var hero = DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.currentBehavouringHeroTeam.FirstOrDefault<HeroEntityBase>();
@@ -76,7 +79,7 @@ namespace Dungeon.AgentLowLevelSystem
         [SerializeField] private LevelSkillData m_LevelSkillData;
         private List<SkillData> CurrentOwnedSkills()
         {
-            var level = m_Properties.currentLevel;
+            var level = m_Properties.combatorData.currentLevel;
             List<SkillData> ownedSkills = new();
 
             if (m_LevelSkillData == null)

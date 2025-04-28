@@ -69,6 +69,8 @@ namespace Dungeon.SkillSystem
         {
             if (!isReadyToFire) return;
 
+            GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 准备使用技能: {skill.skillData.name}");
+
             isReadyToFire = false;
             currentSkillName = skill.skillData.name;
 
@@ -80,6 +82,8 @@ namespace Dungeon.SkillSystem
             currentSequence.AppendInterval(pre);
             currentSequence.AppendCallback(() =>
             {
+                GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能前摇结束, 开始施放技能: {skill.skillData.name}");
+
                 currentSkillEntity = Instantiate(skill.SkillGO).GetComponentInChildren<SkillEntity>();//FIXME()
                 currentSkillEntity.InitAndFire(skill);
             });
@@ -87,6 +91,8 @@ namespace Dungeon.SkillSystem
             currentSequence.AppendInterval(mid);
             currentSequence.AppendCallback(() =>
             {
+                GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能中摇结束, 进入技能后摇: {skill.skillData.name}");
+
                 if (currentSkillEntity != null)
                 {
                     currentSkillEntity.ReturnToPool();
@@ -101,7 +107,7 @@ namespace Dungeon.SkillSystem
                 currentSequence = null;
                 currentSkillName = null;
 
-                GameFrameworkLog.Info("[SkillShooter] Skill casting complete.");
+                GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能后摇结束, 技能: {skill.skillData.name} 释放完毕.");
             });
 
             currentSequence.OnKill(() =>
@@ -115,7 +121,7 @@ namespace Dungeon.SkillSystem
                 isReadyToFire = true;
                 currentSkillName = null;
 
-                GameFrameworkLog.Info("[SkillShooter] Skill was interrupted.");
+                GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能被终止, 技能: {skill.skillData.name} 未能释放.");
             });
         }
 

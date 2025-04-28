@@ -36,6 +36,8 @@ namespace Dungeon.DungeonEntity.Monster
         public int MaxMp { get => basicInfo.maxMp; set => basicInfo.maxMp = value; }
         public float AttackSpeed { get => basicInfo.attackSpeed; set => basicInfo.attackSpeed = value; }
         public CombatorData BasicInfo { get => basicInfo; set => basicInfo = value; }
+        public StatusBarSetting StatusBarSetting { get => statusBarSetting; set => statusBarSetting = value; }
+
         public GameObject GetGameObject() => gameObject;
         public override VisitInformation OnUnvisited(VisitInformation visiter)
         {
@@ -149,14 +151,13 @@ namespace Dungeon.DungeonEntity.Monster
                     continue;
 
                 m_BtHelper.targetsInVision.Add(result.transform);
-                m_BtHelper.currentTarget = result.transform;
             }
         }
         private void UpdateValues()
         {
             m_BtHelper.hp = Hp;
-            if(m_BtHelper.currentTarget!= null)
-                m_BtHelper.targetLastKnownPosition = m_BtHelper.currentTarget.position;
+            if(m_BtHelper.CurrentTarget!= null)
+                m_BtHelper.targetLastKnownPosition = m_BtHelper.CurrentTarget.position;
 
             if(skillColdingDownTime > 0)
                 skillColdingDownTime -= Time.deltaTime;
@@ -175,6 +176,7 @@ namespace Dungeon.DungeonEntity.Monster
             m_SkillShooter.Fire(skill,target.position, target.position - transform.position);
             m_BtHelper.isAttacking = true;
             skillColdingDownTime = skill.cooldownTimeInSec;
+            SetSpriteDirection((target.position - transform.position).x > 0);
             
             Task.Run(async () =>{
                 await Task.Delay(TimeSpan.FromSeconds(skill.preCastTimeInSec));
@@ -187,6 +189,15 @@ namespace Dungeon.DungeonEntity.Monster
         protected virtual void Init()
         {
             DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.RegisterDungeonEntity(this);
+        }
+        private void FlipSprite()
+        {
+            m_Animator.transform.localScale = 
+                new Vector3(m_Animator.transform.localScale.x * -1, m_Animator.transform.localScale.y, m_Animator.transform.localScale.z);
+        }
+        private void SetSpriteDirection(bool right)
+        {
+            m_Animator.transform.localScale = new Vector3(right? 1 : -1, m_Animator.transform.localScale.y, m_Animator.transform.localScale.z);
         }
 
 #if UNITY_EDITOR
@@ -209,12 +220,23 @@ namespace Dungeon.DungeonEntity.Monster
             DOVirtual.DelayedCall(duration, () => { m_BtHelper.isStunned = false; });
         }
 
+        public bool IsAlive()
+        {
+            return Hp > 0;
+        }
+
+        public void OnKillSomebody(ICombatable killed)
+        {
+            GameFrameworkLog.Info($"[DungeonMonsterBase] {gameObject.name} killed {killed.GetGameObject().name}");
+        }
+
         [Header("使用说明")]
         [ReadOnly,TextArea,LabelText("Animator可使用的变量如下:")] public string animatorParametersHint = "isIdle, isMoving, isAttacking, isDead";
 
         [Space]
         [Header("基本信息")]
         [SerializeField,LabelText("基本属性")] protected CombatorData basicInfo;
+        [SerializeField,LabelText("状态条设置")] protected StatusBarSetting statusBarSetting;
         [Space]
         [SerializeField,LabelText("可见检定"), Tooltip("被看见是否需要过一个检定,不需要置空即可")]
         protected DndCheckTarget visibleCheckTarget;

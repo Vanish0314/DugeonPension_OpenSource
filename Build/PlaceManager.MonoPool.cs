@@ -8,6 +8,10 @@ namespace Dungeon
 {
     public partial class PlaceManager : MonoBehaviour
     {
+        // 使用字典直接存储对应关系
+        private Dictionary<MonoPoolComponent, MonoPoolItem> m_Pools = 
+            new Dictionary<MonoPoolComponent, MonoPoolItem>();
+        
         // BuildingPool
         [Header("Buildings")]
         [SerializeField] private MonoPoolComponent m_CastlePoolComponent;
@@ -38,24 +42,33 @@ namespace Dungeon
         [SerializeField] private MonoPoolItem m_SlimeMonsterItemPrefab;
 
 
-        private void InitMonoPool()
+        private void InitMonoPool() // 有点烂了
         {
             m_CastlePoolComponent = GetOrCreateMonoPoolComponent("CastlePoolComponent");
             m_CastlePoolComponent.Init("Castle", m_CastlePoolItem, m_CastlePoolComponent.transform, 16);
+            m_Pools.Add(m_CastlePoolComponent, m_CastlePoolItem);
+            
             m_MonsterLairPoolComponent = GetOrCreateMonoPoolComponent("MonsterLairPoolComponent");
             m_MonsterLairPoolComponent.Init("Monster", m_MonsterLairPoolItem, m_MonsterLairPoolComponent.transform, 16);
+            m_Pools.Add(m_MonsterLairPoolComponent, m_MonsterLairPoolItem);
             m_ControlCenterPoolComponent = GetOrCreateMonoPoolComponent("ControlCenterPoolComponent");
             m_ControlCenterPoolComponent.Init("ControlCenter", m_ControlCenterPoolItem, m_ControlCenterPoolComponent.transform, 16);
+            m_Pools.Add(m_ControlCenterPoolComponent, m_ControlCenterPoolItem);
             m_QuarryPoolComponent = GetOrCreateMonoPoolComponent("QuarryPoolComponent");
             m_QuarryPoolComponent.Init("Quarry", m_QuarryPoolItem, m_QuarryPoolComponent.transform, 16);
+            m_Pools.Add(m_QuarryPoolComponent, m_QuarryPoolItem);
             m_LoggingCampPoolComponent = GetOrCreateMonoPoolComponent("LoggingCampPoolComponent");
             m_LoggingCampPoolComponent.Init("Logging", m_LoggingCampPoolItem, m_LoggingCampPoolComponent.transform, 16);
+            m_Pools.Add(m_LoggingCampPoolComponent, m_LoggingCampPoolItem);
             m_FarmlandPoolComponent = GetOrCreateMonoPoolComponent("FarmlandPoolComponent");
             m_FarmlandPoolComponent.Init("Farmland", m_FarmlandPoolItem, m_FarmlandPoolComponent.transform, 16);
+            m_Pools.Add(m_FarmlandPoolComponent, m_FarmlandPoolItem);
             m_CanteenPoolComponent = GetOrCreateMonoPoolComponent("CanteenPoolComponent");
             m_CanteenPoolComponent.Init("Canteen", m_CanteenPoolItem, m_CanteenPoolComponent.transform, 16);
+            m_Pools.Add(m_CanteenPoolComponent, m_CanteenPoolItem);
             m_DormitoryPoolComponent = GetOrCreateMonoPoolComponent("DormitoryPoolComponent");
             m_DormitoryPoolComponent.Init("Dormitory", m_DormitoryPoolItem, m_DormitoryPoolComponent.transform, 16);
+            m_Pools.Add(m_DormitoryPoolComponent, m_DormitoryPoolItem);
         }
         
         private MonoPoolComponent GetOrCreateMonoPoolComponent(string name)

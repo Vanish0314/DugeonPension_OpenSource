@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DG.Tweening;
+using GameFramework;
 using UnityEngine;
 
 namespace Dungeon.SkillSystem.SkillEffect
@@ -51,11 +53,12 @@ namespace Dungeon.SkillSystem.SkillEffect
     }
     public class SkillCalculator
     {
-        public SkillCalculator(ICombatable attacker, ICombatable target, SkillDeployMethod deployDesc)
+        public SkillCalculator(ICombatable attacker, ICombatable target, Skill skill)
         {
             this.attacker = attacker;
             this.target = target;
-            this.deployDesc = deployDesc;
+            this.deployDesc = skill.skillDeployMethod;
+            this.skill = skill;
         }
 
         /// <summary>
@@ -143,20 +146,50 @@ namespace Dungeon.SkillSystem.SkillEffect
         {
             int totalDamage = 0;
 
-            totalDamage += physicalChannel.Sum(damage => damage.Claculate(target));
-            totalDamage += fireChannel.Sum(damage => damage.Claculate(target));
-            totalDamage += iceChannel.Sum(damage => damage.Claculate(target));
-            totalDamage += holyChannel.Sum(damage => damage.Claculate(target));
-            totalDamage += posionChannel.Sum(damage => damage.Claculate(target));
+            var phy = physicalChannel.Sum(damage => damage.Claculate(target));
+            var fire = fireChannel.Sum(damage => damage.Claculate(target));
+            var ice = iceChannel.Sum(damage => damage.Claculate(target));
+            var holy = holyChannel.Sum(damage => damage.Claculate(target));
+            var posion = posionChannel.Sum(damage => damage.Claculate(target));
+
+            totalDamage += phy + fire + ice + holy + posion;
 
             target.Hp -= totalDamage;
+
+            KillCheck();
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"[Skill Calculator] 技能结算Log - 直接伤害")
+              .AppendLine($"攻击者: {attacker.GetGameObject().name},使用了技能{skill.SkillName}")
+              .AppendLine($"受击者: {target.GetGameObject().name}")
+              .AppendLine($"造成总伤害: {totalDamage}")
+              .AppendLine($"受击者剩余血量: {target.Hp}")
+              .AppendLine($"具体伤害明细:")
+              .AppendLine($"物理伤害: {phy}")
+              .AppendLine($"火伤害: {fire}")
+              .AppendLine($"冰伤害: {ice}")
+              .AppendLine($"神圣伤害: {holy}")
+              .AppendLine($"毒伤害: {posion}");
+            GameFrameworkLog.Info(sb.ToString());
+
+            CalculateEffects();
         }
         private void CalculateEffects()
         {
             foreach (var effect in immediateEffects)
             {
                 effect.Effect();
+
+#if UNITY_EDITOR
+                var sb = new StringBuilder();
+                sb.AppendLine($"[Skill Calculator] 技能结算Log - 立即效果")
+                  .AppendLine($"攻击者: {attacker.GetGameObject().name},使用了技能{skill.SkillName}")
+                  .AppendLine($"受击者: {target.GetGameObject().name}")
+                  .AppendLine($"效果: {effect.Effect.Method.Name}");
+                GameFrameworkLog.Info(sb.ToString());
+#endif
             }
+            KillCheck();
 
             foreach (var effect in continuousEffects)
             {
@@ -168,6 +201,18 @@ namespace Dungeon.SkillSystem.SkillEffect
                         effect.Effect();
                         await Task.Delay(1000); // 每秒触发一次
                         remainingDuration -= 1;
+
+                        KillCheck();
+
+#if UNITY_EDITOR
+                        var sb = new StringBuilder();
+                        sb.AppendLine($"[Skill Calculator] 技能结算Log - 持续效果")
+                          .AppendLine($"攻击者: {attacker.GetGameObject().name},使用了技能{skill.SkillName}")
+                          .AppendLine($"受击者: {target.GetGameObject().name}")
+                          .AppendLine($"效果: {effect.Effect.Method.Name}")
+                          .AppendLine($"剩余时间: {remainingDuration}");
+                        GameFrameworkLog.Info(sb.ToString());
+#endif
                     }
                 });
             }
@@ -178,8 +223,30 @@ namespace Dungeon.SkillSystem.SkillEffect
                 {
                     await Task.Delay((int)(effect.Delay * 1000)); // 转换为毫秒
                     effect.Effect();
+
+                    KillCheck();
+
+#if UNITY_EDITOR
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"[Skill Calculator] 技能结算Log - 定时效果")
+                      .AppendLine($"攻击者: {attacker.GetGameObject().name},使用了技能{skill.SkillName}")
+                      .AppendLine($"受击者: {target.GetGameObject().name}")
+                      .AppendLine($"效果: {effect.Effect.Method.Name}")
+                      .AppendLine($"延迟: {effect.Delay}");
+                    GameFrameworkLog.Info(sb.ToString());
+#endif
                 });
             }
+        }
+        private bool KillCheck()
+        {
+            if (!target.IsAlive())
+            {
+                attacker.OnKillSomebody(target);
+                return true;
+            }
+
+            return false;
         }
 
         private delegate void EffectHandler();
@@ -220,6 +287,7 @@ namespace Dungeon.SkillSystem.SkillEffect
         private ICombatable attacker;
         private ICombatable target;
         private SkillDeployMethod deployDesc;
+        private Skill skill;
         private List<Damage> physicalChannel = new();
         private List<Damage> fireChannel = new();
         private List<Damage> iceChannel = new();

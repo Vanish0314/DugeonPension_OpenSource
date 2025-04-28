@@ -9,12 +9,17 @@ namespace Dungeon.DUngeonCalculator
 {
     public class DungeonResultCalculator : MonoBehaviour
     {
+        public int GetUpgradeExperienceNeed(int level) => upgradeExperienceNeedRule.GetExpForLevel(level);
+        public int GetDropExpForLevel(int level) => experienceGetByLevelRule.GetDropExpForLevel(level);
+        public int GetExpForRoom() => experienceGetByRoomRule.experiencePerRoom;
+
         public DungeonExperienceGetByLevelRule ExperienceGetByLevelRule { get => experienceGetByLevelRule; }
         public DungeonUpgardeExperienceNeedRule UpgradeExperienceNeedRule { get => upgradeExperienceNeedRule; }
-        private DungeonUpgardeExperienceNeedRule upgradeExperienceNeedRule;
-        private DungeonExperienceGetByLevelRule experienceGetByLevelRule;
+        public DungeonExperienceGetByRoomRule ExperienceGetByRoomRule { get => experienceGetByRoomRule; }
+        [SerializeField] private DungeonUpgardeExperienceNeedRule upgradeExperienceNeedRule;
+        [SerializeField] private DungeonExperienceGetByLevelRule experienceGetByLevelRule;
+        [SerializeField] private DungeonExperienceGetByRoomRule experienceGetByRoomRule;
     }
-
     public class DungeonCalculationResult
     {
 
@@ -67,7 +72,7 @@ namespace Dungeon.DUngeonCalculator
             return match != null ? match.RequiredExp : int.MaxValue;
         }
     }
-    [CreateAssetMenu(fileName = "新经验获取规则", menuName = "DungeonRule/经验获取规则")]
+    [CreateAssetMenu(fileName = "新等级经验获取规则", menuName = "DungeonRule/等级经验获取规则")]
     public class DungeonExperienceGetByLevelRule : ScriptableObject
     {
         [TableList(ShowIndexLabels = true, AlwaysExpanded = true)]
@@ -115,4 +120,9 @@ namespace Dungeon.DUngeonCalculator
         }
     }
 
+    [CreateAssetMenu(fileName = "新地牢经验获取规则", menuName = "DungeonRule/地牢房间经验获取规则")]
+    public class DungeonExperienceGetByRoomRule : ScriptableObject
+    {
+        [LabelText("每一个房间的经验")] public int experiencePerRoom;
+    }
 }

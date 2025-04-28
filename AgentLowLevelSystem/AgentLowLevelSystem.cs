@@ -37,7 +37,6 @@ namespace Dungeon.AgentLowLevelSystem
             InitMoveSystem();
             InitVisionSystem();
             InitDNDSystem();
-            InitText();
             InitSkillSystem();
             InitAnimator();
         }

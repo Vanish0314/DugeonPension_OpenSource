@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Dungeon.SkillSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -23,19 +24,19 @@ namespace Dungeon.DungeonEntity.Monster
         [ReadOnly]public bool isAttacking;
         [ReadOnly]public bool isStunned;
         [ReadOnly]public int hp;
-        [ReadOnly]public Transform currentTarget;
+        [ReadOnly]public Transform CurrentTarget => targetsInVision.FirstOrDefault();
         [ReadOnly]public List<Transform> targetsInVision;
         [ShowInInspector,ReadOnly]public Vector3? targetLastKnownPosition;
 
         public bool TargetIsInSkillRange()
         {
-            if(currentTarget == null)
+            if(CurrentTarget == null)
             {
                 return false;
             }
             else
             {
-                return m_Skill.IsInRange(transform.position,currentTarget.position);
+                return m_Skill.IsInRange(transform.position,CurrentTarget.position);
             }
         }
         public void MoveTo(Vector3 targetPositionInWorldCoord)
@@ -44,14 +45,14 @@ namespace Dungeon.DungeonEntity.Monster
         }
         public void MoveToCurrentTarget()
         {
-            if (currentTarget == null) return;
+            if (CurrentTarget == null) return;
 
-            MoveTo(currentTarget.position);
+            MoveTo(CurrentTarget.position);
         }
         public void Attack()
         {
             state = MonsterAIState.Attacking;
-            m_Monster.Attack(currentTarget);
+            m_Monster.Attack(CurrentTarget);
         }
         public void Init(DungeonMonsterBase monster, SkillData skill)
         {
@@ -62,5 +63,19 @@ namespace Dungeon.DungeonEntity.Monster
         private DungeonMonsterBase m_Monster;
         private DungeonEntityMotor m_Motor;
         private SkillData m_Skill;
+
+
+#if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            if (CurrentTarget!= null)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(transform.position, CurrentTarget.position);
+
+                Gizmos.DrawCube(CurrentTarget.position, Vector3.one * 0.2f);
+            }
+        }
+#endif
     }
 }

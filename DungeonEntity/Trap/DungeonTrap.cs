@@ -319,6 +319,7 @@ namespace Dungeon.DungeonEntity.Trap
 
         [Header("基本设置")]
         [LabelText("陷阱名称")] public string trapName;
+        [LabelText("陷阱等级")] public int trapLevel;
         [SerializeField, LabelText("可见检定")] protected DndCheckTarget mDndCheckTarget;
         [SerializeField, LabelText("陷阱精灵")] protected Sprite sprite;
 

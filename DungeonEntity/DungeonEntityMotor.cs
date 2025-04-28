@@ -36,7 +36,9 @@ namespace Dungeon
         }
         public void MoveTo(Vector3 targetPosInWorldCoord)
         {
+            m_Path.Clear();
             m_Path = DungeonGameEntry.DungeonGameEntry.GridSystem.FindPath(transform.position, targetPosInWorldCoord);
+            m_Path.Pop(); // remove the first point, which is the current position
         }
         public void MoveTowards(Vector2 direction)
         {
@@ -61,31 +63,30 @@ namespace Dungeon
         {
             if (m_Path.Count > 0)
             {
-                if (m_Path.Count > 0)
-                {
-                    var dis = Vector3.Magnitude(m_Path.Peek() - transform.position);
+                var dis = Vector3.Magnitude(m_Path.Peek() - transform.position);
 
-                    if (dis < 0.1f)
+                if (dis < 0.1f)
+                {
+                    m_Path.Pop();
+
+                    if (m_Path.Count == 0)
                     {
-                        m_Path.Pop();
-                        return;
-                    }
-                    else if (dis > 1.5f)
-                    {
-                        ReCalculatePath();
+                        rb.velocity = Vector2.zero;
                     }
 
-                    var nextMove = m_Path.Peek();
-                    var dir = (nextMove - transform.position).normalized;
-                    var v = speed * dir;
-                    rb.velocity = new Vector2(v.x, v.y);
-
-                    FlipSpriteTowards(dir.x > 0.1); // prevent flip when moving diagonally
+                    return;
                 }
-                else
+                else if (dis > 1.5f)
                 {
-                    rb.velocity = Vector2.zero;
+                    ReCalculatePath();
                 }
+
+                var nextMove = m_Path.Peek();
+                var dir = (nextMove - transform.position).normalized;
+                var v = speed * dir;
+                rb.velocity = new Vector2(v.x, v.y);
+
+                FlipSpriteTowards(dir.x > 0.1); // prevent flip when moving diagonally
             }
         }
 
@@ -101,8 +102,29 @@ namespace Dungeon
 
         private void FlipSpriteTowards(bool right)
         {
-            spriteTransform.localScale = new Vector3(right? 1 : -1, 1, 1);
+            spriteTransform.localScale = new Vector3(right ? 1 : -1, 1, 1);
         }
 
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            if (m_Path.Count > 0)
+            {
+                Gizmos.color = Color.red;
+                var copy = new Stack<Vector3>(m_Path);
+
+                while (copy.Count > 0)
+                {
+                    var pos = copy.Pop();
+                    Gizmos.DrawSphere(pos, 0.2f);
+                    if (copy.Count > 0)
+                    {
+                        var nextPos = copy.Peek();
+                        Gizmos.DrawLine(pos, nextPos);
+                    }
+                }
+            }
+        }
+#endif
     }
 }

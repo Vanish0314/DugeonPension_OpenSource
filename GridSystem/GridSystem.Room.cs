@@ -215,6 +215,7 @@ namespace Dungeon.GridSystem
             else
             {
                 hero.OnVisitedRoom(room);
+                hero.GetExperience(DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator.ExperienceGetByRoomRule.experiencePerRoom);
             }
         }
         private GridSystem.Room room;

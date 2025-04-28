@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
 using DG.Tweening;
+using Dungeon.DUngeonCalculator;
 using Dungeon.DungeonEntity.InteractiveObject;
+using Dungeon.DungeonEntity.Monster;
+using Dungeon.DungeonEntity.Trap;
 using Dungeon.SkillSystem;
 using GameFramework;
 using UnityEngine;
@@ -15,7 +18,7 @@ namespace Dungeon.AgentLowLevelSystem
         public IActionRunState OpenTreasureChest(Transform chestTransf)
         {
             var chest = chestTransf.GetComponent<StandardDungeonTreasureChest>();
-            chest.Open(agent.LowLevelSystem);
+            chest.Open(this);
             DecreaseBlackboardCountOfIVisible<StandardDungeonTreasureChest>();
 
             return ActionRunState.Completed;
@@ -46,6 +49,12 @@ namespace Dungeon.AgentLowLevelSystem
                 GameFrameworkLog.Info("[DisarmTrap] Trap disarmed");
                 DecreaseBlackboardCountOfIVisible(trap.gameObject);
             }, false);
+
+            currentTween.onComplete += (() =>
+            {
+                GetExperience(DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator.GetDropExpForLevel(
+                    trap.GetComponent<DungeonTrapBase>().trapLevel));
+            });
 
             WipTweens.Add(currentTween);
 
@@ -85,6 +94,7 @@ namespace Dungeon.AgentLowLevelSystem
                 var skill = new Skill(data, method, this);
 
                 m_SkillShooter.Fire(skill);
+                SetSpriteDirection(skill.skillDeployMethod.SkillDirection.x >= 0);
 
                 currentTween = m_SkillShooter.CurrentSkillTween;
                 SkillTween = currentTween;

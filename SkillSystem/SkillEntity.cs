@@ -63,7 +63,7 @@ namespace Dungeon.SkillSystem
                 }
             }
 
-            GameFrameworkLog.Info($"[SkillEntity] {collision.gameObject.name} 收到了技能 {skill.skillData.skillName}");
+            GameFrameworkLog.Info($"[SkillEntity] {collision.gameObject.name} 收到了技能 {skill.skillData.skillName}, 攻击者是 {skill.attacker.GetGameObject().name}");
         }
         public void OTriggerExit2D(Collider2D collision)
         {

@@ -228,7 +228,7 @@ namespace Dungeon
                     {
                         m_SelectedBuildingMonoPoolComponent = monoPoolComponent;
                     }
-                    // previewHelper.Initialize(m_SelectedBuildingMonoPoolComponent.GetPreviewSprite());// 初始化预览 //FIXME(xy)
+                    previewHelper.Initialize(GetPreviewSprite(m_SelectedBuildingMonoPoolComponent));// 初始化预览
                     break;
                 case TrapData trap:
                     m_SelectedTrapData = trap;
@@ -308,7 +308,6 @@ namespace Dungeon
             if (m_SelectedBuildingMonoPoolComponent != null)
             {
                 m_SelectedPoolItem = m_SelectedBuildingMonoPoolComponent.GetItem(null);
-                m_SelectedPoolItem.OnSpawn(null);
             }
             
             GameEntry.Event.Fire(this,
@@ -378,6 +377,15 @@ namespace Dungeon
             if (Camera.main != null)
                 m_CurrentMouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
             m_CurrentMouseWorldPos.z = 0; // 确保z坐标为0
+        }
+
+        private Sprite GetPreviewSprite(MonoPoolComponent selectedPoolComponent)
+        {
+            if (m_Pools.TryGetValue(selectedPoolComponent, out MonoPoolItem selectedPoolItem))
+            {
+                return selectedPoolItem.GetComponent<SpriteRenderer>().sprite;
+            }
+            return null;
         }
         
         private void OnSceneLoaded(object sender, GameEventArgs e)

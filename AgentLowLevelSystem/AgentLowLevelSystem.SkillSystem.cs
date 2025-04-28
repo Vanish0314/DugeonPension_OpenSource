@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using DG.Tweening;
 using Dungeon.Character.Hero;
+using Dungeon.DungeonGameEntry;
 using Dungeon.SkillSystem;
 using GameFramework;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Dungeon.AgentLowLevelSystem
@@ -123,6 +125,12 @@ namespace Dungeon.AgentLowLevelSystem
             }
         }
 
+        public StatusBarSetting StatusBarSetting
+        {
+            get =>  m_Properties.statusBarSetting;
+            set{}
+        }
+
 
 
         public void Stun(float duration)
@@ -145,6 +153,17 @@ namespace Dungeon.AgentLowLevelSystem
                 this.SendMessage("OnStunnedEnd");
             });
         }
+        public bool IsAlive()
+        {
+            return Hp > 0;
+        }
+        public void OnKillSomebody(ICombatable killed)
+        {
+            var exp = DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator.GetDropExpForLevel(killed.BasicInfo.currentLevel);
+            GetExperience(exp);
+
+            GameFrameworkLog.Info($"[{name}] 被 {killed.GetGameObject().name} 杀死了,获得了 {exp} 经验");
+        }
 
 
         private void UpdateCombatorData()
@@ -164,6 +183,13 @@ namespace Dungeon.AgentLowLevelSystem
 
         [SerializeField] private CombatorData CombatorData => m_Properties.combatorData;
         private SkillShooter m_SkillShooter;
+
+#if UNITY_EDITOR
+        [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("血量")] private int odin_hp => m_Properties.combatorData.hp;
+        [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("血量最大值")] private int odin_hpMax => m_Properties.combatorData.maxHp;
+        [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("魔法")] private int odin_mp => m_Properties.combatorData.mp;
+        [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("魔法最大值")] private int odin_mpMax => m_Properties.combatorData.maxMp;
+        #endif
     }
 
 }

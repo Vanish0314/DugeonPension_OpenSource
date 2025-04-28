@@ -2,8 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon.Common.MonoPool;
+using GameFramework;
+using GameFramework.Event;
+using GameFramework.Fsm;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityGameFramework.Runtime;
 
 namespace Dungeon
 {
@@ -20,28 +24,13 @@ namespace Dungeon
     public enum BuildingState
     {
         None,
-        Area,
-        Construction,
+        UnBuilt,
         Completed,
     }
     
     public class MetropolisBuildingBase : MonoPoolItem
     {
-        [Header("当前状态")] 
-        private BuildingState currentState;
-        public BuildingState CurrentState
-        {
-            get => currentState;
-            set
-            {
-                if (currentState != value)
-                {
-                    ExitState(currentState);
-                    currentState = value;
-                    EnterState(value);
-                }
-            }
-        }
+        private IFsm<MetropolisBuildingBase> m_BuildingFsm;
         
         [Header("外观设置")]
         public Sprite constructionSprite;
@@ -66,32 +55,56 @@ namespace Dungeon
         public int maxStock = 100;
         public float currentEfficiency; // 当前效率系数
 
-        private Coroutine productionCoroutine;
+        private Coroutine m_CurrentCoroutine;
 
-        private void Update()
+        #region FSM
+        // 初始化状态机
+        private void InitFsm()
         {
-            if (workingHeroes.Count > 0 && productionCoroutine == null)
+            FsmComponent fsmComponent = GameEntry.Fsm.GetComponent<FsmComponent>();
+    
+            // 生成唯一名称：类型名+实例ID
+            string fsmName = $"{GetType().Name}_FSM_{this.GetInstanceID()}";
+
+            if (fsmComponent.HasFsm<MetropolisBuildingBase>(fsmName))
             {
-                productionCoroutine = StartCoroutine(ProductionCycle());
+                m_BuildingFsm = fsmComponent.GetFsm<MetropolisBuildingBase>(fsmName);
             }
-            else if (workingHeroes.Count == 0 && productionCoroutine != null)
+            else
             {
-                StopCoroutine(productionCoroutine);
-                productionCoroutine = null;
+                m_BuildingFsm = fsmComponent.CreateFsm(
+                    fsmName, // 唯一名称
+                    this,
+                    new UnBuiltState(),
+                    new CompletedState()
+                );
+            }
+            
+            m_BuildingFsm.Start<UnBuiltState>();
+        }
+        
+        // 添加状态查询接口
+        public BuildingState CurrentState
+        {
+            get
+            {
+                if (m_BuildingFsm == null || m_BuildingFsm.IsDestroyed)
+                    return BuildingState.None;
+
+                var stateType = m_BuildingFsm.CurrentState.GetType();
+                
+                if (stateType == typeof(UnBuiltState))
+                    return BuildingState.UnBuilt;
+                if (stateType == typeof(CompletedState))
+                    return BuildingState.Completed;
+
+                return BuildingState.None;
             }
         }
 
-        // 生产周期协程
-        private IEnumerator ProductionCycle()
-        {
-            while (workingHeroes.Count > 0)
-            {
-                yield return new WaitForSeconds(productionInterval);
-                ProduceResource();
-            }
-            productionCoroutine = null;
-        }
-
+        #endregion
+        
+        #region WorkerLogic
         // 尝试让勇者进驻
         public bool TryAssignWorker(MetropolisHeroBase hero)
         {
@@ -158,10 +171,10 @@ namespace Dungeon
                 hero.EndWorking();
                 UpdateEfficiency();
                 
-                if (workingHeroes.Count == 0 && productionCoroutine != null)
+                if (workingHeroes.Count == 0 && m_CurrentCoroutine != null)
                 {
-                    StopCoroutine(productionCoroutine);
-                    productionCoroutine = null;
+                    StopCoroutine(m_CurrentCoroutine);
+                    m_CurrentCoroutine = null;
                 }
             }
         }
@@ -176,6 +189,61 @@ namespace Dungeon
             }
             
             Debug.Log($"{gameObject.name} 当前效率: {currentEfficiency:P0}");
+        }
+        
+        #endregion
+
+        public void StopCurrentCoroutine()
+        {
+            if (m_CurrentCoroutine != null)
+                StopCoroutine(m_CurrentCoroutine);
+            m_CurrentCoroutine = null;
+        }
+        
+        #region UnBuiltState
+
+        public void StartConstructionProcess()
+        {
+            if (m_CurrentCoroutine != null)
+                return;
+            m_CurrentCoroutine = StartCoroutine(ConstructionProcess());
+        }
+        
+        private IEnumerator ConstructionProcess()
+        {
+            while (constructionProgress < 1f)
+            {
+                // 根据在场工人数量计算实际施工速度
+                float effectiveSpeed = constructionSpeed * workingHeroes.Count;
+                constructionProgress = Mathf.Clamp01(constructionProgress + effectiveSpeed * Time.deltaTime / constructionDuration);
+                
+                yield return null;
+            }
+            
+            constructionProgress = 1f;
+            GameEntry.Event.Fire(this, OnConstructionCompletedEvent.Create());
+        }
+        
+        #endregion
+        
+        #region CompletedState
+
+        public void StartProductionProcess()
+        {
+            if (m_CurrentCoroutine != null)
+                return;
+            m_CurrentCoroutine = StartCoroutine(ProductionProcess());
+        }
+        
+        // 生产周期协程
+        private IEnumerator ProductionProcess()
+        {
+            while (workingHeroes.Count > 0)
+            {
+                yield return new WaitForSeconds(productionInterval);
+                ProduceResource();
+            }
+            m_CurrentCoroutine = null;
         }
 
         // 生产资源
@@ -196,84 +264,21 @@ namespace Dungeon
             // 为资源管理器增加对应的资源
             currentStock = 0;
         }
-
-        #region ChangeState
-
-        private void EnterState(BuildingState newState)
-        {
-            switch (newState)
-            {
-                case BuildingState.Area:
-                    SetUpAreaState();
-                    break;
-                case BuildingState.Construction:
-                    //StartConstruction();
-                    break;
-                case BuildingState.Completed:
-                    //CompleteBuilding();
-                    break;
-            }
-        }
-
-        private void ExitState(BuildingState oldState)
-        {
-            switch (oldState)
-            {
-                case BuildingState.Construction:
-                    StopAllCoroutines();
-                    break;
-            }
-        }
-
-        private void SetupPreviewState()
-        {
-            // 禁用碰撞和功能
-            GetComponent<Collider2D>().enabled = false;
-        }
-
-        private void SetUpAreaState()
-        {
-            GetComponent<Collider2D>().enabled = true;
-        }
-
-        private void StartConstruction()
-        {
-            // 启动施工协程
-            StartCoroutine(ConstructionProcess());
-        }
-
-        private IEnumerator ConstructionProcess()
-        {
-            constructionProgress = 0;
-            while (constructionProgress < 1f)
-            {
-                // 根据工人数量加速
-                constructionSpeed = workingHeroes.Count > 0 ? currentEfficiency : 0;
-                constructionProgress += Time.deltaTime / constructionDuration * constructionSpeed;
-                //UpdateConstructionProgress(constructionProgress);
-                yield return null;
-            }
-    
-            CurrentState = BuildingState.Completed;
-        }
-
-        private void CompleteBuilding()
-        {
-
-        }
         
         #endregion
         
         #region Override
         public override void OnSpawn(object data) 
         {
-            currentState = BuildingState.Area;
+            InitFsm();
+            constructionProgress = 0;
+            currentStock = 0;
+            currentEfficiency = 0f;
+            m_CurrentCoroutine = null;
         }
 
         public override void Reset()
         {
-            currentState = BuildingState.None;
-            
             // 清退所有工人
             foreach (var hero in workingHeroes.ToArray()) // ToArray避免修改集合
             {
@@ -283,8 +288,32 @@ namespace Dungeon
             workingHeroes.Clear();
             currentStock = 0;
             currentEfficiency = 0f;
+            m_CurrentCoroutine = null;
         }
         #endregion
         
+    }
+    
+    public sealed class OnConstructionCompletedEvent : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnConstructionCompletedEvent).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+
+        public static OnConstructionCompletedEvent Create()
+        {
+            OnConstructionCompletedEvent onConstructionCompletedEvent = ReferencePool.Acquire<OnConstructionCompletedEvent>();
+            return onConstructionCompletedEvent;
+        }
+
+        public override void Clear()
+        {
+        }
     }
 }
