@@ -11,7 +11,6 @@ namespace Dungeon.AgentLowLevelSystem
         [LabelText("六维属性")] public DndSkillData dndSkillData;
         [LabelText("战斗属性")] public CombatorData combatorData;
         [LabelText("血条设置")] public StatusBarSetting statusBarSetting;
-        [LabelText("等级"),Range(1,20)] public int currentLevel;
         [LabelText("经验值"),Range(0,100)] public int currentExp;
     }
 }

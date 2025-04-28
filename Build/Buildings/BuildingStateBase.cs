@@ -52,10 +52,6 @@ namespace Dungeon
                 // hero进来施工
                 building.StartConstructionProcess();
             }
-            else
-            {
-                building.StopCurrentCoroutine();
-            }
             
             base.OnUpdate(fsm, elapseSeconds, realElapseSeconds);
         }
@@ -82,11 +78,15 @@ namespace Dungeon
             
             MetropolisBuildingBase building = fsm.Owner;
             building.GetComponent<SpriteRenderer>().sprite = building.completedSprite;
+            
+            building.StartCompletedBehavior();
         }
         
         protected override void OnUpdate(IFsm<MetropolisBuildingBase> fsm, float elapseSeconds, float realElapseSeconds)
         {
             MetropolisBuildingBase building = fsm.Owner;
+            
+            building.UpdateCompletedBehavior();
             
             base.OnUpdate(fsm, elapseSeconds, realElapseSeconds);
         }

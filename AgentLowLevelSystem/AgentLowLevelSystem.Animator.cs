@@ -38,7 +38,7 @@ namespace Dungeon.AgentLowLevelSystem
         }
         private void SetAnimatorState(string stateName, float duration)
         {
-            void ApplyAnimatorState(string name)
+            void ApplyAnimatorState(string stateName)
             {
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_IDLE, false);
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_MOVING, false);
@@ -47,7 +47,7 @@ namespace Dungeon.AgentLowLevelSystem
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_INTERACT, false);
                 m_AgentAnimator.SetBool(ANIMATOR_BOOL_DIE, false);
 
-                m_AgentAnimator.SetBool(name, true);
+                m_AgentAnimator.SetBool(stateName, true);
             }
 
             if (statePriority.ContainsKey(CurrentAnimatorState) &&

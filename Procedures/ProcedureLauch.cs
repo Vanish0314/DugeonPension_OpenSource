@@ -575,11 +575,15 @@ namespace Dungeon.Procedure
     /// </summary>
     public class ProcedureDungeonPlacingStage : DungeonProcedure
     {
+        private PlaceArmyControl m_PlaceArmyControl;
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
 
             mOwner = procedureOwner;
+            
+            m_PlaceArmyControl = PlaceArmyControl.Create(PlaceManager.Instance);
+            m_PlaceArmyControl.OnEnter();
 
             GameEntry.Event.Fire(this, OnSwitchedToDungeonPlacingProcedureEvent.Create());
 
@@ -591,6 +595,8 @@ namespace Dungeon.Procedure
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
+            m_PlaceArmyControl.OnLeave();
+            
             base.OnLeave(procedureOwner, isShutdown);
 
             UnsubscribeEvents();

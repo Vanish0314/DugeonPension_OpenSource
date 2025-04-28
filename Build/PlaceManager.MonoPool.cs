@@ -33,17 +33,18 @@ namespace Dungeon
         
         // TrapPool
         [Header("Traps")]
-        [SerializeField] private MonoPoolComponent m_SpikeTrapPoolComponent;
-        [SerializeField] private MonoPoolItem m_SpikeTrapPoolItemPrefab;
+        [SerializeField] private MonoPoolComponent m_SpikeTrapPoolComponent; 
+        [SerializeField] private MonoPoolItem m_SpikeTrapPoolItem;
         
         // MonsterPool
         [Header("Monsters")]
         [SerializeField] private MonoPoolComponent m_SlimeMonsterPoolComponent;
-        [SerializeField] private MonoPoolItem m_SlimeMonsterItemPrefab;
+        [SerializeField] private MonoPoolItem m_SlimeMonsterItem;
 
 
         private void InitMonoPool() // 有点烂了
         {
+            //buildingpool
             m_CastlePoolComponent = GetOrCreateMonoPoolComponent("CastlePoolComponent");
             m_CastlePoolComponent.Init("Castle", m_CastlePoolItem, m_CastlePoolComponent.transform, 16);
             m_Pools.Add(m_CastlePoolComponent, m_CastlePoolItem);
@@ -69,6 +70,16 @@ namespace Dungeon
             m_DormitoryPoolComponent = GetOrCreateMonoPoolComponent("DormitoryPoolComponent");
             m_DormitoryPoolComponent.Init("Dormitory", m_DormitoryPoolItem, m_DormitoryPoolComponent.transform, 16);
             m_Pools.Add(m_DormitoryPoolComponent, m_DormitoryPoolItem);
+            
+            //trappool
+            m_SpikeTrapPoolComponent = GetOrCreateMonoPoolComponent("SpikeTrapPoolComponent");
+            m_SpikeTrapPoolComponent.Init("Spike",m_SpikeTrapPoolItem,m_SpikeTrapPoolComponent.transform, 16);
+            m_Pools.Add(m_SpikeTrapPoolComponent, m_SpikeTrapPoolItem);
+            
+            //monsterpool
+            m_SlimeMonsterPoolComponent = GetOrCreateMonoPoolComponent("SlimeMonsterPoolComponent");
+            m_SlimeMonsterPoolComponent.Init("Slime",m_SlimeMonsterItem,m_SlimeMonsterPoolComponent.transform, 16);
+            m_Pools.Add(m_SlimeMonsterPoolComponent, m_SlimeMonsterItem);
         }
         
         private MonoPoolComponent GetOrCreateMonoPoolComponent(string name)

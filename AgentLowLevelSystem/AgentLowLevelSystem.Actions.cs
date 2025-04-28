@@ -99,6 +99,8 @@ namespace Dungeon.AgentLowLevelSystem
                 currentTween = m_SkillShooter.CurrentSkillTween;
                 SkillTween = currentTween;
                 WipTweens.Add(currentTween);
+                
+                
 
                 return ActionRunState.Continue;
             }

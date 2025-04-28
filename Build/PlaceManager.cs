@@ -107,6 +107,26 @@ namespace Dungeon
                             
                 previewHelper.UpdatePreview(previewPos, isValid);
             }
+
+            if (m_SelectedTrapMonoPoolComponent != null)
+            {
+                var previewPos = DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCenter(m_CurrentMouseWorldPos);
+                var gridPos = DungeonGameEntry.DungeonGameEntry.GridSystem.WorldToGridPosition(
+                    DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCorner(m_CurrentMouseWorldPos));
+                var isValid = DungeonGameEntry.DungeonGameEntry.GridSystem.CouldPlaceTrap(gridPos);
+
+                previewHelper.UpdatePreview(previewPos, isValid);
+            }
+
+            if (m_SelectedMonsterMonoPoolComponent != null)
+            {
+                var previewPos = DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCenter(m_CurrentMouseWorldPos);
+                var gridPos = DungeonGameEntry.DungeonGameEntry.GridSystem.WorldToGridPosition(
+                    DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCorner(m_CurrentMouseWorldPos));
+                var isValid = DungeonGameEntry.DungeonGameEntry.GridSystem.CouldPlaceMonster(gridPos);
+
+                previewHelper.UpdatePreview(previewPos, isValid);
+            }
         }
         
         #region Data Loading
@@ -272,6 +292,7 @@ namespace Dungeon
             inputReader.SetUIActions();
             
             previewHelper.HidePreview();
+            m_SelectedPoolItem = null;
             m_SelectedBuildingData = null;
             m_SelectedBuildingMonoPoolComponent = null;
             m_SelectedTrapData = null;
@@ -310,7 +331,7 @@ namespace Dungeon
                 m_SelectedPoolItem = m_SelectedBuildingMonoPoolComponent.GetItem(null);
             }
             
-            GameEntry.Event.Fire(this,
+            GameEntry.Event.FireNow(this,
                 TryPlaceBuildingEventArgs.Create(m_CurrentMouseWorldPos, m_SelectedPoolItem, m_SelectedBuildingData));
         }
         
@@ -330,11 +351,14 @@ namespace Dungeon
         {
             if (!CanAffordTrap())
                 return;
-
-            var trapItem = m_SpikeTrapPoolComponent.GetItem(null);
-
+            
+            if (m_SpikeTrapPoolComponent != null)
+            {
+                m_SelectedPoolItem = m_SpikeTrapPoolComponent.GetItem(null);
+            }
+            
             GameEntry.Event.Fire(this, 
-                TryPlaceTrapEventArgs.Create(m_CurrentMouseWorldPos, trapItem, m_SelectedTrapData));
+                TryPlaceTrapEventArgs.Create(m_CurrentMouseWorldPos, m_SelectedPoolItem, m_SelectedTrapData));
         }
 
         private bool CanAffordTrap()
@@ -373,9 +397,15 @@ namespace Dungeon
         
         private void OnMouseMoved(Vector2 mouseScreenPos)
         {
-            // 将屏幕坐标转换为世界坐标
-            if (Camera.main != null)
-                m_CurrentMouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+            Camera[] allCameras = FindObjectsOfType<Camera>(false);
+            foreach (var activeCamera in allCameras)
+            {
+                if (activeCamera.isActiveAndEnabled)
+                {
+                    // 将屏幕坐标转换为世界坐标
+                    m_CurrentMouseWorldPos = activeCamera.ScreenToWorldPoint(mouseScreenPos);
+                }
+            }
             m_CurrentMouseWorldPos.z = 0; // 确保z坐标为0
         }
 

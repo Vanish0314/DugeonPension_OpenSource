@@ -38,7 +38,7 @@ namespace Dungeon
 
         [Header("建造设置")] 
         public float constructionProgress;
-        [SerializeField] private float constructionDuration;
+        [SerializeField] private float constructionDuration = 2;
         [SerializeField] private float constructionSpeed;
         
         
@@ -79,8 +79,6 @@ namespace Dungeon
                     new CompletedState()
                 );
             }
-            
-            m_BuildingFsm.Start<UnBuiltState>();
         }
         
         // 添加状态查询接口
@@ -206,6 +204,7 @@ namespace Dungeon
         {
             if (m_CurrentCoroutine != null)
                 return;
+
             m_CurrentCoroutine = StartCoroutine(ConstructionProcess());
         }
         
@@ -216,18 +215,32 @@ namespace Dungeon
                 // 根据在场工人数量计算实际施工速度
                 float effectiveSpeed = constructionSpeed * workingHeroes.Count;
                 constructionProgress = Mathf.Clamp01(constructionProgress + effectiveSpeed * Time.deltaTime / constructionDuration);
-                
                 yield return null;
             }
             
             constructionProgress = 1f;
-            GameEntry.Event.Fire(this, OnConstructionCompletedEvent.Create());
+            GameEntry.Event.Fire(this, OnConstructionCompletedEvent.Create());// 要判断一下是否是自身
+            StopCurrentCoroutine();
         }
         
         #endregion
         
         #region CompletedState
 
+        public virtual void StartCompletedBehavior()
+        {
+            
+        }
+
+        public virtual void UpdateCompletedBehavior()
+        {
+            
+        }
+        
+        #endregion
+        
+        #region Production
+        
         public void StartProductionProcess()
         {
             if (m_CurrentCoroutine != null)
@@ -276,6 +289,13 @@ namespace Dungeon
             currentEfficiency = 0f;
             m_CurrentCoroutine = null;
         }
+        
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            if (CurrentState != BuildingState.UnBuilt && m_BuildingFsm != null)
+                m_BuildingFsm.Start<UnBuiltState>();
+        }
 
         public override void Reset()
         {
@@ -289,6 +309,7 @@ namespace Dungeon
             currentStock = 0;
             currentEfficiency = 0f;
             m_CurrentCoroutine = null;
+            m_BuildingFsm = null;
         }
         #endregion
         

@@ -25,7 +25,11 @@ namespace Dungeon.AgentLowLevelSystem
         private void FixedUpdateMoveSystem()
         {
             if(SkillTween != null && SkillTween.IsActive())
+            {
+                m_MoveWayPoints.Clear();
+                m_AgentRigdbody.velocity = Vector2.zero;
                 return;
+            }
 
             if (m_MoveWayPoints.Count > 0)
             {

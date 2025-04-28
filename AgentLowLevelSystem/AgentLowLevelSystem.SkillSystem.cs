@@ -32,6 +32,8 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void InitSkillSystem()
         {
+            m_SkillDict.Clear();
+
             m_SkillShooter = gameObject.GetOrAddComponent<SkillShooter>();
 
             foreach (var skillData in CurrentOwnedSkills())

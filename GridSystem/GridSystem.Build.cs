@@ -40,11 +40,11 @@ namespace Dungeon.GridSystem
         {
             if (entityInstiated is DungeonMonsterBase monster)
             {
-                PlaceDungeonMonster(monster,gridPos);
+                //PlaceDungeonMonster(monster,gridPos);
             }
             else if (entityInstiated is DungeonTrapBase trap)
             {
-                PlaceDungeonTrap(trap,gridPos);
+                //PlaceDungeonTrap(trap,gridPos);
             }
             else if (entityInstiated is DungeonInteractiveObjectBase interactiveObject)
             {
@@ -59,12 +59,13 @@ namespace Dungeon.GridSystem
             Vector3 worldPos = args.WorldPosition;
             MonoPoolItem monsterItem = args.MonsterItem;
             
-            Vector2Int gridPos = WorldToGridPosition(worldPos);
-            
-            GameObject monsterObj = monsterItem.gameObject;
-            DungeonMonsterBase monster = monsterObj.GetComponent<DungeonMonsterBase>();
+            Vector3 worldCenterPos = SnapToGridCenter(worldPos);
+            Vector3 worldCornerPos = SnapToGridCorner(worldPos);
+            Vector2Int gridPos = WorldToGridPosition(worldCornerPos);
 
-            if (PlaceDungeonMonster(monster, gridPos))
+            DungeonMonsterBase monster = monsterItem.GetComponent<DungeonMonsterBase>();
+
+            if (PlaceDungeonMonster(monster, gridPos, worldCenterPos))
             {
                 GameEntry.Event.GetComponent<EventComponent>().Fire(this,OnMonsterPlacedEventArgs.Create(args.MonsterData));
             }
@@ -73,12 +74,12 @@ namespace Dungeon.GridSystem
                 monsterItem.ReturnToPool();
             }
         }
-        public bool PlaceDungeonMonster(DungeonMonsterBase monsterInstiated, Vector2Int gridPos)
+        public bool PlaceDungeonMonster(DungeonMonsterBase monsterInstiated, Vector2Int gridPos, Vector3 worldCenterPos)
         {
             if(!CouldPlaceMonster(gridPos))
                 return false;
-
-            monsterInstiated.transform.position = m_LogicalGrid.GridToWorldPosition(gridPos.x, gridPos.y);
+            
+            monsterInstiated.transform.position = worldCenterPos;
             return true;
         }
         
@@ -88,13 +89,14 @@ namespace Dungeon.GridSystem
             
             Vector3 worldPos = args.WorldPosition;
             MonoPoolItem trapItem = args.TrapItem;
-            
-            Vector2Int gridPos = WorldToGridPosition(worldPos);
-            
-            GameObject trapObj = trapItem.gameObject;
-            DungeonTrapBase trap = trapObj.GetComponent<DungeonTrapBase>();
 
-            if (PlaceDungeonTrap(trap, gridPos))
+            Vector3 worldCenterPos = SnapToGridCenter(worldPos);
+            Vector3 worldCornerPos = SnapToGridCorner(worldPos);
+            Vector2Int gridPos = WorldToGridPosition(worldCornerPos);
+
+            DungeonTrapBase trap = trapItem.GetComponent<DungeonTrapBase>();
+            
+            if (PlaceDungeonTrap(trap, gridPos, worldCenterPos))
             {
                 GameEntry.Event.GetComponent<EventComponent>().Fire(this,OnTrapPlacedEventArgs.Create(args.TrapData));
             }
@@ -103,12 +105,13 @@ namespace Dungeon.GridSystem
                 trapItem.ReturnToPool();
             }
         }
-        public bool PlaceDungeonTrap(DungeonTrapBase trapInstiated, Vector2Int gridPos)
+        public bool PlaceDungeonTrap(DungeonTrapBase trapInstiated, Vector2Int gridPos, Vector3 worldCenterPos)
         {
             if(!CouldPlaceTrap(gridPos))
                 return false;
 
-            trapInstiated.transform.position = m_LogicalGrid.GridToWorldPosition(gridPos.x, gridPos.y);
+            Debug.Log(gridPos);
+            trapInstiated.transform.position = worldCenterPos;
             m_LogicalGrid.AddTrap(gridPos, trapInstiated);
             return true;
         }
@@ -154,15 +157,19 @@ namespace Dungeon.GridSystem
         }
         public bool CouldPlaceTrap(Vector2Int gridPos)
         {
+            Debug.Log(IsValidGridPosition(gridPos));
             if(!IsValidGridPosition(gridPos))
                 return false;
             
+            Debug.Log(GridIsSpare(gridPos));
             if(!GridIsSpare(gridPos))
                 return false;
             
+            Debug.Log(!GetReachablilty(gridPos));
             if(!GetReachablilty(gridPos))
                 return false;
 
+            Debug.Log(HasMonsterOnCell(gridPos));
             if(HasMonsterOnCell(gridPos))
                 return false;
 
@@ -212,16 +219,18 @@ namespace Dungeon.GridSystem
 
         public bool GetReachablilty(Vector2Int gridPos)
         {
-            return m_LogicalGrid.IsUnReachable(gridPos);
+            return !m_LogicalGrid.IsUnReachable(gridPos);
         }
         public bool HasMonsterOnCell(Vector2Int gridPos)
         {
             Collider2D[] results = new Collider2D[2];
             Physics2D.OverlapBoxNonAlloc(GridToWorldPosition(gridPos),Vector2.one*0.5f,0,results,LayerMask.GetMask("Monster"));
-
+         
             #if UNITY_EDITOR
             foreach (Collider2D collider in results)
             {
+                if(collider == null)
+                    break;
                 if(collider.gameObject.GetComponent<DungeonMonsterBase>()== null)
                 {
                     GameFrameworkLog.Error("[GridSystem] Unexpected Collider2D found on cell, please check the layer of the collider:" + collider.gameObject.name);

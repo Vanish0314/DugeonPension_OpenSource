@@ -121,7 +121,7 @@ namespace Dungeon.SkillSystem
                 isReadyToFire = true;
                 currentSkillName = null;
 
-                GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能被终止, 技能: {skill.skillData.name} 未能释放.");
+                GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能被打断, 技能: {skill.skillData.name} 结束释放.");
             });
         }
 

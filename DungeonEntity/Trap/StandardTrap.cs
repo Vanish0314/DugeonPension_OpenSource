@@ -10,12 +10,12 @@ namespace Dungeon.DungeonEntity.Trap
     {
         public override void OnSpawn(object data)
         {
-            throw new System.NotImplementedException();
+            //throw new System.NotImplementedException();
         }
 
         public override void Reset()
         {
-            throw new System.NotImplementedException();
+            //throw new System.NotImplementedException();
         }
     }
 }

@@ -48,9 +48,9 @@ namespace Dungeon.Character.Hero
                 m_GoapAgent.enabled = false;
                 
                 var rb= GetComponent<Rigidbody2D>();
-                rb.bodyType = RigidbodyType2D.Static;
                 rb.velocity = Vector2.zero;
                 rb.angularVelocity = 0;
+                rb.bodyType = RigidbodyType2D.Static;
             });
         }
 

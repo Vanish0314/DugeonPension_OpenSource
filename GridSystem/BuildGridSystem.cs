@@ -102,10 +102,10 @@ namespace Dungeon.GridSystem
             
             Vector2Int gridPos = WorldToGridPosition(worldPos);
             Vector3 cellLocalPos = GetCellLocalPosition(worldPos, gridPos);
-            
-            GameObject buildingGo = buildingItem.gameObject;
 
-            if (TryPlaceBuilding(gridPos, cellLocalPos, buildingData, buildingGo))
+            MetropolisBuildingBase buildingInstantiated = buildingItem.GetComponent<MetropolisBuildingBase>();
+
+            if (TryPlaceBuilding(gridPos, cellLocalPos, buildingData, buildingInstantiated))
             {
                 GameEntry.Event.Fire(this, OnBuildingPlacedEventArgs.Create(buildingData));
             }
@@ -115,6 +115,25 @@ namespace Dungeon.GridSystem
             }
         }
 
+        /// <summary>
+        /// 尝试在指定位置放置建筑
+        /// </summary>
+        public bool TryPlaceBuilding(Vector2Int gridPos, Vector3 cellLocalPos, BuildingData buildingData, MetropolisBuildingBase buildingInstantiated)
+        {
+            Vector2Int originGridPos = GetBuildingOrigin(gridPos, buildingData.size, cellLocalPos);
+            
+            if (!CanBuildAt(originGridPos, buildingData)) return false;
+            
+            Vector3 centerWorldPosition = CalculateWorldPosition(gridPos, cellLocalPos, buildingData.size);
+
+            // 更新建筑网格
+            if (m_BuildingGrid.TryPlaceBuilding(originGridPos.x, originGridPos.y, buildingData))
+            {
+                buildingInstantiated.transform.position = centerWorldPosition;
+                return true;
+            }
+            return false;
+        }
         
         #region PUBLIC
         public void SetTile(Vector2Int gridPos, TileDesc tileDesc)
@@ -134,27 +153,6 @@ namespace Dungeon.GridSystem
             return m_BuildingGrid.CanBuildAt(gridPos.x, gridPos.y, buildingData);
         }
         
-        /// <summary>
-        /// 尝试在指定位置放置建筑
-        /// </summary>
-        public bool TryPlaceBuilding(Vector2Int gridPos, Vector3 cellLocalPos, BuildingData buildingData, GameObject buildingGameObject)
-        {
-            Vector2Int originGridPos = GetBuildingOrigin(gridPos, buildingData.size, cellLocalPos);
-            Debug.Log(originGridPos);
-            
-            if (!CanBuildAt(originGridPos, buildingData)) return false;
-            
-            Vector3 centerWorldPosition = CalculateWorldPosition(gridPos, cellLocalPos, buildingData.size);
-            Debug.Log(centerWorldPosition);
-
-            // 更新建筑网格
-            if (m_BuildingGrid.TryPlaceBuilding(originGridPos.x, originGridPos.y, buildingData))
-            {
-                buildingGameObject.transform.position = centerWorldPosition;
-                return true;
-            }
-            return false;
-        }
         
         /// <summary>
         /// 尝试拆除指定位置的建筑

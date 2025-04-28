@@ -62,5 +62,18 @@ namespace Dungeon
                 uiComponent.HideAllUI();
             }
         }
+
+        #region CompleteState
+
+        public override void StartCompletedBehavior()
+        {
+            
+        }
+        
+        
+
+        #endregion
+        
+        
     }
 }

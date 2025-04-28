@@ -13,6 +13,8 @@ namespace Dungeon.DungeonGameEntry
             
             TimeManager timeManager = GameObject.FindObjectOfType<TimeManager>();
             timeManager.Subscribe();
+            
+            HPManager.Instance.Initialize();
         }
     }
 }
