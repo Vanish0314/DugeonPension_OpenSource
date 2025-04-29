@@ -61,7 +61,7 @@ namespace Dungeon.SkillSystem
         [LabelText("施放方式")] public SkillShootType shootType;
         [LabelText("AOE类型")] public SkillAoeType aoeType;
         [Required,LabelText("HitBox")] public GameObject hitBoxPrefab;
-        [LabelText("技能范围"),Tooltip("技能范围是技能的作用范围")] public float range = 1;//TODO: not used yet
+        [Obsolete("希望使用这个来作为施法半径的乘数,但现在没用")][LabelText("技能范围乘数"),Tooltip("默认是1,hitbox多大作用范围多大")] public float range = 1;//TODO: not used yet
         [LabelText("施法半径"),Tooltip("施法半径是可以放技能的最远距离")] public float radius = 1;
     }
 

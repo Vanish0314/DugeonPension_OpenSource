@@ -34,6 +34,11 @@ namespace Dungeon
                 m_Path = temp;
             });
         }
+        public void Stop()
+        {
+            rb.velocity = Vector2.zero;
+            m_Path.Clear();
+        }
         public void MoveTo(Vector3 targetPosInWorldCoord)
         {
             m_Path.Clear();

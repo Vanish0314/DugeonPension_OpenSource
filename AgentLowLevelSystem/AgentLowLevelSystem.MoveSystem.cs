@@ -66,6 +66,8 @@ namespace Dungeon.AgentLowLevelSystem
 
             m_MoveWayPoints.Clear();
             m_MoveWayPoints = DungeonGameEntry.DungeonGameEntry.GridSystem.FindPath(transform.position, targetPositionWorldCoord);
+
+            m_MoveWayPoints.Pop();
         }
 
         public void TargetChanged(ITarget target, bool inRange)
