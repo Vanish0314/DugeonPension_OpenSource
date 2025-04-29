@@ -2,6 +2,7 @@ using CrashKonijn.Goap.Runtime;
 using Dungeon.BlackBoardSystem;
 using Dungeon.Common;
 using Dungeon.DUngeonCalculator;
+using Dungeon.Gal;
 using GameFramework;
 using UnityEngine;
 
@@ -42,6 +43,11 @@ namespace Dungeon.DungeonGameEntry
             get;
             private set;
         }
+        public static GalSystem GalSystem
+        {
+            get;
+            private set;
+        }
         private static void InitDungeonComponents()
         {
             // GOAP
@@ -75,6 +81,9 @@ namespace Dungeon.DungeonGameEntry
 
             // Dungeon Result Calculator
             DungeonResultCalculator = FindObjectOfType<DungeonResultCalculator>();
+
+            // Gal System
+            GalSystem = FindObjectOfType<GalSystem>();
         }
     }
 
