@@ -76,8 +76,8 @@ namespace Dungeon.DungeonEntity.Monster
 
         protected override void OnEnable()
         {
-            #if UNITY_EDITOR
-            if(LayerMask.NameToLayer("Hero") == -1)
+#if UNITY_EDITOR
+            if (LayerMask.NameToLayer("Hero") == -1)
                 GameFrameworkLog.Error("[DungeonMonsterBase] There is no layer named 'Hero' in the project.");
 #endif
             m_HeroLayerMask = LayerMask.GetMask("Hero");
@@ -85,7 +85,7 @@ namespace Dungeon.DungeonEntity.Monster
             m_BtHelper = GetComponent<DungeonMonsterBehaviourTreeHelper>();
             m_Animator = GetComponent<Animator>();
             m_Motor = GetComponent<DungeonEntityMotor>();
-            m_Motor.InitMotor(moveSpeed,m_Animator.transform);
+            m_Motor.InitMotor(moveSpeed, m_Animator.transform);
             m_BtHelper.Init(this, skill);
             Init();
         }
@@ -142,12 +142,12 @@ namespace Dungeon.DungeonEntity.Monster
             foreach (var result in results)
             {
 #if UNITY_EDITOR
-                if(result?.GetComponent<HeroEntityBase>() == null && result != null)
+                if (result?.GetComponent<HeroEntityBase>() == null && result != null)
                     GameFrameworkLog.Error($"[DungeonMonsterBase] Why the fuck there is a GO in Hero layer but not a HeroEntityBase?\n collider name: {result.name}");
 #endif
-                if(result == null)
+                if (result == null)
                     break;
-                if(!result.GetComponent<HeroEntityBase>().IsAlive())
+                if (!result.GetComponent<HeroEntityBase>().IsAlive())
                     continue;
 
                 m_BtHelper.targetsInVision.Add(result.transform);
@@ -156,10 +156,10 @@ namespace Dungeon.DungeonEntity.Monster
         private void UpdateValues()
         {
             m_BtHelper.hp = Hp;
-            if(m_BtHelper.CurrentTarget!= null)
+            if (m_BtHelper.CurrentTarget != null)
                 m_BtHelper.targetLastKnownPosition = m_BtHelper.CurrentTarget.position;
 
-            if(skillColdingDownTime > 0)
+            if (skillColdingDownTime > 0)
                 skillColdingDownTime -= Time.deltaTime;
         }
         private bool SkillIsCoolingDown()
@@ -170,17 +170,18 @@ namespace Dungeon.DungeonEntity.Monster
         protected abstract void OnUpdate();
         public virtual void Attack(Transform target)
         {
-            if(!skill.IsInRange(transform.position, target.position) || !m_SkillShooter.CouldFire() || SkillIsCoolingDown())
+            if (!skill.IsInRange(transform.position, target.position) || !m_SkillShooter.CouldFire() || SkillIsCoolingDown())
                 return;
 
             m_Motor.Stop();
 
-            m_SkillShooter.Fire(skill,target.position, target.position - transform.position);
+            m_SkillShooter.Fire(skill, target.position, target.position - transform.position);
             m_BtHelper.isAttacking = true;
             skillColdingDownTime = skill.cooldownTimeInSec;
             SetSpriteDirection((target.position - transform.position).x > 0);
-            
-            Task.Run(async () =>{
+
+            Task.Run(async () =>
+            {
                 await Task.Delay(TimeSpan.FromSeconds(skill.preCastTimeInSec));
                 await Task.Delay(TimeSpan.FromSeconds(skill.midCastTimeInSec));
                 await Task.Delay(TimeSpan.FromSeconds(skill.postCastTimeInSec));
@@ -194,12 +195,12 @@ namespace Dungeon.DungeonEntity.Monster
         }
         private void FlipSprite()
         {
-            m_Animator.transform.localScale = 
+            m_Animator.transform.localScale =
                 new Vector3(m_Animator.transform.localScale.x * -1, m_Animator.transform.localScale.y, m_Animator.transform.localScale.z);
         }
         private void SetSpriteDirection(bool right)
         {
-            m_Animator.transform.localScale = new Vector3(right? 1 : -1, m_Animator.transform.localScale.y, m_Animator.transform.localScale.z);
+            m_Animator.transform.localScale = new Vector3(right ? 1 : -1, m_Animator.transform.localScale.y, m_Animator.transform.localScale.z);
         }
 
 #if UNITY_EDITOR
@@ -233,18 +234,18 @@ namespace Dungeon.DungeonEntity.Monster
         }
 
         [Header("使用说明")]
-        [ReadOnly,TextArea,LabelText("Animator可使用的变量如下:")] public string animatorParametersHint = "isIdle, isMoving, isAttacking, isDead";
+        [ReadOnly, TextArea, LabelText("Animator可使用的变量如下:")] public string animatorParametersHint = "isIdle, isMoving, isAttacking, isDead";
 
         [Space]
         [Header("基本信息")]
-        [SerializeField,LabelText("基本属性")] protected CombatorData basicInfo;
-        [SerializeField,LabelText("状态条设置")] protected StatusBarSetting statusBarSetting;
+        [SerializeField, LabelText("基本属性")] protected CombatorData basicInfo;
+        [SerializeField, LabelText("状态条设置")] protected StatusBarSetting statusBarSetting;
         [Space]
-        [SerializeField,LabelText("可见检定"), Tooltip("被看见是否需要过一个检定,不需要置空即可")]
+        [SerializeField, LabelText("可见检定"), Tooltip("被看见是否需要过一个检定,不需要置空即可")]
         protected DndCheckTarget visibleCheckTarget;
-        [Required,SerializeField,LabelText("使用技能")] protected SkillData skill;
-        [SerializeField,LabelText("移动速度")] protected float moveSpeed = 5f;
-        [SerializeField,LabelText("视野范围")] protected float visionRange = 10f;
+        [Required, SerializeField, LabelText("使用技能")] protected SkillData skill;
+        [SerializeField, LabelText("移动速度")] protected float moveSpeed = 5f;
+        [SerializeField, LabelText("视野范围")] protected float visionRange = 10f;
         protected SkillShooter m_SkillShooter;
         protected Animator m_Animator;
         protected DungeonEntityMotor m_Motor;

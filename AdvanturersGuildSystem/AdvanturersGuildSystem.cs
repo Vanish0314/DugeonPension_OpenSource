@@ -60,7 +60,7 @@ namespace Dungeon
 
         private void OnHeroStartExploreDungeonEventHandler(object sender, GameEventArgs e)
         {
-            SpawnHero(Vector3.zero);
+            ReleaseHeroTeam(Vector3.zero);
         }
 
         private void Update() 
@@ -73,16 +73,37 @@ namespace Dungeon
             if(currentGameProgressingHeroTeam.Count != 0)
                 DungeonGameEntry.DungeonGameEntry.Event.Fire(this,OnHeroTeamDiedInDungeonEvent.Create());
         }
-        public void SpawnHero(Vector3 worldPos)
+        public HeroEntityBase GetCurrentMainHero()
+        {
+            if(currentMainHero == null)
+            {
+                SpawnHeroTeam(Vector3.zero);
+            }
+
+            return currentMainHero;
+        }
+        private void ReleaseHeroTeam(Vector3 worldPos)
+        {
+            foreach(var hero in currentBehavouringHeroTeam)
+            {
+                hero.transform.position = worldPos;
+                hero.gameObject.SetActive(true);
+            }
+        }
+        private void SpawnHeroTeam(Vector3 worldPos)
         {
             heroMonoPool.TryGetValue(heroPrefabs[Random.Range(0, heroPrefabs.Count)].name, out var pool);
             var go = pool.GetItem(null);
             // SceneManager.MoveGameObjectToScene(go.gameObject, SceneManager.GetSceneByName("DungeonGameScene"));
             go.transform.parent = null;
 
+            //FIXME
             go.GetComponent<HeroEntityBase>().OnSpawn();
             currentBehavouringHeroTeam.Add(go.GetComponent<HeroEntityBase>());
             currentGameProgressingHeroTeam.Add(go.GetComponent<HeroEntityBase>());
+            currentMainHero = go.GetComponent<HeroEntityBase>();
+
+            go.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -102,6 +123,7 @@ namespace Dungeon
         [SerializeField] private List<GameObject> heroPrefabs = new ();
         [ReadOnly] public List<HeroEntityBase> currentBehavouringHeroTeam = new ();//地牢中还能动的勇者
         [ReadOnly] public List<HeroEntityBase> currentGameProgressingHeroTeam = new();//当前流程的勇者小队
+        [ReadOnly] private HeroEntityBase currentMainHero = null; // 当前主角
         private Dictionary<string,MonoPoolComponent> heroMonoPool = new();
     }
 }

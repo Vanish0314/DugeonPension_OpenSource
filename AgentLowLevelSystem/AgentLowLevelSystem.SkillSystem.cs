@@ -170,17 +170,17 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void UpdateCombatorData()
         {
-            var keyHp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentHP);
-            var keyMaxHp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.HpMax);
-            var keyMp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentMP);
-            var keyMaxMp = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.MpMax);
-            var keyAtkSpeed = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.AttackSpeed);
+            var keyHp = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentHP);
+            var keyMaxHp = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.HpMax);
+            var keyMp = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.CurrentMP);
+            var keyMaxMp = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.MpMax);
+            var keyAtkSpeed = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.AttackSpeed);
 
-            m_blackboard.SetValue<int>(keyHp, CombatorData.hp);
-            m_blackboard.SetValue<int>(keyMaxHp, CombatorData.maxHp);
-            m_blackboard.SetValue<int>(keyMp, CombatorData.mp);
-            m_blackboard.SetValue<int>(keyMaxMp, CombatorData.maxMp);
-            m_blackboard.SetValue<float>(keyAtkSpeed, CombatorData.attackSpeed);
+            blackboard.SetValue<int>(keyHp, CombatorData.hp);
+            blackboard.SetValue<int>(keyMaxHp, CombatorData.maxHp);
+            blackboard.SetValue<int>(keyMp, CombatorData.mp);
+            blackboard.SetValue<int>(keyMaxMp, CombatorData.maxMp);
+            blackboard.SetValue<float>(keyAtkSpeed, CombatorData.attackSpeed);
         }
 
         [SerializeField] private CombatorData CombatorData => m_Properties.combatorData;

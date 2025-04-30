@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Codice.Client.BaseCommands.Merge.IncomingChanges;
+using Dungeon.Character.Hero;
 using Dungeon.Data;
 using Dungeon.DungeonEntity;
 using Dungeon.DungeonGameEntry;
@@ -911,9 +912,15 @@ namespace Dungeon.Evnents
             }
         }
 
-        public static OnHeroArrivedInDungeonEvent Create()
+        public HeroEntityBase MainHero { get; private set; }
+
+
+        public static OnHeroArrivedInDungeonEvent Create(HeroEntityBase mainHero)
         {
             OnHeroArrivedInDungeonEvent onHeroArrivedInDungeonEventArgs = ReferencePool.Acquire<OnHeroArrivedInDungeonEvent>();
+
+            onHeroArrivedInDungeonEventArgs.MainHero = mainHero;
+
             return onHeroArrivedInDungeonEventArgs;
         }
 

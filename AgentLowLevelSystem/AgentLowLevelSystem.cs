@@ -16,11 +16,7 @@ namespace Dungeon.AgentLowLevelSystem
     [RequireComponent(typeof(BlackboardController))]
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
-        private Rigidbody2D m_AgentRigdbody;
-        private BoxCollider2D m_AgentCollider;
-        private Animator m_AgentAnimator;
-        private BlackboardController m_BlackboardController;
-        private Blackboard m_blackboard => m_BlackboardController.GetBlackboard();
+        public string Name{get => m_Properties.heroName;}
 
         public BlackboardController GetBlackboard() => m_BlackboardController;
         public void OnSpawn()
@@ -66,6 +62,11 @@ namespace Dungeon.AgentLowLevelSystem
             FixedUpdateMoveSystem();
         }
 
+        private Rigidbody2D m_AgentRigdbody;
+        private BoxCollider2D m_AgentCollider;
+        private Animator m_AgentAnimator;
+        private BlackboardController m_BlackboardController;
+        private Blackboard blackboard => m_BlackboardController.GetBlackboard();
 
 #if UNITY_EDITOR
         void OnValidate()

@@ -14,17 +14,17 @@ namespace Dungeon.AgentLowLevelSystem
             #endif
 
             var visible = goWithIVisibleComponent.GetComponent<IVisible>();
-            var key = m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(visible.GetType().Name));
-            if (m_blackboard.TryGetValue(key, out int count))
+            var key = blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(visible.GetType().Name));
+            if (blackboard.TryGetValue(key, out int count))
             {
-                m_blackboard.SetValue(key, count - 1);
+                blackboard.SetValue(key, count - 1);
             }
             else
             {
                 #if UNITY_EDITOR
                 GameFrameworkLog.Warning("[AgentLowLevelSystem.BlackboardHelper] 黑板有未注册的条目被修改，初始化可能出现问题");
                 #endif
-                m_blackboard.SetValue(key, 0);
+                blackboard.SetValue(key, 0);
             }
         }
 
@@ -38,17 +38,17 @@ namespace Dungeon.AgentLowLevelSystem
             Debug.Assert(typeof(TValueType).IsAssignableFrom(typeof(IVisible)), "TValueType must be a subclass of IVisible");
             #endif
 
-            var key =  m_blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(typeof(TValueType).Name));
-            if(m_blackboard.TryGetValue(key, out int count))
+            var key =  blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(typeof(TValueType).Name));
+            if(blackboard.TryGetValue(key, out int count))
             {
-                m_blackboard.SetValue(key, count - 1);
+                blackboard.SetValue(key, count - 1);
             }
             else
             {
                 #if UNITY_EDITOR
                 GameFrameworkLog.Warning("[AgentLowLevelSystem.BlackboardHelper] 黑板有未注册的条目被修改，初始化可能出现问题");
                 #endif
-                m_blackboard.SetValue(key, 0);
+                blackboard.SetValue(key, 0);
             }
         }
     }

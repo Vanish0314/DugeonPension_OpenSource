@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dungeon.Data;
+using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
 using GameFramework;
 using GameFramework.Event;
@@ -166,7 +167,7 @@ namespace Dungeon.Procedure
 
             Log.Error("Can not load dictionary '{0}' from '{1}' with error message '{2}'.", ne.DictionaryAssetName, ne.DictionaryAssetName, ne.ErrorMessage);
         }
-    }
+    }   
 
     public class ProcedureBattelFilding : DungoenProcedure.DungeonProcedure
     {
@@ -179,7 +180,9 @@ namespace Dungeon.Procedure
                 await Task.Delay(1000);
                 GameEntry.Event.Fire(OnPlayerSwitchToDungeonEvent.EventId, OnPlayerSwitchToDungeonEvent.Create());
                 await Task.Delay(1000);
-                GameEntry.Event.Fire(OnHeroArrivedInDungeonEvent.EventId, OnHeroArrivedInDungeonEvent.Create());
+                GameEntry.Event.Fire(OnHeroArrivedInDungeonEvent.EventId, OnHeroArrivedInDungeonEvent.Create(
+                    DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentMainHero()
+                ));
             });
         }
 

@@ -3,6 +3,7 @@ using Dungeon.BlackBoardSystem;
 using Dungeon.Common;
 using Dungeon.DUngeonCalculator;
 using Dungeon.Gal;
+using Dungeon.Overload;
 using GameFramework;
 using UnityEngine;
 
@@ -48,6 +49,11 @@ namespace Dungeon.DungeonGameEntry
             get;
             private set;
         }
+        public static OverlordPower OverloadPower
+        {
+            get;
+            private set;
+        }
         private static void InitDungeonComponents()
         {
             // GOAP
@@ -84,6 +90,9 @@ namespace Dungeon.DungeonGameEntry
 
             // Gal System
             GalSystem = FindObjectOfType<GalSystem>();
+
+            // Overload Power
+            OverloadPower = FindObjectOfType<OverlordPower>();
         }
     }
 

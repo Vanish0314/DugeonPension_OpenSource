@@ -17,6 +17,11 @@ namespace Dungeon.Character.Hero
             return m_LowLevelSystem.IsAlive();
         }
 
+        public void GoDie()
+        {
+            m_LowLevelSystem.Hp -= 1000000;
+        }
+
         public void OnDie()
         {
             m_GoapActionProvider.enabled = false;
