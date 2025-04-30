@@ -30,6 +30,8 @@ namespace Dungeon
 
                 heroMonoPool.Add(heroType.HeroName, pool);
             }
+            
+            SpawnNewHeroTeam();
         }
         private void SubscribeEvents()
         {
@@ -77,11 +79,6 @@ namespace Dungeon
         }
         public HeroEntityBase GetCurrentMainHero()
         {
-            if(currentMainHero == null)
-            {
-                SpawnNewHeroTeam(Vector3.zero);
-            }
-
             return currentMainHero;
         }
         private void ReleaseHeroTeam(Vector3 worldPos)
@@ -92,7 +89,7 @@ namespace Dungeon
                 hero.gameObject.SetActive(true);
             }
         }
-        private void SpawnNewHeroTeam(Vector3 worldPos)
+        private void SpawnNewHeroTeam()
         {
             currentBehavouringHeroTeam.Clear();
             currentGameProgressingHeroTeam.Clear();

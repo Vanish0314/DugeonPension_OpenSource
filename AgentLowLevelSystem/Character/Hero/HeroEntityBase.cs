@@ -16,7 +16,17 @@ namespace Dungeon.Character.Hero
     [RequireComponent(typeof(AgentBehaviour))]
     public partial class HeroEntityBase : DungeonVisitorEntity
     {
-        public string HeroName{get => m_LowLevelSystem.Name;}
+        public string HeroName
+        {
+            get
+            {
+                if(m_LowLevelSystem!= null)
+                    return m_LowLevelSystem.HeroName;
+
+                m_LowLevelSystem = GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+                return m_LowLevelSystem.HeroName;
+            }
+        }
         public void OnSpawn()
         {
             InitHighLevelSystem();

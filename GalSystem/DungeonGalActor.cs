@@ -16,7 +16,6 @@ namespace Dungeon.Gal
         public Sprite PortraitSprite;
         public Color DialogueColor;
         public Vector3 DialoguePosition;
-        public Transform Transform;
 
         // 接口实现
         string IDialogueActor.name => Name;
@@ -24,6 +23,6 @@ namespace Dungeon.Gal
         Sprite IDialogueActor.portraitSprite => PortraitSprite;
         Color IDialogueActor.dialogueColor => DialogueColor;
         Vector3 IDialogueActor.dialoguePosition => DialoguePosition;
-        Transform IDialogueActor.transform => Transform;
+        Transform IDialogueActor.transform => DungeonGameEntry.DungeonGameEntry.GalSystem.GetControllerTransform();
     }
 }

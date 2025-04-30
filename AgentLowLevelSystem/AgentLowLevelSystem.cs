@@ -16,7 +16,7 @@ namespace Dungeon.AgentLowLevelSystem
     [RequireComponent(typeof(BlackboardController))]
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
-        public string Name{get => m_Properties.heroName;}
+        public string HeroName{get => m_Properties.heroName;}
 
         public BlackboardController GetBlackboard() => m_BlackboardController;
         public void OnSpawn()

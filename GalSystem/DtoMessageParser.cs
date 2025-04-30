@@ -10,7 +10,7 @@ namespace Dungeon
 {
     public class DtoMessageParser : MonoBehaviour
     {
-        public static void GalParser(string message)
+        public void GalParser(string message)
         {
             if (string.IsNullOrWhiteSpace(message)) return;
 

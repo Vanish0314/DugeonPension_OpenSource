@@ -55,6 +55,10 @@ namespace Dungeon.Gal
         {
             return m_Dao.TryGetActor(name, out IDialogueActor actor) ? (DungeonGalActor)actor : null;
         }
+        public Transform GetControllerTransform()
+        {
+            return m_DialogueTreeController.transform;
+        }
 
         private void Start()
         {
@@ -66,6 +70,7 @@ namespace Dungeon.Gal
             m_GalGUI.SetActive(false);
 
             SubscribeEvents();
+
         }
         void OnDestroy()
         {
