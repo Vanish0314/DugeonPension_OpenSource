@@ -13,20 +13,20 @@ namespace Dungeon
 {
     public partial class PlaceManager : MonoBehaviour
     {
-        [SerializeField] public InputReader inputReader; 
+        [SerializeField] public InputReader inputReader;
         [SerializeField] private PreviewHelper previewHelper;
-        
+
         // 字典存储对应 放置物 信息
         private Dictionary<BuildingType, BuildingData> m_BuildingDataDict = new Dictionary<BuildingType, BuildingData>();
         private Dictionary<TrapType, TrapData> m_TrapDataDict = new Dictionary<TrapType, TrapData>();
         private Dictionary<MonsterType, MonsterData> m_MonsterDataDict = new Dictionary<MonsterType, MonsterData>();
-        
-        
+
+
         // 字典对应 对象池 信息
         private Dictionary<BuildingData, MonoPoolComponent> m_BuildingMonoPoolComponentDict = new Dictionary<BuildingData, MonoPoolComponent>();
         private Dictionary<TrapData, MonoPoolComponent> m_TrapMonoPoolComponentDict = new Dictionary<TrapData, MonoPoolComponent>();
         private Dictionary<MonsterData, MonoPoolComponent> m_MonsterMonoPoolComponentDict = new Dictionary<MonsterData, MonoPoolComponent>();
-        
+
         // 存储当前拿到的放置物信息
         private MonoPoolComponent m_SelectedBuildingMonoPoolComponent;
         private BuildingData m_SelectedBuildingData;
@@ -34,14 +34,14 @@ namespace Dungeon
         private TrapData m_SelectedTrapData;
         private MonoPoolComponent m_SelectedMonsterMonoPoolComponent;
         private MonsterData m_SelectedMonsterData;
-        
+
         // 存储当前拿到的item
         private MonoPoolItem m_SelectedPoolItem;
-        
+
         private Vector3 m_CurrentMouseWorldPos;
 
         private int m_Flag = 0;
-        
+
         public static PlaceManager Instance { get; private set; }
         private void Awake()
         {
@@ -54,14 +54,14 @@ namespace Dungeon
             Instance = this;
             transform.position = Vector3.zero;
         }
-        
+
         private void OnEnable()
         {
             if (m_Flag == 0)
             {
                 m_Flag = 1;
             }
-            else if (m_Flag ==  1)
+            else if (m_Flag == 1)
             {
                 Subscribe();
             }
@@ -75,24 +75,37 @@ namespace Dungeon
             inputReader = Resources.Load<InputReader>("InputReader");
             inputReader.Subscribe();
         }
+        bool m_hasSubscribed = false;
         private void Subscribe()
         {
-            GameEntry.Event.Subscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
-            GameEntry.Event.Subscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
-            GameEntry.Event.Subscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
-            GameEntry.Event.Subscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+            if (!m_hasSubscribed)
+            {
+                if (GameEntry.Event == null)
+                    return;
+
+                GameEntry.Event.Subscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
+                GameEntry.Event.Subscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
+                GameEntry.Event.Subscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
+                GameEntry.Event.Subscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+
+                m_hasSubscribed = true;
+            }
         }
 
         private void OnDisable()
         {
-            GameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
-            GameEntry.Event.Unsubscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
-            GameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
-            GameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+            if (m_hasSubscribed)
+            {
+                GameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
+                GameEntry.Event.Unsubscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
+                GameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
+                GameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+
+            }
         }
         private void OnDestroy()
         {
-           
+
         }
 
         private void Update()
@@ -104,7 +117,7 @@ namespace Dungeon
                     m_CurrentMouseWorldPos,
                     m_SelectedBuildingData
                 );
-                            
+
                 previewHelper.UpdatePreview(previewPos, isValid);
             }
 
@@ -128,7 +141,7 @@ namespace Dungeon
                 previewHelper.UpdatePreview(previewPos, isValid);
             }
         }
-        
+
         #region Data Loading
         private void LoadPlacementData()
         {
@@ -145,7 +158,7 @@ namespace Dungeon
             foreach (var data in buildingDatas)
             {
                 m_BuildingDataDict.TryAdd(data.buildingType, data);
-                
+
                 switch (data.buildingType)
                 {
                     case BuildingType.Castle:
@@ -200,7 +213,7 @@ namespace Dungeon
             }
         }
         #endregion
-        
+
         #region Public API
         // 通过ID获取BuildingData
         public void SelectBuildingData(BuildingType type)
@@ -233,12 +246,12 @@ namespace Dungeon
             GameFrameworkLog.Error($"MonsterData not found: {monsterType}");
         }
         #endregion
-        
+
         #region Placement Logic
         private void StartPlacement(IPlaceableData data)
         {
             CancelPlacement();
-            
+
             switch (data)
             {
                 case BuildingData building:
@@ -257,25 +270,25 @@ namespace Dungeon
                     m_SelectedMonsterData = monster;
                     break;
             }
-            
+
             RegisterInputEvents();
         }
 
         private void RegisterInputEvents()
         {
             inputReader.SetPlaceActions();
-            
+
             inputReader.OnPlacePositionEvent += OnMouseMoved;
             inputReader.OnTryPlaceEvent += TryPlace;
             inputReader.OnCancelPlaceEvent += CancelPlacement;
-            
+
             // 仅当放置陷阱时订阅旋转事件
             if (m_SelectedTrapData != null)
             {
                 //inputReader.OnTrapRotateEvent += HandleTrapRotation;
             }
         }
-        
+
         // 放置结束
         private void FinalizePlacement(object sender, GameEventArgs gameEventArgs)
         {
@@ -290,7 +303,7 @@ namespace Dungeon
             inputReader.OnCancelPlaceEvent -= CancelPlacement;
 
             inputReader.SetUIActions();
-            
+
             previewHelper.HidePreview();
             m_SelectedPoolItem = null;
             m_SelectedBuildingData = null;
@@ -317,7 +330,7 @@ namespace Dungeon
             }
         }
         #endregion
-        
+
         #region Building Placement
         private void TryPlaceBuilding()
         {
@@ -330,11 +343,11 @@ namespace Dungeon
             {
                 m_SelectedPoolItem = m_SelectedBuildingMonoPoolComponent.GetItem(null);
             }
-            
+
             GameEntry.Event.FireNow(this,
                 TryPlaceBuildingEventArgs.Create(m_CurrentMouseWorldPos, m_SelectedPoolItem, m_SelectedBuildingData));
         }
-        
+
         // 检查资源是否足够
         private bool CanAffordBuilding()
         {
@@ -346,18 +359,18 @@ namespace Dungeon
         #endregion
 
         #region Trap Placement
-        
+
         private void TryPlaceTrap()
         {
             if (!CanAffordTrap())
                 return;
-            
+
             if (m_SpikeTrapPoolComponent != null)
             {
                 m_SelectedPoolItem = m_SpikeTrapPoolComponent.GetItem(null);
             }
-            
-            GameEntry.Event.Fire(this, 
+
+            GameEntry.Event.Fire(this,
                 TryPlaceTrapEventArgs.Create(m_CurrentMouseWorldPos, m_SelectedPoolItem, m_SelectedTrapData));
         }
 
@@ -365,9 +378,9 @@ namespace Dungeon
         {
             return ResourceModel.Instance.Material >= m_SelectedTrapData.cost.material;
         }
-        
+
         #endregion
-        
+
         #region Monster Placement
         private void TryPlaceMonster()
         {
@@ -379,22 +392,22 @@ namespace Dungeon
             GameEntry.Event.Fire(this,
                 TryPlaceMonsterEventArgs.Create(m_CurrentMouseWorldPos, monsterItem, m_SelectedMonsterData));
         }
-        
+
         private bool CanAffordMonster()
         {
             return ResourceModel.Instance.MagicPower >= m_SelectedMonsterData.cost.magicPower;
         }
         #endregion
-        
+
         #region Common Logic
-        
+
         private Vector2Int GetCurrentSize()
         {
-            return (m_SelectedBuildingData?.size ?? 
-                   m_SelectedTrapData?.size ?? 
+            return (m_SelectedBuildingData?.size ??
+                   m_SelectedTrapData?.size ??
                    m_SelectedMonsterData?.size) ?? Vector2Int.one;
         }
-        
+
         private void OnMouseMoved(Vector2 mouseScreenPos)
         {
             Camera[] allCameras = FindObjectsOfType<Camera>(false);
@@ -417,12 +430,12 @@ namespace Dungeon
             }
             return null;
         }
-        
+
         private void OnSceneLoaded(object sender, GameEventArgs e)
         {
             CancelPlacement();
         }
-        
+
         #endregion
     }
 }

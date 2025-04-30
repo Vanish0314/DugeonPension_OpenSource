@@ -41,11 +41,11 @@ namespace Dungeon
         
         public void Subscribe()
         {
-            GameEntry.Event.Subscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
         }
         private void OnDisable()
         {
-            GameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
         }
         private void Update()
         {

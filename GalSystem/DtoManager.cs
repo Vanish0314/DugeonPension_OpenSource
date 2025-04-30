@@ -19,12 +19,12 @@ namespace Dungeon.Gal
 		[BoxGroup("主角对话树管理")]
 		[LabelText("主角对话树"), SerializeReference]
 		[TableList(ShowIndexLabels = true)]
-		public List<CharacterDialogueMap<DialogueType>> HeroDtoMap = new();
+		public List<HeroDialogueMap> HeroDtoMap = new();
 
 		[BoxGroup("龙套对话树管理")]
 		[LabelText("龙套对话树"), Tooltip("根据龙套的性格选择通用对话")]
 		[SerializeReference]
-		public CharacterDialogueMap<CharacterType> NpcDtoMap = new();
+		public NpcDialogueMap NpcDtoMap = new();
 
 		public DialogueTree GetClonedHeroDialogue(string characterName, DialogueType type) =>
 			HeroDtoMap
@@ -76,6 +76,12 @@ namespace Dungeon.Gal
 			return null;
 		}
 	}
+	[Serializable]
+	public class HeroDialogueMap : CharacterDialogueMap<DialogueType> { }
+
+	[Serializable]
+	public class NpcDialogueMap : CharacterDialogueMap<CharacterType> { }
+
 
 
 	public enum CharacterType

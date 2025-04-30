@@ -37,7 +37,7 @@ namespace Dungeon.DungeonGameEntry
 
         void Start()
         {
-            InitGameFramwork(); //Prevent init order issue
+            // InitGameFramwork(); //Prevent init order issue
             
             InitUniversalSystem();
         }

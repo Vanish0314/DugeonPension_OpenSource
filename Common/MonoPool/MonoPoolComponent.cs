@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon.Common.MonoPool;
+using Dungeon.DungeonGameEntry;
 using GameFramework.ObjectPool;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace Dungeon
 			m_ItemTemplate = templete;
 			m_InstanceRoot = root;
 			m_InstancePoolCapacity = capacity;
-			m_ItemObjectPool = GameEntry.ObjectPool.CreateSingleSpawnObjectPool<MonoPoolObject>(name, m_InstancePoolCapacity); //TODO(vanish): find if exist
+			m_ItemObjectPool = DungeonGameEntry.DungeonGameEntry.ObjectPool.CreateSingleSpawnObjectPool<MonoPoolObject>(name, m_InstancePoolCapacity); //TODO(vanish): find if exist
 		}
 
 		public MonoPoolItem GetItem(object data)

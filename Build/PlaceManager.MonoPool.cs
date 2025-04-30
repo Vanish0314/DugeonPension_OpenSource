@@ -45,9 +45,9 @@ namespace Dungeon
         private void InitMonoPool() // 有点烂了
         {
             //buildingpool
-            m_CastlePoolComponent = GetOrCreateMonoPoolComponent("CastlePoolComponent");
-            m_CastlePoolComponent.Init("Castle", m_CastlePoolItem, m_CastlePoolComponent.transform, 16);
-            m_Pools.Add(m_CastlePoolComponent, m_CastlePoolItem);
+            // m_CastlePoolComponent = GetOrCreateMonoPoolComponent("CastlePoolComponent");
+            // m_CastlePoolComponent.Init("Castle", m_CastlePoolItem, m_CastlePoolComponent.transform, 16);
+            // m_Pools.Add(m_CastlePoolComponent, m_CastlePoolItem);// FIXME(xy) : 初始化错误
             
             m_MonsterLairPoolComponent = GetOrCreateMonoPoolComponent("MonsterLairPoolComponent");
             m_MonsterLairPoolComponent.Init("Monster", m_MonsterLairPoolItem, m_MonsterLairPoolComponent.transform, 16);

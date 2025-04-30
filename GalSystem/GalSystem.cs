@@ -91,9 +91,9 @@ namespace Dungeon.Gal
                 m_GalGUI.SetActive(true);
                 m_DialogueTreeController.gameObject.SetActive(true);
 
-                var dto = GetDto(args.HeroEntity.Name, DialogueType.Capture);
+                var dto = GetDto(args.HeroEntity.HeroName, DialogueType.Capture);
 
-                StartDialogue(dto, args.HeroEntity.Name);
+                StartDialogue(dto, args.HeroEntity.HeroName);
             }
         }
 
@@ -104,9 +104,9 @@ namespace Dungeon.Gal
                 m_GalGUI.SetActive(true);
                 m_DialogueTreeController.gameObject.SetActive(true);
 
-                var dto = GetDto(args.HeroEntity.Name, DialogueType.Convincing);
+                var dto = GetDto(args.HeroEntity.HeroName, DialogueType.Convincing);
 
-                StartDialogue(dto, args.HeroEntity.Name);
+                StartDialogue(dto, args.HeroEntity.HeroName);
             }
         }
 
@@ -117,9 +117,9 @@ namespace Dungeon.Gal
                 m_GalGUI.SetActive(true);
                 m_DialogueTreeController.gameObject.SetActive(true);
 
-                var dto = GetDto(arg.MainHero.Name, DialogueType.EnterDungeon);
+                var dto = GetDto(arg.MainHero.HeroName, DialogueType.EnterDungeon);
 
-                StartDialogue(dto, arg.MainHero.Name);
+                StartDialogue(dto, arg.MainHero.HeroName);
             }
         }
 

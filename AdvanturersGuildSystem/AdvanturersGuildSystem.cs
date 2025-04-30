@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Dungeon.Character.Hero;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
+using GameFramework;
 using GameFramework.Event;
 using Sirenix.OdinInspector;
 using Unity.Collections;
@@ -26,7 +28,7 @@ namespace Dungeon
                 var pool = gameObject.AddComponent<MonoPoolComponent>();
                 pool.Init(hero.name, heroType, transform, 10);
 
-                heroMonoPool.Add(hero.name, pool);
+                heroMonoPool.Add(heroType.HeroName, pool);
             }
         }
         private void SubscribeEvents()
@@ -77,7 +79,7 @@ namespace Dungeon
         {
             if(currentMainHero == null)
             {
-                SpawnHeroTeam(Vector3.zero);
+                SpawnNewHeroTeam(Vector3.zero);
             }
 
             return currentMainHero;
@@ -90,9 +92,18 @@ namespace Dungeon
                 hero.gameObject.SetActive(true);
             }
         }
-        private void SpawnHeroTeam(Vector3 worldPos)
+        private void SpawnNewHeroTeam(Vector3 worldPos)
         {
-            heroMonoPool.TryGetValue(heroPrefabs[Random.Range(0, heroPrefabs.Count)].name, out var pool);
+            currentBehavouringHeroTeam.Clear();
+            currentGameProgressingHeroTeam.Clear();
+            currentMainHero = null;
+
+            var rnd = new System.Random();
+            var num = rnd.Next(0, heroPrefabs.Count);
+            var prefab = heroPrefabs[num];
+            var heroname = prefab.GetComponent<HeroEntityBase>().HeroName;
+
+            heroMonoPool.TryGetValue(heroname, out var pool);
             var go = pool.GetItem(null);
             // SceneManager.MoveGameObjectToScene(go.gameObject, SceneManager.GetSceneByName("DungeonGameScene"));
             go.transform.parent = null;
