@@ -17,6 +17,8 @@ namespace Dungeon.Character.Hero
             return m_LowLevelSystem.IsAlive();
         }
 
+        public bool IsFainted() => m_LowLevelSystem.IsFainted;
+
         public void GoDie()
         {
             m_LowLevelSystem.Hp -= 1000000;

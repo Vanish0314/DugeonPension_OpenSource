@@ -155,6 +155,29 @@ namespace Dungeon.AgentLowLevelSystem
                 this.SendMessage("OnStunnedEnd");
             });
         }
+
+        public void FaintMe(float duration)
+        {
+            StunTween?.Kill();
+            IsFainted = true;
+            this.SendMessage("OnStunned");
+
+            currentTween?.Kill();
+            foreach (var tween in WipTweens)
+            {
+                tween.Kill();
+            }
+
+            SetAnimatorState(ANIMATOR_BOOL_DIE, duration);
+
+            StunTween = DOVirtual.DelayedCall(duration, () =>
+            {
+                IsFainted = false;
+                m_Properties.Submissiveness = 50;
+                this.SendMessage("OnStunnedEnd");
+            });
+        }
+
         public bool IsAlive()
         {
             return Hp > 0;
@@ -191,6 +214,8 @@ namespace Dungeon.AgentLowLevelSystem
         [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("血量最大值")] private int odin_hpMax => m_Properties.combatorData.maxHp;
         [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("魔法")] private int odin_mp => m_Properties.combatorData.mp;
         [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("魔法最大值")] private int odin_mpMax => m_Properties.combatorData.maxMp;
+        [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("当前屈服度")] private int odin_submissiveness => m_Properties.Submissiveness;
+        
         #endif
     }
 

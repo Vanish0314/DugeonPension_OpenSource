@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using DG.Tweening;
+using Dungeon.AgentLowLevelSystem;
 using Dungeon.Character.Hero;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Gal;
@@ -63,6 +64,13 @@ namespace Dungeon.Overload
             GameEntry.Event.Subscribe(OnOneHeroEndBeingPersuadedEventArgs.EventId,OnOneHeroEndBeingCompiled);
             GameEntry.Event.Subscribe(OnOneHeroEndBeingCapturedEventArgs.EventId,OnOneHeroEndBeingCaptured);
             GameEntry.Event.Subscribe(OnOverlordEndRedeployedEventArgs.EventId,OnOverlordEndBeingRedeployed);
+            GameEntry.Event.Subscribe(OnOneHeroReachedASubmissivenessLevel.EventId,OnOneHeroReachedASubmissivenessLevelHandler);
+        }
+
+        private void OnOneHeroReachedASubmissivenessLevelHandler(object sender, GameEventArgs e)
+        {
+            var args = (OnOneHeroReachedASubmissivenessLevel)e;
+            GameFrameworkLog.Info($"[OverlordPower] 勇者{args.MainHero.HeroName} 屈服度达到了{args.SubmissivenessLevel}级,应该被诅咒但是这里还没做好");
         }
 
         private void OnOverlordEndBeingRedeployed(object sender, GameEventArgs e)
@@ -142,6 +150,12 @@ namespace Dungeon.Overload
 
         private void CaptureHero(HeroEntityBase hero)
         {
+            if(!hero.IsFainted())
+            {
+                GameFrameworkLog.Info($"[OverlordPower] 捕捉勇者: {hero.HeroName},但是勇者还没昏厥");
+                return;
+            }
+
             // Pause Game
             DOTween.To((t)=>{
                 Time.timeScale = t;
@@ -154,6 +168,8 @@ namespace Dungeon.Overload
                     this,OnOneHeroStartBeingCapturedEventArgs.Create(hero)
                 );
             });
+
+            GameFrameworkLog.Info($"[OverlordPower] 捕捉勇者: {hero.HeroName} 成功开始!");
         }
 
         private void Redeploy()

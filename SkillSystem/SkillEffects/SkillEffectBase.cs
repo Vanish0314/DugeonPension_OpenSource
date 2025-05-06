@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DG.Tweening;
+using Dungeon.AgentLowLevelSystem;
 using GameFramework;
 using UnityEngine;
 
@@ -99,6 +100,23 @@ namespace Dungeon.SkillSystem.SkillEffect
             {
                 target.Hp -= damagePerSecond.Claculate(target);
             }, duration));
+            return this;
+        }
+        public SkillCalculator GiveEffect_IncreaseSubmissiveness(int amount)
+        {
+            immediateEffects.Add(new ImmediateEffect(() =>{
+                var low = target.GetGameObject().GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+
+                if(low!= null)
+                {
+                    low.ModifySubmissiveness(amount);
+                }
+                else
+                {
+                    GameFrameworkLog.Error("[Skill Calculator] AgentLowLevelSystem not found");
+                }
+            }));
+
             return this;
         }
         public SkillCalculator GiveEffect_Heal(int amount)

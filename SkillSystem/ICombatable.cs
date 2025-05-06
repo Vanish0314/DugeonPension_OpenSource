@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection;
 using Codice.Client.Commands;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -10,14 +11,14 @@ namespace Dungeon
 {
     public interface ICombatable
     {
-        public int Hp{get;set;}
-        public int MaxHp{get;set;}
-        public int Mp{get;set;}
-        public int MaxMp{get;set;}
-        public float AttackSpeed{get;set;}
-        public CombatorData BasicInfo{get;set;}
-        public StatusBarSetting StatusBarSetting{get;set;}
-        
+        public int Hp { get; set; }
+        public int MaxHp { get; set; }
+        public int Mp { get; set; }
+        public int MaxMp { get; set; }
+        public float AttackSpeed { get; set; }
+        public CombatorData BasicInfo { get; set; }
+        public StatusBarSetting StatusBarSetting { get; set; }
+
         public GameObject GetGameObject();
         public bool IsAlive();
         public void OnKillSomebody(ICombatable killed);
@@ -40,12 +41,37 @@ namespace Dungeon
     [Serializable]
     public class DndSkillData
     {
-        [LabelText("力量"),Range(1,20)] public int Strength;
-        [LabelText("敏捷"),Range(1,20)] public int Dexterity;
-        [LabelText("体质"),Range(1,20)] public int Constitution;
-        [LabelText("智力"),Range(1,20)] public int Intelligence;
-        [LabelText("感知"),Range(1,20)] public int Wisdom;
-        [LabelText("魅力"),Range(1,20)] public int Charisma;
+        [LabelText("力量"), Range(1, 20)] public int Strength;
+        [LabelText("敏捷"), Range(1, 20)] public int Dexterity;
+        [LabelText("体质"), Range(1, 20)] public int Constitution;
+        [LabelText("智力"), Range(1, 20)] public int Intelligence;
+        [LabelText("感知"), Range(1, 20)] public int Wisdom;
+        [LabelText("魅力"), Range(1, 20)] public int Charisma;
+
+        /// <summary>
+        /// 力量调整值
+        /// </summary>
+        public int StrengthModifyValue => (Strength - 10) / 2;
+        /// <summary>
+        /// 敏捷调整值
+        /// </summary>
+        public int DexterityModifyValue => (Dexterity - 10) / 2;
+        /// <summary>
+        /// 体质调整值
+        /// </summary>
+        public int ConstitutionModifyValue => (Constitution - 10) / 2;
+        /// <summary>
+        /// 智力调整值
+        /// </summary>
+        public int IntelligenceModifyValue => (Intelligence - 10) / 2;
+        /// <summary>
+        /// 感知调整值
+        /// </summary>
+        public int WisdomModifyValue => (Wisdom - 10) / 2;
+        /// <summary>
+        /// 魅力调整值
+        /// </summary>
+        public int CharismaModifyValue => (Charisma - 10) / 2;
     }
 
     [Serializable]
@@ -55,7 +81,7 @@ namespace Dungeon
         public int maxHp;
         public int mp;
         public int maxMp;
-        
+
         /// <summary>
         /// 0代表无法攻击，1代表正常攻击速度,2代表双倍攻击速度...
         /// </summary>
@@ -64,7 +90,7 @@ namespace Dungeon
         /// <summary>
         /// 当前的等级
         /// </summary>
-        [LabelText("等级"),Range(1,20)] public int currentLevel;
+        [LabelText("等级"), Range(1, 20)] public int currentLevel;
 
         /// <summary>
         /// 物理属性抗性
@@ -100,10 +126,10 @@ namespace Dungeon
     [Serializable]
     public enum ResistanceLevel
     {
-        [LabelText("弱点")]Weak,
-        [LabelText("普通")]Normal,
-        [LabelText("抵抗")]Strong,
-        [LabelText("免疫")]Immunity
+        [LabelText("弱点")] Weak,
+        [LabelText("普通")] Normal,
+        [LabelText("抵抗")] Strong,
+        [LabelText("免疫")] Immunity
     }
-    
+
 }
