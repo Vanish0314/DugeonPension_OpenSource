@@ -25,6 +25,7 @@ namespace Dungeon
             transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
             m_Combatable = combatable;
             UpdateHPBar();
+            UpdateMPBar();
         }
 
         public override void OnSpawn(object data)
@@ -48,12 +49,18 @@ namespace Dungeon
 
         private void Update()
         {
+            if (m_Combatable == null)
+            {
+                ReturnToPool();
+                return;
+            }
+            
             if (m_Combatable != null)
             {
                 UpdateHPBar();
                 UpdateMPBar();
             }
-
+            
             if (m_Combatable.Hp <= 0)
             {
                 ReturnToPool();

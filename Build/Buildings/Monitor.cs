@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Dungeon
 {
-    public class Monitor : ProducingBuildingBase
+    public class Monitor : MetropolisBuildingBase
     {
 
     }

@@ -27,7 +27,8 @@ namespace Dungeon.Gal
          "6. 通过Create->GalSystem->Dungeon Gal Actor来创建Dao\n" +
          "7. 在对话结束时,需要调用: Reflected -> SendMessage -> System -> (string) -> 填入参数\n" +
          "8. 参数规则在下面\n" +
-         "9. 方法名称: “GalParser”"
+         "9. 方法名称: “GalParser”" +
+         "10. 配置了的Dto的勇者,需要在DungeonSystem -> AdventurersGuildSystem中有相应勇者的配置"
         )]
         [LabelText("本策划记住啦")] public bool MeRemberered0;
 
@@ -123,6 +124,10 @@ namespace Dungeon.Gal
                 m_DialogueTreeController.gameObject.SetActive(true);
 
                 var dto = GetDto(arg.MainHero.HeroName, DialogueType.EnterDungeon);
+                if (dto == null)
+                {
+                    GameFrameworkLog.Error($"[GalSystem][对话树] 未找到名字为 {arg.MainHero.HeroName} 的 DialogueTree");
+                }
 
                 StartDialogue(dto, arg.MainHero.HeroName);
             }

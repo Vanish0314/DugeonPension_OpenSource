@@ -14,8 +14,8 @@ namespace Dungeon
             if (m_PlaceManager == null)
                 return;
 
-            m_PlaceManager.inputReader.OnBuildEvent += StartBuilding;
-            m_PlaceManager.inputReader.OnBuildEndEvent += EndBuilding;
+            m_PlaceManager.inputReader.OnOpenTargetUIEvent += StartBuilding;
+            m_PlaceManager.inputReader.OnCloseTargetUIEvent += EndBuilding;
         }
 
         public void Update(float elapseSeconds, float realElapseSeconds)
@@ -28,8 +28,8 @@ namespace Dungeon
             if (m_PlaceManager == null)
                 return;
 
-            m_PlaceManager.inputReader.OnBuildEvent -= StartBuilding;
-            m_PlaceManager.inputReader.OnBuildEndEvent -= EndBuilding;
+            m_PlaceManager.inputReader.OnOpenTargetUIEvent -= StartBuilding;
+            m_PlaceManager.inputReader.OnCloseTargetUIEvent -= EndBuilding;
         }
 
         private void StartBuilding()

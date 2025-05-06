@@ -5,13 +5,8 @@ using UnityEngine;
 
 namespace Dungeon
 {
-    public class MonsterLair : ProducingBuildingBase
+    public class MonsterLair : MetropolisBuildingBase
     {
-        private void Start()
-        {
-            ResourceModel.Instance.MagicPower += 10;
-            string text = "+" + 10;
-            FeelSystem.Instance.FloatingText(text, transform, produceData.productionGradient);
-        }
+        
     }
 }

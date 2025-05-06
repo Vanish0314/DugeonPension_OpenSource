@@ -1,5 +1,4 @@
 using System;
-using System.Data.Common;
 using GameFramework.Event;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +8,7 @@ namespace Dungeon
 {
     public class BuildUIController : MonoBehaviour
     {
-        [System.Serializable]
+        [Serializable]
         public class BuildingTypeButton
         {
             public BuildingType type;

@@ -50,7 +50,6 @@ namespace Dungeon
 
         public void ShowBubble(Transform target, string content, BubbleID id)
         {
-            GameFrameworkLog.Debug("ShowBubble");
             StartCoroutine(ProcessBubble(target, content, id));
         }
         
@@ -106,7 +105,7 @@ namespace Dungeon
             switch (profile.style)
             {
                 case BubbleStyle.FloatingFade:
-                    yield return StartCoroutine(animator.FloatingFade(obj, profile));
+                    yield return StartCoroutine(animator.FloatingFade(obj, profile, target));
                     break;
                 case BubbleStyle.FollowTarget:
                     yield return StartCoroutine(animator.FollowTarget(obj, target, profile));

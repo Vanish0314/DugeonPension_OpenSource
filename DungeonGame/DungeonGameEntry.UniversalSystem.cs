@@ -8,11 +8,9 @@ namespace Dungeon.DungeonGameEntry
     {
         private void InitUniversalSystem()
         {
-            PlaceManager placeManager = GameObject.FindObjectOfType<PlaceManager>();
-            placeManager.Initialize();
+            PlaceManager.Instance.Initialize();
             
-            TimeManager timeManager = GameObject.FindObjectOfType<TimeManager>();
-            timeManager.Subscribe();
+            TimeManager.Instance.Subscribe();
             
             HPManager.Instance.Initialize();
         }

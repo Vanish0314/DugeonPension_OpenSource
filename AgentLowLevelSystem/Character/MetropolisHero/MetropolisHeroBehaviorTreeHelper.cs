@@ -18,17 +18,11 @@ namespace Dungeon
         Command     
     }
 
-    public enum CommandType
-    {
-        Work,
-        Eat,
-        Sleep,
-    }
     public class MetropolisHeroBehaviorTreeHelper : MonoBehaviour
     {
         public MetropolisHeroAIState state;
         public MetropolisHeroAIState previousState;
-        public CommandType commandType;
+        public MetropolisHeroAIState commandType;
         
         public int hungerLevel;
         public int energyLevel;
@@ -116,11 +110,18 @@ namespace Dungeon
         {
             m_HeroBase.Talk();
         }
+
+        public void AssignWorkPlace()
+        {
+            m_HeroBase.FindNearestWorkplacePosition();
+        }
         
         public void MoveToWorkPosition()
         {
-            workPosition = m_HeroBase.FindNearestWorkplacePosition();
-            m_Motor.MoveTo(workPosition);
+            var workPlace = m_HeroBase.FindNearestWorkplacePosition();
+            workPosition = workPlace.Item1;
+            var workPlaceCollider = workPlace.Item2;
+            m_Motor.MoveTo(workPosition, workPlaceCollider);
         }
 
         public void MoveToCommandWorkPosition()

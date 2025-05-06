@@ -6,19 +6,31 @@ namespace Dungeon
 {
     public class BubbleAnimator : MonoBehaviour
     {
-        public IEnumerator FloatingFade(GameObject obj, BubbleProfile profile)
+        public IEnumerator FloatingFade(GameObject obj, BubbleProfile profile, Transform target)
         {
             RectTransform rt = obj.GetComponent<RectTransform>();
             CanvasGroup cg = obj.AddComponent<CanvasGroup>();
-            Vector3 startPos = rt.position; // 使用世界坐标
+            
+            // 初始位置基于目标或独立位置
+            Vector3 basePosition = target != null ? target.position : rt.position;
+            Vector3 startPos = basePosition + (Vector3)profile.positionOffset;
 
             float timer = 0f;
             while (timer < profile.duration)
             {
                 float progress = timer / profile.duration;
                 
-                // 在世界空间移动
-                Vector3 newPos = startPos + Vector3.up * (profile.moveCurve.Evaluate(progress) * 2.5f);
+                // 更新基础位置（如果跟随目标）
+                if (target != null)
+                {
+                    basePosition = target.position;
+                }
+                
+                // 计算新位置：基础位置 + 偏移 + 上浮
+                Vector3 newPos = basePosition + 
+                                 (Vector3)profile.positionOffset + 
+                                 Vector3.up * profile.moveCurve.Evaluate(progress);
+                
                 rt.position = newPos;
                 
                 // 透明度控制
@@ -27,6 +39,9 @@ namespace Dungeon
                 timer += Time.deltaTime;
                 yield return null;
             }
+            
+            // 动画结束后销毁对象
+            Destroy(obj);
         }
         
         public IEnumerator FollowTarget(GameObject obj, Transform target, BubbleProfile profile)

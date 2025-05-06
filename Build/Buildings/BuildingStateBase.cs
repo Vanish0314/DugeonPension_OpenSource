@@ -40,7 +40,13 @@ namespace Dungeon
 
         private void OnConstructionCompleted(object sender, GameEventArgs gameEventArgs)
         {
-            ChangeState<CompletedState>(m_Fsm);
+            OnConstructionCompletedEvent eventData = (OnConstructionCompletedEvent)gameEventArgs;
+
+            if (m_Fsm.Owner == eventData.BuildingFsm)
+            {
+                m_Fsm.Owner.FireAllWorkers();
+                ChangeState<CompletedState>(m_Fsm);
+            }
         }
 
         protected override void OnUpdate(IFsm<MetropolisBuildingBase> fsm, float elapseSeconds, float realElapseSeconds)
@@ -98,6 +104,4 @@ namespace Dungeon
             base.OnLeave(fsm, isShutdown);
         }
     }
-    
-    
 }

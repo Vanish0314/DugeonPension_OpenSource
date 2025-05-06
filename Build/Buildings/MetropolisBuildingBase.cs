@@ -14,10 +14,9 @@ namespace Dungeon
     // 工作建筑类型枚举
     public enum WorkplaceType
     {
-        Farm,       // 农场
-        Mine,       // 矿场
-        Factory,    // 工厂
-        Laboratory  // 实验室
+        Quarry,
+        LoggingCamp,
+        Farm,       
     }
     
     // 建筑当前状态
@@ -41,21 +40,15 @@ namespace Dungeon
         [SerializeField] private float constructionDuration = 2;
         [SerializeField] private float constructionSpeed;
         
-        
         [Header("工作设置")]
         public WorkplaceType workplaceType;
-        public ResourceType resourceType;
-        public int baseOutput = 1;
         public int maxWorkers = 3;
-        public float productionInterval = 5f; // 生产间隔(秒)
-        
+       
         [Header("工作状态")]
         public List<MetropolisHeroBase> workingHeroes = new List<MetropolisHeroBase>();
-        public int currentStock = 0;
-        public int maxStock = 100;
         public float currentEfficiency; // 当前效率系数
-
-        private Coroutine m_CurrentCoroutine;
+        
+        protected Coroutine m_CurrentCoroutine;
 
         #region FSM
         // 初始化状态机
@@ -79,6 +72,9 @@ namespace Dungeon
                     new CompletedState()
                 );
             }
+            
+            if (CurrentState != BuildingState.UnBuilt && m_BuildingFsm != null)
+                m_BuildingFsm.Start<UnBuiltState>();
         }
         
         // 添加状态查询接口
@@ -86,7 +82,7 @@ namespace Dungeon
         {
             get
             {
-                if (m_BuildingFsm == null || m_BuildingFsm.IsDestroyed)
+                if (m_BuildingFsm == null || m_BuildingFsm.IsDestroyed || m_BuildingFsm.CurrentState == null)
                     return BuildingState.None;
 
                 var stateType = m_BuildingFsm.CurrentState.GetType();
@@ -150,6 +146,40 @@ namespace Dungeon
             }
             return lowest;
         }
+        
+        // 踢出指定工人
+        public bool FireWorker(MetropolisHeroBase hero)
+        {
+            if (!workingHeroes.Contains(hero))
+                return false;
+
+            WorkerLeave(hero);
+            return true;
+        }
+        
+        // 踢出所有工人
+        public void FireAllWorkers()
+        {
+            // 创建副本遍历，避免修改集合时迭代的问题
+            var workersToRemove = new List<MetropolisHeroBase>(workingHeroes);
+    
+            foreach (var worker in workersToRemove)
+            { 
+                WorkerLeave(worker); // 使用原有方法，会调用EndWorking
+            }
+    
+            // 确保清空并停止协程
+            workingHeroes.Clear();
+            currentEfficiency = 0f;
+    
+            if (m_CurrentCoroutine != null)
+            {
+                StopCoroutine(m_CurrentCoroutine);
+                m_CurrentCoroutine = null;
+            }
+    
+            Debug.Log($"{gameObject.name} 已清空所有工人");
+        }
 
         public bool CanAcceptWorker()
         {
@@ -190,13 +220,6 @@ namespace Dungeon
         }
         
         #endregion
-
-        public void StopCurrentCoroutine()
-        {
-            if (m_CurrentCoroutine != null)
-                StopCoroutine(m_CurrentCoroutine);
-            m_CurrentCoroutine = null;
-        }
         
         #region UnBuiltState
 
@@ -219,7 +242,7 @@ namespace Dungeon
             }
             
             constructionProgress = 1f;
-            GameEntry.Event.Fire(this, OnConstructionCompletedEvent.Create());// 要判断一下是否是自身
+            GameEntry.Event.Fire(this, OnConstructionCompletedEvent.Create(this));// 要判断一下是否是自身
             StopCurrentCoroutine();
         }
         
@@ -239,62 +262,14 @@ namespace Dungeon
         
         #endregion
         
-        #region Production
-        
-        public void StartProductionProcess()
-        {
-            if (m_CurrentCoroutine != null)
-                return;
-            m_CurrentCoroutine = StartCoroutine(ProductionProcess());
-        }
-        
-        // 生产周期协程
-        private IEnumerator ProductionProcess()
-        {
-            while (workingHeroes.Count > 0)
-            {
-                yield return new WaitForSeconds(productionInterval);
-                ProduceResource();
-            }
-            m_CurrentCoroutine = null;
-        }
-
-        // 生产资源
-        public virtual void ProduceResource()
-        {
-            if (currentStock >= maxStock) 
-            {
-                Debug.Log($"{gameObject.name} 库存已满");
-                return;
-            }
-            
-            int productionAmount = Mathf.RoundToInt(baseOutput * currentEfficiency);
-            currentStock = Mathf.Min(currentStock + productionAmount, maxStock);
-        }
-
-        public void GatherResources()
-        {
-            // 为资源管理器增加对应的资源
-            currentStock = 0;
-        }
-        
-        #endregion
         
         #region Override
         public override void OnSpawn(object data) 
         {
             InitFsm();
             constructionProgress = 0;
-            currentStock = 0;
             currentEfficiency = 0f;
             m_CurrentCoroutine = null;
-        }
-        
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            if (CurrentState != BuildingState.UnBuilt && m_BuildingFsm != null)
-                m_BuildingFsm.Start<UnBuiltState>();
         }
 
         public override void Reset()
@@ -306,18 +281,26 @@ namespace Dungeon
             }
             
             workingHeroes.Clear();
-            currentStock = 0;
             currentEfficiency = 0f;
             m_CurrentCoroutine = null;
             m_BuildingFsm = null;
         }
         #endregion
         
+        public void StopCurrentCoroutine()
+        {
+            if (m_CurrentCoroutine != null)
+                StopCoroutine(m_CurrentCoroutine);
+            m_CurrentCoroutine = null;
+        }
+        
     }
     
     public sealed class OnConstructionCompletedEvent : GameEventArgs
     {
         public static readonly int EventId = typeof(OnConstructionCompletedEvent).GetHashCode();
+        
+        public  MetropolisBuildingBase BuildingFsm;
 
         public override int Id
         {
@@ -327,9 +310,10 @@ namespace Dungeon
             }
         }
 
-        public static OnConstructionCompletedEvent Create()
+        public static OnConstructionCompletedEvent Create(MetropolisBuildingBase buildingFsm)
         {
             OnConstructionCompletedEvent onConstructionCompletedEvent = ReferencePool.Acquire<OnConstructionCompletedEvent>();
+            onConstructionCompletedEvent.BuildingFsm = buildingFsm;
             return onConstructionCompletedEvent;
         }
 

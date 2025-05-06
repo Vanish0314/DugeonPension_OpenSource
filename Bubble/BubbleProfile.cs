@@ -7,7 +7,7 @@ namespace Dungeon
     // 气泡唯一标识
     public enum BubbleID
     {
-        ProcedureBubble,
+        ExpBubble,
         DiceBubble,
         DialogueBubble,
     }

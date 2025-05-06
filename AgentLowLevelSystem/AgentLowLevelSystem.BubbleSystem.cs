@@ -28,37 +28,43 @@ namespace Dungeon.AgentLowLevelSystem
         //TODO(xy)
         public void BumpGetExperienceBubble(int expGet)
         {
-
+            string expString = expGet + " exp";
+            BubbleManager.Instance.ShowBubble(transform, expString, BubbleID.ExpBubble);
         }
 
         //TODO(xy)
         public void BumpLevelUpBubble(int upgradedLevel)
         {
-
+            string upgradedString = upgradedLevel + " upgraded";
+            BubbleManager.Instance.ShowBubble(transform, upgradedString, BubbleID.ExpBubble);
         }
 
         //TODO(xy)
         public void BumpSeeAMonsterBubble(DungeonMonsterBase monster)
         {
-
+            string monsterString = "怪物：" + monster;
+            BubbleManager.Instance.ShowBubble(transform, monsterString, BubbleID.DialogueBubble);
         }
 
         //TODO(xy)
         public void BumpSeeATreasureChestBubble(StandardDungeonTreasureChest treasureChest)
         {
-
+            string treasureString = "宝物：" + treasureChest;
+            BubbleManager.Instance.ShowBubble(transform, treasureString, BubbleID.DialogueBubble);
         }
 
         //TODO(xy)
         public void BumpSeeATrapBubble(DungeonTrapBase trap)
         {
-
+            string trapString = "陷阱：" + trap;
+            BubbleManager.Instance.ShowBubble(transform, trapString, BubbleID.DialogueBubble);
         }
 
         //TODO(xy)
         public void BumpSeeATorchBubble(StandardTorch torch)
         {
-
+            string torchString = "火把" + torch;
+            BubbleManager.Instance.ShowBubble(transform, torchString, BubbleID.DialogueBubble);
         }
     }
 

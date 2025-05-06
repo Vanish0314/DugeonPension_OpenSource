@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Dungeon
 {
@@ -10,7 +11,7 @@ namespace Dungeon
         private bool reachTarget = false;
         private bool isMoving;
         private float distance;
-        [SerializeField] private Vector3 targetPos;
+        [SerializeField] private Vector3  m_TargetPos;
         private Rigidbody2D m_Rigidbody;
         private float m_Speed;
         [SerializeField] private float stoppingDistance = 0.1f; // 停止距离阈值
@@ -21,11 +22,24 @@ namespace Dungeon
             this.m_Speed = speed;
         }
 
-        public void MoveTo(Vector3 targetPos)
+        public void MoveTo(Vector3 targetPos, Collider2D targetCollider = null)
         {
             isMoving = true;
-            reachTarget = false;
-            this.targetPos = targetPos;
+            reachTarget = false; 
+            m_TargetPos = targetPos;
+            
+            // 如果有建筑碰撞体，根据其大小调整停止距离
+            if(targetCollider != null)
+            {
+                // 获取建筑碰撞体的边界大小
+                Bounds bounds = targetCollider.bounds;
+                // 以建筑对角线的一半作为停止距离（暂时）
+                stoppingDistance = bounds.extents.magnitude + 0.1f;
+            }
+            else
+            {
+                stoppingDistance = 0.1f; // 默认值
+            }
         }
         
         public void StopMoving()
@@ -54,7 +68,7 @@ namespace Dungeon
             }
             
             isMoving = false;
-            targetPos = transform.position;
+            m_TargetPos = transform.position;
         }
 
         // Update is called once per frame
@@ -63,8 +77,8 @@ namespace Dungeon
             if (isMoving)
             {
                 // 计算移动方向和距离
-                Vector2 direction = (targetPos - transform.position).normalized;
-                distance = Vector2.Distance(transform.position, targetPos);
+                Vector2 direction = (m_TargetPos - transform.position).normalized;
+                distance = Vector2.Distance(transform.position, m_TargetPos);
 
                 // 如果已经到达目标位置
                 if (distance <= stoppingDistance)

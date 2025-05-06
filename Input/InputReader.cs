@@ -1,20 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Dungeon.Evnents;
 using GameFramework.Event;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Dungeon
 {
-    [CreateAssetMenu(fileName = "New InputReader", menuName = "InputReader")]
+    [CreateAssetMenu(fileName = "New InputReader",menuName ="InputReader")]
     public class InputReader : ScriptableObject, GameInput.IUIActions, GameInput.IPlaceActions
     {
         private GameInput m_GameInput;
         [SerializeField] private Camera m_MainCamera;
-
+        
         private bool m_isBuilding;
-        private bool m_subscribedEvents = false;
         private void OnEnable()
         {
             // 初始化输入系统
@@ -23,32 +26,21 @@ namespace Dungeon
                 m_GameInput = new GameInput();
                 m_GameInput.UI.SetCallbacks(this);
                 m_GameInput.Place.SetCallbacks(this);
+                m_MainCamera = Camera.main;
                 SetUIActions();
             }
-
-            Subscribe();
         }
 
         public void Subscribe()
         {
-            if (GameEntry.Event == null)
-            {
-                m_subscribedEvents = false;
-                return;
-            }
-
             // 订阅场景加载事件
-            GameEntry.Event.Subscribe(OnSwitchedToMetroplisProcedureEvent.EventId, OnSceneLoaded);
-            m_subscribedEvents = true;
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnSceneLoaded);
         }
 
         private void OnDisable()
         {
-            if (m_subscribedEvents)
-            {
-                // 取消订阅事件，避免内存泄漏
-                GameEntry.Event.Unsubscribe(OnSwitchedToMetroplisProcedureEvent.EventId, OnSceneLoaded);
-            }
+            // 取消订阅事件，避免内存泄漏
+            DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnSceneLoaded);
 
             // 清理输入系统
             if (m_GameInput != null)
@@ -77,7 +69,7 @@ namespace Dungeon
             m_MainCamera = Camera.main;
             m_isBuilding = false;
         }
-
+        
         /// <summary>
         /// ui 
         /// </summary>
@@ -86,17 +78,17 @@ namespace Dungeon
 
         public event Action OnLeftPressBeginEvent;
         public event Action OnLeftPressEndEvent;
-
+        
         public event Action OnRightPressBeginEvent;
-
-        public event Action OnBuildEvent;
-        public event Action OnBuildEndEvent;
-
+        
+        public event Action OnOpenTargetUIEvent;
+        public event Action OnCloseTargetUIEvent;
+        
         // 新增摄像机控制事件
         public event Action<Vector2> OnCameraMoveEvent;
         public event Action OnCameraMoveEndEvent;
         public event Action<float> OnCameraZoomEvent;
-
+        
         // 经营场景事件
         public event Action<GameObject> OnBuildingClickedEvent;
         public event Action<GameObject> OnHeroClickedEvent;
@@ -137,9 +129,9 @@ namespace Dungeon
             if (context.phase == InputActionPhase.Started)
             {
                 if (m_isBuilding)
-                    OnBuildEndEvent?.Invoke();
+                    OnCloseTargetUIEvent?.Invoke();
                 else
-                    OnBuildEvent?.Invoke();
+                    OnOpenTargetUIEvent?.Invoke();
             }
 
             if (context.phase == InputActionPhase.Canceled)
@@ -172,21 +164,39 @@ namespace Dungeon
 
         private void DetectClickedObject()
         {
-            if (m_MainCamera == null)
+            // 检查是否点击在UI上
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                // 进一步确认是否真的是UI
+                PointerEventData pointerData = new PointerEventData(EventSystem.current);
+                pointerData.position = Pointer.current.position.ReadValue();
+        
+                List<RaycastResult> results = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointerData, results);
+        
+                bool isRealUI = results.Any(r => r.gameObject.GetComponent<Graphic>() != null);
+        
+                if(isRealUI) {
+                    Debug.Log("点击在真实UI上");
+                    return;
+                }
+            }
+            
+            if (m_MainCamera == null )
                 return;
-
+            
             Vector2 clickPos = Mouse.current.position.ReadValue();
             Vector2 worldPos = m_MainCamera.ScreenToWorldPoint(clickPos);
 
             // 获取所有2D碰撞体（优化GC）
             RaycastHit2D[] hits = new RaycastHit2D[10];
-            int hitCount = Physics2D.RaycastNonAlloc(worldPos, Vector2.zero, hits,
+            int hitCount = Physics2D.RaycastNonAlloc(worldPos, Vector2.zero, hits, 
                 Mathf.Infinity);
 
             // 点击空白区域
             if (hitCount == 0)
             {
-                OnNoBuildingClickedEvent?.Invoke();
+                OnNoBuildingClickedEvent?.Invoke(); 
                 OnNoHeroClickedEvent?.Invoke();
                 return;
             }
@@ -229,13 +239,13 @@ namespace Dungeon
         private float GetRenderPriority(Collider2D collider)
         {
             const float Y_SCALE = 0.01f; // Y轴权重系数
-
+    
             // 基础值：sortingOrder * 1000（确保order是主要因素）
             float priority = GetSortingOrder(collider) * 1000f;
-
+    
             // 叠加Y轴影响：Y越小，附加值越大（模拟2D透视）
             priority += (1f - collider.transform.position.y * Y_SCALE);
-
+    
             return priority;
         }
 
@@ -250,10 +260,10 @@ namespace Dungeon
         /// game
         /// </summary>
         /// <param name="context"></param>
-
+                
         // 陷阱旋转事件
         public event Action<float> OnTrapRotateEvent;
-
+        
         public event Action<Vector2> OnPlacePositionEvent;
         public event Action OnTryPlaceEvent;
         public event Action OnCancelPlaceEvent;
@@ -278,6 +288,11 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Started)
             {
+                // 检查是否点击在UI上
+                if (EventSystem.current.IsPointerOverGameObject())
+                {
+                    return;
+                }
                 OnTryPlaceEvent?.Invoke();
             }
         }

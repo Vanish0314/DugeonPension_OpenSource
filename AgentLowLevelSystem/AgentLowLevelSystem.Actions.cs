@@ -41,7 +41,8 @@ namespace Dungeon.AgentLowLevelSystem
                 return ActionRunState.Completed;
             }
 
-            SetAnimatorState(ANIMATOR_BOOL_INTERACT,timeToDisarmTrap);
+            SetAnimatorState(ANIMATOR_BOOL_INTERACT, timeToDisarmTrap);
+            m_CurrentDisarmingTrap = trap.GetComponent<DungeonTrapBase>();
 
             currentTween = DOVirtual.DelayedCall(timeToDisarmTrap, () =>
             {
@@ -54,6 +55,7 @@ namespace Dungeon.AgentLowLevelSystem
             {
                 GetExperience(DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator.GetDropExpForLevel(
                     trap.GetComponent<DungeonTrapBase>().trapLevel));
+                m_CurrentDisarmingTrap = null;
             });
 
             WipTweens.Add(currentTween);
@@ -88,7 +90,7 @@ namespace Dungeon.AgentLowLevelSystem
                 GameFrameworkLog.Info("[AgentLowLevelSystem] UseSkill: " + data.name);
                 BumpUseSkillBubbule(data.name);
 
-                SetAnimatorState(ANIMATOR_BOOL_ATTACKING,data.TotalUsageTime);
+                SetAnimatorState(ANIMATOR_BOOL_ATTACKING, data.TotalUsageTime);
 
                 var method = SkillDeployMethod.CreateSkillDeployMethod(data, m_SkillShooter, posToUse, dirToUse);
                 var skill = new Skill(data, method, this);
@@ -99,8 +101,8 @@ namespace Dungeon.AgentLowLevelSystem
                 currentTween = m_SkillShooter.CurrentSkillTween;
                 SkillTween = currentTween;
                 WipTweens.Add(currentTween);
-                
-                
+
+
 
                 return ActionRunState.Continue;
             }
@@ -109,6 +111,11 @@ namespace Dungeon.AgentLowLevelSystem
                 GameFrameworkLog.Error("[UseSkill] Skill not found: " + skillDesc.name + " 勇者没有这个技能");
                 return ActionRunState.Stop;
             }
+        }
+
+        public bool IsDisarmingTrap(DungeonTrapBase trap)
+        {
+            return m_CurrentDisarmingTrap == trap;
         }
 
         [Header("常量设置")]
@@ -152,5 +159,7 @@ namespace Dungeon.AgentLowLevelSystem
         /// 当前动画状态
         /// </summary>
         private string CurrentAnimatorState = ANIMATOR_BOOL_IDLE;
+
+        private DungeonTrapBase m_CurrentDisarmingTrap = null;
     }
 }

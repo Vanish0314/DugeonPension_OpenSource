@@ -60,5 +60,10 @@ namespace Dungeon
         /// 战斗结算界面
         /// </summary>
         FightSettlementForm = 1010,
+        
+        /// <summary>
+        /// 诅咒界面
+        /// </summary>
+        CurseForm = 1011,
     }
 }

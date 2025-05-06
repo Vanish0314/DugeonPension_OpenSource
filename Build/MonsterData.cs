@@ -8,21 +8,9 @@ namespace Dungeon
     public class MonsterData : ScriptableObject, IPlaceableData
     {
         public MonsterType monsterType;
-        public GameObject monsterPrefab;
         public Vector2Int size = Vector2Int.one;
-        public MonsterCost cost;
+        public Cost cost;
         
-        [System.Serializable]
-        public struct MonsterCost
-        {
-            public int magicPower;
-        }
-
-        public GameObject GetPrefab()
-        {
-            return monsterPrefab;
-        }
-
         public Vector2Int GetSize()
         {
             return new Vector2Int(size.x, size.y);

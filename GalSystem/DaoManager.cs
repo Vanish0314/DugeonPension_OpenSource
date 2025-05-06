@@ -49,7 +49,7 @@ namespace Dungeon.Gal
             }
             else
             {
-                GameFrameworkLog.Error($"[DaoManager] 你嘛的,找不到{name}这个DungeonActor,对话树无法正常显示图片,请检查配置,名字是否正确");
+                GameFrameworkLog.Error($"[DaoManager][对话树] 你嘛的,找不到{name}这个DungeonActor,对话树无法正常显示图片,请检查配置,名字是否正确");
 
                 actor = null;
                 return false;

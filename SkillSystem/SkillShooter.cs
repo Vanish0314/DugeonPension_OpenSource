@@ -138,6 +138,14 @@ namespace Dungeon.SkillSystem
 
         public void Fire(SkillData skillData, Vector3 posToUseSkill, Vector3 dirToUseSkill)
         {
+#if UNITY_EDITOR
+            if (skillData == null)
+            {
+                GameFrameworkLog.Error("[SkillShooter] 传入的技能数据为空.请检查是否是没有配置技能\n物体:" + name);
+                return;
+            }
+#endif
+
             var method = SkillDeployMethod.CreateSkillDeployMethod(skillData, this, posToUseSkill, dirToUseSkill);
             var skill = new Skill(skillData, method, owner);
             Fire(skill);

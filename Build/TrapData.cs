@@ -8,21 +8,9 @@ namespace Dungeon
     public class TrapData : ScriptableObject, IPlaceableData
     {
         public TrapType trapType;
-        public GameObject trapPrefab;
         public Vector2Int size = Vector2Int.one;
-        public TrapCost cost;
-
-        [System.Serializable]
-        public struct TrapCost
-        {
-            public int material;
-        }
-
-        public GameObject GetPrefab()
-        {
-            return trapPrefab;
-        }
-
+        public Cost cost;
+        
         public Vector2Int GetSize()
         {
             return new Vector2Int(size.x, size.y);

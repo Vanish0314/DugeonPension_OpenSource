@@ -513,7 +513,7 @@ namespace Dungeon.Procedure
         /// 4. 开启模拟经营系统
         /// </summary>
         /// <param name="procedureOwner"></param>
-        private BusinessControl m_MetropolisControl;
+        private MetropolisControl m_MetropolisControl;
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
@@ -525,7 +525,7 @@ namespace Dungeon.Procedure
             DungeonGameEntry.DungeonGameEntry.Instance.DisableDungeon();
             DungeonGameEntry.DungeonGameEntry.Instance.EnableMetroplis();
 
-            m_MetropolisControl = BusinessControl.Create(PlaceManager.Instance);
+            m_MetropolisControl = MetropolisControl.Create(PlaceManager.Instance);
             m_MetropolisControl.OnEnter();
             
             GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
@@ -679,11 +679,15 @@ namespace Dungeon.Procedure
     /// </summary>
     public class ProcedureHeroExploringDungeonStage : DungeonProcedure
     {
+        private CurseUIControl m_CurseUIControl;
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
 
             mOwner = procedureOwner;
+            
+            m_CurseUIControl = CurseUIControl.Create(CursesManager.Instance);
+            m_CurseUIControl.OnEnter();
 
             GameEntry.Event.Fire(this, OnSwitchedToHeroExploringDungeonProcedureEvent.Create());
 
@@ -694,6 +698,8 @@ namespace Dungeon.Procedure
         {
             base.OnLeave(procedureOwner, isShutdown);
 
+            m_CurseUIControl.OnLeave();
+            
             UnsubscribeEvents();
         }
 

@@ -230,7 +230,6 @@ namespace Dungeon
             m_BTHelper.hasDormitoryAvailable = HasDormitoryAvailable();
 
             m_BTHelper.hasWorkAvailable = HasWorkplaceAvailable();
-            m_BTHelper.workComplete = !m_IsWorking;
         }
 
         #region PublicAPI
@@ -284,6 +283,9 @@ namespace Dungeon
 
         public virtual void Work()
         {
+            if(m_CurrentWorkBuilding ==null)
+                return;
+            
             if (m_IsWorking) return;
 
             if (m_WorkRoutine != null)
@@ -323,6 +325,7 @@ namespace Dungeon
 
         private void HideCommandUI()
         {
+            m_BTHelper.isCommandale = false;
             commandUIPrefab.gameObject.SetActive(false);
         }
 
@@ -330,6 +333,7 @@ namespace Dungeon
         public void ReceiveCommand(string command)
         {
             Debug.Log($"接收到指令: {command}");
+            m_BTHelper.isCommandale = false;
             m_BTHelper.hasCommand = true;
             m_Command = command;
             commandUIPrefab.gameObject.SetActive(false);
@@ -341,13 +345,13 @@ namespace Dungeon
             switch (m_Command.ToLower())
             {
                 case "work":
-                    m_BTHelper.commandType = CommandType.Work;
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
                     break;
                 case "eat":
-                    m_BTHelper.commandType = CommandType.Eat;
+                    m_BTHelper.commandType = MetropolisHeroAIState.Eating;
                     break;
                 case "sleep":
-                    m_BTHelper.commandType = CommandType.Sleep;
+                    m_BTHelper.commandType = MetropolisHeroAIState.Sleeping;
                     break;
                 default:
                     Debug.LogWarning($"未知指令: {m_Command}");
@@ -551,7 +555,6 @@ namespace Dungeon
             EndWorking();
         }
 
-
         public void EndWorking()
         {
             if (!m_IsWorking) return;
@@ -559,10 +562,9 @@ namespace Dungeon
             StopCoroutine(m_WorkRoutine);
             m_WorkRoutine = null;
             m_CurrentWorkBuilding = null;
+            m_BTHelper.workComplete = true;
         }
-
-        private const string WORKPLACE_TAG = "WorkPlace"; // 工作建筑标签
-
+        
         // 判断是否有可用工作建筑
         public bool HasWorkplaceAvailable()
         {
@@ -582,11 +584,13 @@ namespace Dungeon
         }
 
         // 获取最近工作建筑的位置
-        public Vector3 FindNearestWorkplacePosition()
+        public (Vector3,Collider2D) FindNearestWorkplacePosition()
         {
             GameObject workplace = FindNearestWorkplace();
             m_CurrentWorkBuilding = workplace.GetComponent<MetropolisBuildingBase>();
-            return workplace != null ? workplace.transform.position : Vector3.zero;
+            return workplace != null
+                ? (workplace.transform.position, workplace.GetComponent<Collider2D>())
+                : (Vector3.zero, null);
         }
 
         public Vector3 FindWorkplacePositionOfType()

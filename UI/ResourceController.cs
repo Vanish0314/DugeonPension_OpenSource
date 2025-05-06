@@ -1,3 +1,4 @@
+using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
 using UnityGameFramework.Runtime;
@@ -71,24 +72,29 @@ namespace Dungeon
            if (gameEventArgs is OnBuildingPlacedEventArgs buildingPlacedEventArgs)
            {
                BuildingData buildingData = buildingPlacedEventArgs.BuildingData;
-               if (buildingData.cost.gold > 0)
-                   ResourceModel.Instance.Gold = Mathf.Max(0, ResourceModel.Instance.Gold - buildingData.cost.gold);
-               if (buildingData.cost.stone > 0)
-                   ResourceModel.Instance.Stone = Mathf.Max(0, ResourceModel.Instance.Stone - buildingData.cost.stone);
-               if (buildingData.cost.magicPower > 0)
-                   ResourceModel.Instance.MagicPower = Mathf.Max(0, ResourceModel.Instance.MagicPower - buildingData.cost.magicPower);
-               if (buildingData.cost.material > 0)
-                   ResourceModel.Instance.Material = Mathf.Max(0, ResourceModel.Instance.Material - buildingData.cost.material);
+               if (!ResourceModel.Instance.TryConsumeResources(buildingData.cost))
+               {
+                   GameFrameworkLog.Warning(string.Format("Failed to consume resources for building: {0}",
+                       buildingData.name));
+               }
            }
            else if (gameEventArgs is OnTrapPlacedEventArgs trapPlacedEventArgs)
            {
                TrapData trapData = trapPlacedEventArgs.TrapData;
-               ResourceModel.Instance.Material = Mathf.Max(0, ResourceModel.Instance.Material - trapData.cost.material);
+               if (!ResourceModel.Instance.TryConsumeResources(trapData.cost))
+               {
+                   GameFrameworkLog.Warning(string.Format("Failed to consume resources for trap: {0}",
+                       trapData.name));
+               }
            }
            else if(gameEventArgs is OnMonsterPlacedEventArgs monsterPlacedEventArgs)
            {
                MonsterData monsterData = monsterPlacedEventArgs.MonsterData;
-               ResourceModel.Instance.MagicPower = Mathf.Max(0, ResourceModel.Instance.MagicPower - monsterData.cost.magicPower);
+               if (!ResourceModel.Instance.TryConsumeResources(monsterData.cost))
+               {
+                   GameFrameworkLog.Warning(string.Format("Failed to consume resources for monster: {0}",
+                       monsterData.name));
+               }
            }
        }
        

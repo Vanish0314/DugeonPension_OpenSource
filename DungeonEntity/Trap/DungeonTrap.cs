@@ -106,80 +106,6 @@ namespace Dungeon.DungeonEntity.Trap
         }
     }
 
-    [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
-    public class DungeonTrapEffectAreaCollider : MonoBehaviour
-    {
-        private DungeonTrapBase trap;
-        private List<BoxCollider2D> boxes = new();
-        private Dictionary<Collider2D, int> map = new();
-
-        public void Init(List<Vector2Int> area, DungeonTrapBase trapBase)
-        {
-#if UNITY_EDITOR
-            if (LayerMask.NameToLayer("TrapTrigger") == -1)
-                GameFrameworkLog.Error("[DungeonTrapEffectAreaCollider] No Collider Layer named 'TrapTrigger'");
-#endif
-            trap = trapBase;
-            gameObject.layer = LayerMask.NameToLayer("TrapTrigger");
-
-            foreach (var pos in area)
-            {
-                var box = gameObject.AddComponent<BoxCollider2D>();
-                box.size = Vector2.one;
-                box.offset += (Vector2)pos * Vector2.one;
-                box.isTrigger = true;
-                boxes.Add(box);
-            }
-
-            var rb = GetComponent<Rigidbody2D>();
-            rb.bodyType = RigidbodyType2D.Static;
-        }
-
-        private void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (!map.ContainsKey(collision))
-            {
-                map[collision] = 1;
-                var lowLevel = collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
-                if (lowLevel != null)
-                {
-                    ExcuteTrap(lowLevel);
-                }
-            }
-            else
-            {
-                map[collision]++;
-            }
-        }
-
-        private void OnTriggerExit2D(Collider2D collision)
-        {
-            if (map.ContainsKey(collision))
-            {
-                map[collision]--;
-                if (map[collision] <= 0)
-                {
-                    map.Remove(collision);
-                }
-            }
-        }
-
-        private void ExcuteTrap(AgentLowLevelSystem.AgentLowLevelSystem low)
-        {
-#if UNITY_EDITOR
-            if (low == null)
-            {
-                StringBuilder sb = new();
-                sb.AppendLine("[DungeonTrapBase] Detected Collision with no-hero object. which is not should happen");
-                sb.AppendLine("Check if there has a no-hero obj set to wrong layer or collision layer is mis setted");
-                sb.AppendLine("Info:" + low.gameObject.name);
-                GameFrameworkLog.Error(sb.ToString());
-            }
-#endif
-            trap.OnEffectEnter(low);
-        }
-    }
-
     [RequireComponent(typeof(SkillShooter),typeof(BoxCollider2D),typeof(Rigidbody2D))]
     public abstract class DungeonTrapBase : DungeonVisibleEntity
     {
@@ -214,6 +140,8 @@ namespace Dungeon.DungeonEntity.Trap
             rb.bodyType = RigidbodyType2D.Static;
             var box = GetComponent<BoxCollider2D>();
             box.isTrigger = false;
+
+            m_SkillShooter = GetComponent<SkillShooter>();
 
             InitCollider2D();
             CalculateFourCorners();

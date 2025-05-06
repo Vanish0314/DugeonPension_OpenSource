@@ -11,25 +11,25 @@ public class ResourceUI : MonoBehaviour
     [SerializeField] private float fillAmount;
     [SerializeField] private Button collectButton;
 
-    private MetropolisBuildingBase targetBuilding;
+    private ProduceBuilding m_TargetBuilding;
 
 
     private void Awake()
     {
-        targetBuilding = transform.parent.GetComponent<MetropolisBuildingBase>();
+        m_TargetBuilding = transform.parent.GetComponent<ProduceBuilding>();
         collectButton.onClick.AddListener(OnCollectClick);
     }
 
     private void Update()
     {
-        if (targetBuilding != null)
-            fillAmount = (float)targetBuilding.currentStock / targetBuilding.maxStock;
+        if (m_TargetBuilding != null)
+            fillAmount = (float)m_TargetBuilding.currentStock / m_TargetBuilding.maxStock;
 
         if (fillAmount >= 0.8)
         {
             ShowStockUI();
         }
-        UpdateUI(targetBuilding);
+        UpdateUI(m_TargetBuilding);
     }
     public void ShowAllUI()
     {
@@ -48,7 +48,7 @@ public class ResourceUI : MonoBehaviour
         stockSlider.gameObject.SetActive(true);
     }
 
-    private void UpdateUI(MetropolisBuildingBase building)
+    private void UpdateUI(ProduceBuilding building)
     {
         stockSlider.value = fillAmount;
         percentageText.text = (fillAmount * 100) + "%";
@@ -57,7 +57,7 @@ public class ResourceUI : MonoBehaviour
 
     private void OnCollectClick()
     {
-        targetBuilding.GatherResources();
-        UpdateUI(targetBuilding); // 刷新UI
+        m_TargetBuilding.GatherResources();
+        UpdateUI(m_TargetBuilding); // 刷新UI
     }
 }

@@ -32,14 +32,14 @@ namespace Dungeon.Gal
 				.GetDialogue(type)
 				.Pipe(tree => tree != null
 					? PostProcessDialogueTree(Graph.Clone(tree, null))
-					: WarnAndReturnNull($"未找到角色 {characterName} 的 {type} 对话树。"));
+					: WarnAndReturnNull($"[DtoManager][对话树] 未找到角色 {characterName} 的 {type} 对话树。"));
 
 		public DialogueTree GetClonedNpcDialogue(CharacterType characterType) =>
 			NpcDtoMap
 				?.GetDialogue(characterType)
 				.Pipe(tree => tree != null
 					? PostProcessDialogueTree(Graph.Clone(tree, null))
-					: WarnAndReturnNull($"未找到龙套的 {characterType} 对话树。"));
+					: WarnAndReturnNull($"[DtoManager][对话树] 未找到龙套的 {characterType} 对话树。"));
 
 		private static DialogueTree PostProcessDialogueTree(DialogueTree tree) =>
 			tree.Tap(t => t.actorParameters.ForEach(p =>
@@ -61,7 +61,7 @@ namespace Dungeon.Gal
 	[Serializable]
 	public class CharacterDialogueMap<TEnum>
 	{
-		public string CharacterId;
+		[LabelText("角色名称"),Tooltip("角色名称需要和冒险者工会系统中的勇者prefab名称一致")] public string CharacterId;
 
 		[TableList]
 		public List<DialogueEntry<TEnum>> Dialogues = new();
