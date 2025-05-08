@@ -34,7 +34,7 @@ namespace Dungeon
                 // 获取建筑碰撞体的边界大小
                 Bounds bounds = targetCollider.bounds;
                 // 以建筑对角线的一半作为停止距离（暂时）
-                stoppingDistance = bounds.extents.magnitude + 0.1f;
+                stoppingDistance = bounds.extents.magnitude + 0.5f;
             }
             else
             {

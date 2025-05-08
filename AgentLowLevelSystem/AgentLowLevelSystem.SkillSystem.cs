@@ -139,7 +139,7 @@ namespace Dungeon.AgentLowLevelSystem
         {
             StunTween?.Kill();
             m_IsStunned = true;
-            this.SendMessage("OnStunned");
+            this.SendMessage("OnStunned",SendMessageOptions.RequireReceiver);
 
             currentTween?.Kill();
             foreach (var tween in WipTweens)
@@ -152,7 +152,7 @@ namespace Dungeon.AgentLowLevelSystem
             StunTween = DOVirtual.DelayedCall(duration, () =>
             {
                 m_IsStunned = false;
-                this.SendMessage("OnStunnedEnd");
+                this.SendMessage("OnStunnedEnd",SendMessageOptions.RequireReceiver);
             });
         }
 
@@ -160,7 +160,7 @@ namespace Dungeon.AgentLowLevelSystem
         {
             StunTween?.Kill();
             IsFainted = true;
-            this.SendMessage("OnStunned");
+            this.SendMessage("OnStunned",SendMessageOptions.RequireReceiver);
 
             currentTween?.Kill();
             foreach (var tween in WipTweens)
@@ -174,7 +174,7 @@ namespace Dungeon.AgentLowLevelSystem
             {
                 IsFainted = false;
                 m_Properties.Submissiveness = 50;
-                this.SendMessage("OnStunnedEnd");
+                this.SendMessage("OnStunnedEnd",SendMessageOptions.RequireReceiver);
             });
         }
 

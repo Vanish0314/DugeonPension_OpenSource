@@ -262,7 +262,6 @@ namespace Dungeon
         
         #endregion
         
-        
         #region Override
         public override void OnSpawn(object data) 
         {

@@ -77,6 +77,10 @@ namespace Dungeon.SkillSystem
 
         [Space]
         [Header("技能消耗 & 冷却")]
+        [InfoBox(
+         "配置技能需要注意:\n" +
+         "1. 技能前摇,中摇,后摇都需要配置,时长上尽量与动画匹配"
+        )]
         [LabelText("冷却时间(秒)")] public float cooldownTimeInSec;
         [LabelText("技能前摇时间")] public float preCastTimeInSec;
         [LabelText("技能中摇时间")] public float midCastTimeInSec;

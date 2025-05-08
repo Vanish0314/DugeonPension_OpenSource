@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Dungeon.Common.MonoPool;
+using Dungeon.DungeonEntity.Trap;
 
 namespace Dungeon
 {
@@ -53,11 +54,17 @@ namespace Dungeon
 
         private void CreateHPBarsForActiveCombatables()
         {
-            // 获取场景中所有活跃的战斗对象
+            // 获取场景中所有活跃且非陷阱的战斗对象
             var combatables = FindObjectsOfType<MonoBehaviour>(false)
                 .OfType<ICombatable>()
-                .Where(c => (c as MonoBehaviour)?.gameObject.activeInHierarchy == true);
-            
+                .Where(c => 
+                {
+                    var mono = c as MonoBehaviour;
+                    return mono != null 
+                           && mono.gameObject.activeInHierarchy 
+                           && !(mono is DungeonTrapBase); // 排除 TrapBase 及其子类
+                });
+    
             foreach (var combatable in combatables)
             {
                 CreateHPBar(combatable);

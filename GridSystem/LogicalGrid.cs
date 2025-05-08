@@ -183,6 +183,8 @@ namespace Dungeon.GridSystem
 
         public List<Room> CalculateRoom()
         {
+            if(wallMap == null) return null;
+
             int width = wallMap.Width;
             int height = wallMap.Height;
 

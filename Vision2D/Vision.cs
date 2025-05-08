@@ -50,15 +50,19 @@ namespace Dungeon.Vision2D
         }
         private void OnTriggerEnter2D(Collider2D other)
         {
+            GameFrameworkLog.Info($"[Vision] 视野与{other.name}物体相交,请考虑是否应该相交");
+
             var visible = other.GetComponent<IVisible>();
             if (visible == null)
                 return;
 
-            GameFrameworkLog.Info($"[Vision] {other.gameObject.name} entered the {gameObject.name}'s Vision.");
+            GameFrameworkLog.Info($"[Vision] {other.gameObject.name} 进入了 {gameObject.name}的视野.");
 
             var visitInfo = visible.OnVisited(new VisitInformation(transform.parent.gameObject, null));
             if (visitInfo.visited != null)
             {
+                GameFrameworkLog.Info($"[Vision] {gameObject.name} 看到了 {other.gameObject.name}");
+
                 mOwner.OnSee(other.gameObject);
                 {
                     var key = m_Blackboard.GetOrRegisterKey(AgentBlackBoardEnum.GetNameOfIVisibleCountInVision(visible.GetType().Name));

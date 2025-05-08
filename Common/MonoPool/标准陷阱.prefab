@@ -136,7 +136,21 @@ MonoBehaviour:
   trapLevel: 0
   mDndCheckTarget: {fileID: 11400000, guid: 1d3292e22de11479f91481cca3eb2ec2, type: 2}
   sprite: {fileID: 21300000, guid: 5ad0f8012fb5b5642b0630e6b244d805, type: 3}
-  skill: {fileID: 0}
+  skill: {fileID: 11400000, guid: 56f34e545ff2648fabdc1f31355aecbc, type: 2}
   size: {x: 1, y: 1}
   isCollider: 0
   effectArea: []
+  basicInfo:
+    hp: 0
+    maxHp: 0
+    mp: 0
+    maxMp: 0
+    attackSpeed: 0
+    currentLevel: 0
+    physicalResistance: 0
+    fireResistance: 0
+    iceResistance: 0
+    holyResistance: 0
+    posionResistance: 0
+  statusBarSetting:
+    offset: {x: 0, y: 0, z: 0}

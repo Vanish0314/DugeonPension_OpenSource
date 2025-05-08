@@ -107,7 +107,7 @@ namespace Dungeon.DungeonEntity.Trap
     }
 
     [RequireComponent(typeof(SkillShooter),typeof(BoxCollider2D),typeof(Rigidbody2D))]
-    public abstract class DungeonTrapBase : DungeonVisibleEntity
+    public abstract class DungeonTrapBase : DungeonVisibleEntity,ICombatable
     {
         public static readonly Dictionary<TrapDirection, float> DirectionToElurRotation = new Dictionary<TrapDirection, float>
         {
@@ -237,6 +237,12 @@ namespace Dungeon.DungeonEntity.Trap
             return visitInfo;
         }
 
+        public abstract GameObject GetGameObject();
+        public abstract bool IsAlive();
+        public abstract void OnKillSomebody(ICombatable killed);
+        public abstract bool TakeSkill(Skill skill);
+        public abstract void Stun(float duration);
+
         public enum TrapDirection
         {
             Up =0, // (0,0,) is up-left
@@ -264,6 +270,14 @@ namespace Dungeon.DungeonEntity.Trap
 
         private TrapDirection currentDirection = TrapDirection.Left;
         private Vector3[] fourCorners = new Vector3[4];
+
+        public abstract int Hp { get; set; }
+        public abstract int MaxHp { get; set; }
+        public abstract int Mp { get; set; }
+        public abstract int MaxMp { get; set; }
+        public abstract float AttackSpeed { get; set; }
+        public abstract CombatorData BasicInfo { get; set; }
+        public abstract StatusBarSetting StatusBarSetting { get; set; }
     }
 
 

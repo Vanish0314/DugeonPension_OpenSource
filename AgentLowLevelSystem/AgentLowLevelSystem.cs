@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
+using DG.Tweening;
 using Dungeon.BlackBoardSystem;
 using Dungeon.Vision2D;
 using GameFramework;
+using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 using UnityGameFramework.Runtime;
@@ -67,8 +69,12 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void FixedUpdateSystem()
         {
-            if (m_IsStunned || Hp <= 0)
+            if (m_IsStunned || Hp <= 0 || (SkillTween != null && SkillTween.IsActive()))
+            {
+                m_MoveWayPoints.Clear();
+                m_AgentRigdbody.velocity = Vector2.zero;
                 return;
+            }
 
             FixedUpdateMoveSystem();
         }

@@ -12,8 +12,7 @@ public class ResourceUI : MonoBehaviour
     [SerializeField] private Button collectButton;
 
     private ProduceBuilding m_TargetBuilding;
-
-
+    
     private void Awake()
     {
         m_TargetBuilding = transform.parent.GetComponent<ProduceBuilding>();
@@ -27,8 +26,15 @@ public class ResourceUI : MonoBehaviour
 
         if (fillAmount >= 0.8)
         {
-            ShowStockUI();
+            if (!stockSlider.gameObject.activeInHierarchy)
+                ShowStockUI();
         }
+        
+        if(fillAmount >= 1)
+        {
+            ShowAllUI();
+        }
+        
         UpdateUI(m_TargetBuilding);
     }
     public void ShowAllUI()

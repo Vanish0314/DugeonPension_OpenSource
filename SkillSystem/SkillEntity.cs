@@ -61,9 +61,10 @@ namespace Dungeon.SkillSystem
                     OnSkillHitEvent = null;
                     OnSkillKilledEvent = null;// TODO(vanish) : 对于如毒属性的伤害,需要延迟调用event
                 }
+
+                GameFrameworkLog.Info($"[SkillEntity] {collision.gameObject.name} 收到了技能 {skill.skillData.skillName}, 攻击者是 {skill.attacker.GetGameObject().name}");
             }
 
-            GameFrameworkLog.Info($"[SkillEntity] {collision.gameObject.name} 收到了技能 {skill.skillData.skillName}, 攻击者是 {skill.attacker.GetGameObject().name}");
         }
         public void OTriggerExit2D(Collider2D collision)
         {

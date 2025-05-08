@@ -141,7 +141,9 @@ namespace Dungeon.Overload
 
             DOTween.To((t)=>{
             // TODO: Zoom Cam to Hero
-            },0,1,1f).OnComplete(()=>{
+            },0,1,1f)
+            .SetUpdate(true)
+            .OnComplete(()=>{
                 DungeonGameEntry.DungeonGameEntry.Event.Fire(
                     this,OnOneHeroStartBeingPersuadedEventArgs.Create(hero)
                 );
@@ -163,7 +165,9 @@ namespace Dungeon.Overload
 
             DOTween.To((t)=>{
             // TODO: Zoom Cam to Hero
-            },0,1,1f).OnComplete(()=>{
+            },0,1,1f)
+            .SetUpdate(true)
+            .OnComplete(()=>{
                 DungeonGameEntry.DungeonGameEntry.Event.Fire(
                     this,OnOneHeroStartBeingCapturedEventArgs.Create(hero)
                 );

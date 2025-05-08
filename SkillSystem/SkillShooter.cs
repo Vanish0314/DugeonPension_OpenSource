@@ -71,6 +71,7 @@ namespace Dungeon.SkillSystem
 
             GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 准备使用技能: {skill.skillData.name}");
 
+            bool SequenceIsEndedByKillFlag = true;
             isReadyToFire = false;
             currentSkillName = skill.skillData.name;
 
@@ -107,11 +108,16 @@ namespace Dungeon.SkillSystem
                 currentSequence = null;
                 currentSkillName = null;
 
+                SequenceIsEndedByKillFlag = false;
+
                 GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能后摇结束, 技能: {skill.skillData.name} 释放完毕.");
             });
 
             currentSequence.OnKill(() =>
             {
+                if(!SequenceIsEndedByKillFlag) //TODO(vanish): 必须保证OnComplete先于OnKill执行
+                    return;
+
                 if (currentSkillEntity != null)
                 {
                     currentSkillEntity.ReturnToPool();
