@@ -237,6 +237,10 @@ namespace Dungeon.DungeonEntity.Trap
             return visitInfo;
         }
 
+        public Sprite GetSprite() // 获取陷阱精灵（暂时）
+        {
+            return sprite;
+        }
         public abstract GameObject GetGameObject();
         public abstract bool IsAlive();
         public abstract void OnKillSomebody(ICombatable killed);

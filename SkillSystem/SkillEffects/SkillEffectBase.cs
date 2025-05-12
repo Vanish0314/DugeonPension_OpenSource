@@ -176,6 +176,7 @@ namespace Dungeon.SkillSystem.SkillEffect
 
             KillCheck();
 
+#if UNITY_EDITOR
             var sb = new StringBuilder();
             sb.AppendLine($"[Skill Calculator] 技能结算Log - 直接伤害")
               .AppendLine($"攻击者: {attacker.GetGameObject().name},使用了技能{skill.SkillName}")
@@ -189,6 +190,7 @@ namespace Dungeon.SkillSystem.SkillEffect
               .AppendLine($"神圣伤害: {holy}")
               .AppendLine($"毒伤害: {posion}");
             GameFrameworkLog.Info(sb.ToString());
+#endif
 
             CalculateEffects();
         }

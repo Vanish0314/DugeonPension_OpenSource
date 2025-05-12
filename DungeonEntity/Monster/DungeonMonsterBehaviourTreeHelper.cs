@@ -24,7 +24,7 @@ namespace Dungeon.DungeonEntity.Monster
         [ReadOnly]public bool isAttacking;
         [ReadOnly]public bool isStunned;
         [ReadOnly]public int hp;
-        [ReadOnly]public Transform CurrentTarget => targetsInVision.FirstOrDefault();
+        public Transform CurrentTarget;
         [ReadOnly]public List<Transform> targetsInVision;
         [ShowInInspector,ReadOnly]public Vector3? targetLastKnownPosition;
 

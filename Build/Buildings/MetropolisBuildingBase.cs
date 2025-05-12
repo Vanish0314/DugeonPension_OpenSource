@@ -14,9 +14,12 @@ namespace Dungeon
     // 工作建筑类型枚举
     public enum WorkplaceType
     {
+        None,
+        Construction,
         Quarry,
         LoggingCamp,
-        Farm,       
+        Farm,  
+        Canteen,
     }
     
     // 建筑当前状态
@@ -43,8 +46,10 @@ namespace Dungeon
         [Header("工作设置")]
         public WorkplaceType workplaceType;
         public int maxWorkers = 3;
-       
-        [Header("工作状态")]
+        [SerializeField] private WorkplaceType completeworkplaceType;
+        
+        [Header("工作状态")] 
+        public bool hasWork;
         public List<MetropolisHeroBase> workingHeroes = new List<MetropolisHeroBase>();
         public float currentEfficiency; // 当前效率系数
         
@@ -252,7 +257,7 @@ namespace Dungeon
 
         public virtual void StartCompletedBehavior()
         {
-            
+            workplaceType = completeworkplaceType;
         }
 
         public virtual void UpdateCompletedBehavior()

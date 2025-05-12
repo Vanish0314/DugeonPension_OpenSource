@@ -88,6 +88,7 @@ namespace Dungeon.Overload
             {
                 if(capturedArgs.IsCaptured)
                 {
+                    MetropolisHeroTransverter.Instance.TransverseMetropolisHero(capturedArgs.HeroEntity);
                     //TODO(xy): 把地牢勇者转换成工厂勇者
                 }
                 else

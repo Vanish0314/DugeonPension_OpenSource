@@ -598,6 +598,8 @@ namespace Dungeon.Procedure
         {
             m_PlaceArmyControl.OnLeave();
             
+            GameEntry.UI.CloseAllLoadedUIForms();
+            
             base.OnLeave(procedureOwner, isShutdown);
 
             UnsubscribeEvents();

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Dungeon.Common.MonoPool;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -13,8 +14,10 @@ namespace Dungeon
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(Animator), typeof(Rigidbody2D), typeof(MetropolisHeroBehaviorTreeHelper))]
     [RequireComponent(typeof(MetropolisHeroMotor), typeof(BoxCollider2D), typeof(SpriteRenderer))]
-    public class MetropolisHeroBase : MonoBehaviour 
+    public class MetropolisHeroBase : MonoPoolItem
     {
+        public string HeroName;
+        
         #region BaseVariables
 
         // 堕落等级
@@ -102,7 +105,7 @@ namespace Dungeon
         private string m_Command;
 
         private Vector3 m_CurrentWorkPosition;
-        private WorkplaceType m_CurrentWorkType;
+        private WorkplaceType m_TargetWorkType;
         private MetropolisBuildingBase m_CurrentWorkBuilding;
 
         private void Start()
@@ -112,8 +115,9 @@ namespace Dungeon
             m_Motor = GetComponent<MetropolisHeroMotor>();
             m_Motor.InitMotor(moveSpeed);
             m_BTHelper.Init(this);
+            m_TargetWorkType = WorkplaceType.None;
         }
-
+        
         private void OnEnable()
         {
             m_InputReader.OnHeroClickedEvent += OnHeroClicked;
@@ -227,8 +231,6 @@ namespace Dungeon
 
             m_BTHelper.hasFoodAvailable = HasFoodAvailable();
 
-            m_BTHelper.hasDormitoryAvailable = HasDormitoryAvailable();
-
             m_BTHelper.hasWorkAvailable = HasWorkplaceAvailable();
         }
 
@@ -236,11 +238,14 @@ namespace Dungeon
 
         public virtual void Wander()
         {
-            Vector3 randomPos = new Vector3();
-            randomPos.x = UnityEngine.Random.Range(-10f, 10f);
-            randomPos.y = UnityEngine.Random.Range(-10f, 10f);
-            randomPos.z = 0;
-            m_Motor.MoveTo(randomPos);
+            if(m_IsWandering) return;
+            
+            // 如果已有协程在运行则先停止
+            if (m_WanderCoroutine != null)
+            {
+                StopCoroutine(m_WanderCoroutine);
+            }
+            m_WanderCoroutine = StartCoroutine(WanderRoutine());
         }
 
         public virtual void Eat()
@@ -302,10 +307,42 @@ namespace Dungeon
             //破坏设施
         }
 
-        public virtual void Build()
+        // 执行具体指令
+        public void SetUpCommand()
         {
-            //建造设施
+            ForceEndCurrentState();
+            
+            switch (m_Command.ToLower())
+            {
+                case "quarry":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                    m_TargetWorkType = WorkplaceType.Quarry;
+                    break;
+                case "loggingcamp":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                    m_TargetWorkType = WorkplaceType.LoggingCamp;
+                    break;
+                case "farm":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                    m_TargetWorkType = WorkplaceType.Farm;
+                    break;
+                case "eat":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Eating;
+                    break;
+                case "sleep":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Sleeping;
+                    break;
+                default:
+                    Debug.LogWarning($"未知指令: {m_Command}");
+                    break;
+            }
+
+            m_BTHelper.hasCommand = false;
         }
+
+        #endregion
+
+        #region Command
 
         // 点击角色时触发
         public void OnHeroClicked(GameObject clickedHero)
@@ -338,32 +375,109 @@ namespace Dungeon
             m_Command = command;
             commandUIPrefab.gameObject.SetActive(false);
         }
-
-        // 执行具体指令
-        public void SetUpCommand()
+        
+        private void ForceEndCurrentState()
         {
-            switch (m_Command.ToLower())
+            switch (m_BTHelper.state)
             {
-                case "work":
-                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                case MetropolisHeroAIState.Eating:
+                    EndEat();
                     break;
-                case "eat":
-                    m_BTHelper.commandType = MetropolisHeroAIState.Eating;
+                case MetropolisHeroAIState.Sleeping:
+                    EndSleep();
                     break;
-                case "sleep":
-                    m_BTHelper.commandType = MetropolisHeroAIState.Sleeping;
+                case MetropolisHeroAIState.Working:
+                    EndWorking();
                     break;
-                default:
-                    Debug.LogWarning($"未知指令: {m_Command}");
+                case MetropolisHeroAIState.Talking:
+                    EndTalking();
                     break;
             }
-
-            m_BTHelper.hasCommand = false;
         }
 
         #endregion
 
         #region
+
+        #region Wander
+
+        // 新增字段
+        [Header("闲逛设置")]
+        [SerializeField] private float wanderInterval = 5f;    // 生成新位置的间隔时间
+        [SerializeField] private float wanderRadius = 10f;    // 移动半径范围
+        [SerializeField] private float positionCheckDistance = 0.5f; // 位置有效性检测距离
+        [SerializeField] private LayerMask obstacleLayers;    // 障碍物层级
+
+        private Coroutine m_WanderCoroutine;
+        private Vector3 m_CurrentWanderTarget;
+        private bool m_IsWandering;
+        
+        private IEnumerator WanderRoutine()
+        {
+            m_IsWandering = true;
+            
+            while (m_BTHelper.state == MetropolisHeroAIState.Idle)
+            {
+                float startTime = Time.time;
+                
+                // 生成新位置直到找到有效位置
+                Vector3 newPos;
+                do 
+                {
+                    newPos = GenerateRandomPosition();
+                } 
+                while (!IsPositionValid(newPos));
+
+                m_CurrentWanderTarget = newPos;
+                m_Motor.MoveTo(m_CurrentWanderTarget);
+
+                // 等待指定间隔或提前到达
+                yield return new WaitUntil(() => 
+                    Vector3.Distance(transform.position, m_CurrentWanderTarget) < positionCheckDistance || 
+                    Time.time >= startTime + wanderInterval
+                );
+                
+                yield return new WaitForSeconds(UnityEngine.Random.Range(0, 1));
+            }
+            
+            StopWandering();
+        }
+        
+        public void StopWandering()
+        {
+            if(!m_IsWandering)
+                return;
+            
+            m_IsWandering = false;
+            
+            if (m_WanderCoroutine != null)
+            {
+                StopCoroutine(m_WanderCoroutine);
+                m_WanderCoroutine = null;
+            }
+        }
+
+
+        // 生成随机位置
+        private Vector3 GenerateRandomPosition()
+        {
+            Vector2 randomCircle = UnityEngine.Random.insideUnitCircle * wanderRadius;
+            return transform.position + new Vector3(randomCircle.x, randomCircle.y, 0);
+        }
+
+        // 位置有效性检测
+        private bool IsPositionValid(Vector3 position)
+        {
+            // 检测目标点是否可达
+            RaycastHit2D hit = Physics2D.Linecast(
+                transform.position, 
+                position, 
+                obstacleLayers
+            );
+            return hit.collider == null;
+        }
+
+            #endregion
 
         #region Talk
 
@@ -492,14 +606,33 @@ namespace Dungeon
 
         #region Sleep
 
+        // 新增字段
+        [Header("睡觉设置")]
+        private Dormitory m_CurrentDormitory;
+        private Dormitory m_TargetDormitory;
+        [SerializeField] private int bedEfficiency = 5; // 床上每分钟降低疲劳值
+        [SerializeField] private int groundEfficiency = 3; // 地上每分钟降低疲劳值
+        
         IEnumerator Sleeping()
         {
             m_IsSleeping = true;
 
-            while (m_BTHelper.state == MetropolisHeroAIState.Sleeping)
+            m_CurrentDormitory = m_TargetDormitory;
+            bool inDormitory = m_CurrentDormitory != null;
+
+            // 正式入住登记
+            if(inDormitory) 
             {
-                yield return new WaitForSeconds(1f);
-                TiredLevel = Mathf.Clamp(TiredLevel + 1, 0, MaxTiredLevel);
+                m_CurrentDormitory.CheckIn(this);
+            }
+
+            int efficiency = inDormitory ? bedEfficiency : groundEfficiency;
+    
+            // 持续降低疲劳度
+            while (TiredLevel > 0 && m_BTHelper.state == MetropolisHeroAIState.Sleeping)
+            {
+                TiredLevel = Mathf.Clamp(TiredLevel - efficiency, 0, MaxTiredLevel);
+                yield return new WaitForSeconds(1);
             }
 
             EndSleep();
@@ -508,36 +641,44 @@ namespace Dungeon
         private void EndSleep()
         {
             if (!m_IsSleeping) return;
+
+            // 起床气判定
+            if (TiredLevel > 50 && m_BTHelper.state != MetropolisHeroAIState.Sleeping)
+            {
+                basicInfo.CorruptLevel = Mathf.Max(0, basicInfo.CorruptLevel - 5);
+                Debug.Log($"{name} 被强制唤醒，支配度-5");
+            }
+
+            // 退房处理
+            if (m_CurrentDormitory != null)
+            {
+                m_CurrentDormitory.CheckOut(this);
+                m_CurrentDormitory = null;
+            }
+
             m_IsSleeping = false;
-            StopCoroutine(m_SleepRoutine);
+            if (m_SleepRoutine != null) StopCoroutine(m_SleepRoutine);
             m_SleepRoutine = null;
         }
-
-        private const string DORMITORY_TAG = "Dormitory"; // 宿舍标签常量
-
-        private bool HasDormitoryAvailable()
+        
+        public (Vector3, Collider2D) TryFindNearestDormitory()
         {
-            if (!m_IsSleeping) return false;
-            return FindNearestDormitoryPosition() != Vector3.zero;
-        }
-
-        // 返回最近宿舍的位置，如果没有则返回Vector3.zero
-        public Vector3 FindNearestDormitoryPosition()
-        {
-            // 获取场景中所有宿舍对象
-            GameObject[] allDorms = GameObject.FindGameObjectsWithTag(DORMITORY_TAG);
-
-            // 如果没有宿舍则返回空
-            if (allDorms.Length == 0) return Vector3.zero;
-
-            // 使用LINQ找到最近的宿舍
-            GameObject nearestDorm = allDorms
-                .OrderBy(dorm => Vector3.Distance(transform.position, dorm.transform.position))
+            Dormitory nearestDorm = FindObjectsOfType<Dormitory>()
+                .Where(d => d.CanAcceptResident())
+                .OrderBy(d => Vector3.Distance(transform.position, d.transform.position))
                 .FirstOrDefault();
 
-            return nearestDorm != null ? nearestDorm.transform.position : Vector3.zero;
+            if (nearestDorm != null)
+            {
+                m_TargetDormitory = nearestDorm;
+                Collider2D dormCollider = nearestDorm.GetComponent<Collider2D>();
+                return (nearestDorm.transform.position, dormCollider);
+            }
+            
+            m_TargetDormitory = null;
+            return (transform.position, null);
         }
-
+        
         #endregion
 
         #region Work
@@ -558,84 +699,119 @@ namespace Dungeon
         public void EndWorking()
         {
             if (!m_IsWorking) return;
+    
             m_IsWorking = false;
-            StopCoroutine(m_WorkRoutine);
+    
+            if (m_CurrentWorkBuilding != null)
+            {
+                m_CurrentWorkBuilding.WorkerLeave(this); // 新增建筑解绑
+                m_CurrentWorkBuilding = null;
+            }
+    
+            if (m_WorkRoutine != null)
+                StopCoroutine(m_WorkRoutine);
+    
             m_WorkRoutine = null;
-            m_CurrentWorkBuilding = null;
+            m_TargetWorkType = WorkplaceType.None;
             m_BTHelper.workComplete = true;
         }
         
         // 判断是否有可用工作建筑
         public bool HasWorkplaceAvailable()
         {
-            return FindNearestWorkplace() != null;
+            return FindHighestPriorityWorkplace().Item2 != null;
+        }
+        
+        // 返回（位置, 建筑）元组，支持优先级和强制分配
+        public (Vector3, Collider2D) FindHighestPriorityWorkplace()
+        {
+            if (m_TargetWorkType != WorkplaceType.None)
+            {
+                return FindNearestAvailableWorkplaceOfType();
+            }
+            
+            // 按优先级排序类型
+            var sortedTypes = workplacePriorities
+                .OrderBy(p => p.priority)
+                .Select(p => p.type)
+                .ToList();
+
+            foreach (var type in sortedTypes)
+            {
+                var building = FindNearestAvailableBuildingOfType(type);
+                if (building != null)
+                {
+                    m_CurrentWorkBuilding = building;
+                    return (building.transform.position, building.GetComponent<Collider2D>());
+                }
+            }
+            
+            m_CurrentWorkBuilding = null;
+            m_BTHelper.state = MetropolisHeroAIState.Idle;
+            return (Vector3.zero, null);
         }
 
-        // 查找最近的工作建筑（返回GameObject）
-        public GameObject FindNearestWorkplace()
+        public (Vector3, Collider2D) FindNearestAvailableWorkplaceOfType()
         {
-            MetropolisBuildingBase[] allWorkplaces = FindObjectsOfType<MetropolisBuildingBase>();
-            if (allWorkplaces.Length == 0) return null;
-
-            return allWorkplaces
-                .OrderBy(building => Vector3.Distance(transform.position, building.transform.position))
-                .FirstOrDefault()
-                ?.gameObject;
+            var building = FindNearestAvailableBuildingOfType(m_TargetWorkType);
+            if (building != null)
+            {
+                m_CurrentWorkBuilding = building;
+                return (building.transform.position, building.GetComponent<Collider2D>());
+            }
+            return (Vector3.zero, null);
         }
 
-        // 获取最近工作建筑的位置
-        public (Vector3,Collider2D) FindNearestWorkplacePosition()
+        private MetropolisBuildingBase FindNearestAvailableBuildingOfType(WorkplaceType targetType)
         {
-            GameObject workplace = FindNearestWorkplace();
-            m_CurrentWorkBuilding = workplace.GetComponent<MetropolisBuildingBase>();
-            return workplace != null
-                ? (workplace.transform.position, workplace.GetComponent<Collider2D>())
-                : (Vector3.zero, null);
-        }
-
-        public Vector3 FindWorkplacePositionOfType()
-        {
-            return FindWorkplacePositionOfType(m_CurrentWorkType);
-        }
-
-        // 按类型查找工作建筑（优先返回有空位的）
-        public Vector3 FindWorkplacePositionOfType(WorkplaceType targetType)
-        {
-            MetropolisBuildingBase[] allBuildings = FindObjectsOfType<MetropolisBuildingBase>();
-
-            // 优先查找有空位的最近建筑
-            MetropolisBuildingBase nearestAvailable = allBuildings
-                .Where(b => b.workplaceType == targetType && b.CanAcceptWorker())
+            return FindObjectsOfType<MetropolisBuildingBase>()
+                .Where(b => b.workplaceType == targetType && b.CanAcceptWorker() && b.hasWork)
                 .OrderBy(b => Vector3.Distance(transform.position, b.transform.position))
                 .FirstOrDefault();
-
-            m_CurrentWorkBuilding = nearestAvailable;
-            
-            if (nearestAvailable != null)
-                return nearestAvailable.transform.position;
-
-            // 其次返回最近同类型建筑（无论是否有空位）
-            MetropolisBuildingBase nearestAny = allBuildings
-                .Where(b => b.workplaceType == targetType)
-                .OrderBy(b => Vector3.Distance(transform.position, b.transform.position))
-                .FirstOrDefault();
-            
-            m_CurrentWorkBuilding = nearestAny;
-
-            return nearestAny?.transform.position ?? Vector3.zero;
         }
 
         #endregion
 
         #endregion
+        
+        #region Override
+
+        public override void OnSpawn(object data)
+        {
+            
+        }
+
+        public override void Reset()
+        {
+            
+        }
+
+        #endregion
+
 
         [SerializeField] private InputReader m_InputReader;
         [SerializeField, LabelText("基本属性")] protected MetropolisHeroData basicInfo;
         [SerializeField, LabelText("移动速度")] protected float moveSpeed = 5f;
         [Header("指令设置")] [SerializeField] private GameObject commandUIPrefab; // 指令UI预制体
         [SerializeField] private float uiOffsetY = 1.5f; // UI显示偏移量
+        [Header("工作设置")]
+        [SerializeField] 
+        private List<WorkplacePriority> workplacePriorities = new List<WorkplacePriority>
+        {
+            new WorkplacePriority{ type = WorkplaceType.Construction, priority = 0},
+            new WorkplacePriority{ type = WorkplaceType.Quarry, priority = 1 },
+            new WorkplacePriority{ type = WorkplaceType.Farm, priority = 2 },
+            new WorkplacePriority{ type = WorkplaceType.LoggingCamp, priority = 3 }
+        };
         protected Animator m_Animator;
         protected MetropolisHeroMotor m_Motor;
         protected MetropolisHeroBehaviorTreeHelper m_BTHelper;
+    }
+    
+    [Serializable]
+    public class WorkplacePriority
+    {
+        public WorkplaceType type;
+        public int priority; // 数值越小优先级越高
     }
 }

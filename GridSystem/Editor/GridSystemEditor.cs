@@ -68,6 +68,7 @@ namespace Dungeon.GridSystem
                 return null;
             }
 
+            visualGrid.UpdateVisualGrid();
             Tilemap bg = GetTilemap(visualGrid, VisualGrid.VisualLayer.BackGround);
             Tilemap bld = GetTilemap(visualGrid, VisualGrid.VisualLayer.Buildings);
             Tilemap deco = GetTilemap(visualGrid, VisualGrid.VisualLayer.Decorate);
@@ -75,6 +76,7 @@ namespace Dungeon.GridSystem
             if (bg == null || bld == null || deco == null)
             {
                 GameFrameworkLog.Error("[GridSystemEditor] 找不到 Tilemap!\n");
+                return null;
             }
 
             BoundsInt bounds = IntersectBounds(bg.cellBounds, bld.cellBounds, deco.cellBounds);

@@ -8,7 +8,10 @@ namespace Dungeon
 {
     public enum TrapType
     {
-        Spike
+        Spike,
+        Bomb,
+        SpiderNet,
+        WindMagic,
     }
 
     [System.Serializable]
@@ -21,7 +24,10 @@ namespace Dungeon
     
     public enum MonsterType
     {
-        Slime
+        Slime,
+        Skull,
+        Goblin,
+        Gargoyle,
     }
     
     [System.Serializable]

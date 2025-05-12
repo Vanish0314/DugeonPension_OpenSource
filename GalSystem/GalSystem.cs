@@ -9,6 +9,7 @@ using Dungeon.Overload;
 using GameFramework;
 using GameFramework.Event;
 using NodeCanvas.DialogueTrees;
+using NodeCanvas.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -158,6 +159,8 @@ namespace Dungeon.Gal
             //         GameFrameworkLog.Error($"[GalSystem] 未找到名字为 {param.name} 的 DialogueActor");
             //     }
             // }
+
+            m_DialogueTreeController.updateMode = Graph.UpdateMode.FixedUpdate;
 
             m_DialogueTreeController.StartDialogue(dialogueTree, GetDungeonGalActor(heroName), null);
         }

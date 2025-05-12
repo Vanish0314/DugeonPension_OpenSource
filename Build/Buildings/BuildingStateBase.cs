@@ -29,6 +29,7 @@ namespace Dungeon
             MetropolisBuildingBase building = fsm.Owner;
             building.GetComponent<Collider2D>().enabled = true;
             building.GetComponent<SpriteRenderer>().sprite = building.constructionSprite;
+            building.hasWork = true;
             
             // 订阅
             GameEntry.Event.Subscribe(OnConstructionCompletedEvent.EventId, OnConstructionCompleted);
@@ -67,6 +68,7 @@ namespace Dungeon
             MetropolisBuildingBase building = fsm.Owner;
 
             building.StopCurrentCoroutine();
+            building.hasWork = false;
             
             // 取消订阅
             GameEntry.Event.Unsubscribe(OnConstructionCompletedEvent.EventId, OnConstructionCompleted);

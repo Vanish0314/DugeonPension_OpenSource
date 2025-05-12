@@ -42,6 +42,11 @@ namespace Dungeon
             if (curse != null)
             {
                 m_SelectedCurse = curseType;
+                if (m_SelectedCurse == CurseType.Redeploy)
+                {
+                    DungeonGameEntry.DungeonGameEntry.OverloadPower.SpellCurse(null, m_SelectedCurse);
+                    return;
+                }
                 StartCurseProcess();
             }
             else
@@ -63,8 +68,6 @@ namespace Dungeon
         
         private void RegisterInputEvents()
         {
-            inputReader.SetPlaceActions();
-
             inputReader.OnPlacePositionEvent += OnMouseMoved;
             inputReader.OnTryPlaceEvent += TryCurse;
             inputReader.OnCancelPlaceEvent += CancelCurse;
@@ -82,6 +85,7 @@ namespace Dungeon
         private void TryCurse()
         {
             m_SelectedHero = GetHeroAtPosition(m_CurrentMouseWorldPos);
+
             ExecuteCurse();
         }
 
@@ -112,6 +116,7 @@ namespace Dungeon
             
             // 重置选择
             CancelCurse();
+            GameEntry.UI.GetUIForm(EnumUIForm.CurseForm).Close();
         }
         
         private void OnMouseMoved(Vector2 mouseScreenPos)

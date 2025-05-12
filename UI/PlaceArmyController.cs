@@ -39,12 +39,12 @@ namespace Dungeon
             // 测试用数据
             foreach (var btn in trapButtons)
             {
-                PlaceArmyModel.Instance.SetTrapCount(btn.type, (int)btn.type + 1);
+                PlaceArmyModel.Instance.SetTrapCount(btn.type, 99);
             }
 
             foreach (var btn in monsterTypeButtons)
             {
-                PlaceArmyModel.Instance.SetMonsterCount(btn.type, (int)btn.type + 3);
+                PlaceArmyModel.Instance.SetMonsterCount(btn.type, 99);
             }
             
             InitializeButtons();

@@ -13,6 +13,10 @@ namespace Dungeon.DungeonGameEntry
             TimeManager.Instance.Subscribe();
             
             HPManager.Instance.Initialize();
+            
+            CursesManager.Instance.Initialize();
+            
+            DungeonHeroUIManager.Instance.Initialize();
         }
     }
 }

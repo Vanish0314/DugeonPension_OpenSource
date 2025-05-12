@@ -92,16 +92,24 @@ namespace Dungeon
         // 生产周期协程
         private IEnumerator ProductionProcess()
         {
-            while (workingHeroes.Count > 0)
+            while (workingHeroes.Count > 0 && currentStock < maxStock)
             {
                 yield return new WaitForSeconds(productionInterval);
                 ProduceResource();
             }
-            StopCurrentCoroutine();
+            EndProductionProcess();
         }
 
+        private void EndProductionProcess()
+        {
+            FireAllWorkers();
+            hasWork = false;
+            m_CurrentCoroutine = null;
+            StopCurrentCoroutine();
+        }
+        
         // 生产资源
-        public virtual void ProduceResource()
+        protected virtual void ProduceResource()
         {
             if (currentStock >= maxStock) 
             {
@@ -118,6 +126,7 @@ namespace Dungeon
             // 为资源管理器增加对应的资源
             ResourceModel.Instance.GatherResource(procedureResourceType, currentStock);
             currentStock = 0;
+            hasWork = true;
         }
         
         #endregion
@@ -126,7 +135,9 @@ namespace Dungeon
 
         public override void StartCompletedBehavior()
         {
+            base.StartCompletedBehavior();
             GameFrameworkLog.Info("进入完成状态");
+            hasWork = true;
         }
 
         public override void UpdateCompletedBehavior()

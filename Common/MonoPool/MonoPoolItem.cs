@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GameFramework;
 using PlasticGui.WorkspaceWindow;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -30,6 +31,13 @@ namespace Dungeon.Common.MonoPool
 		}
 		public void ReturnToPool()
 		{
+			if(m_Owner == null)
+			{
+				GameFrameworkLog.Warning($"[MonoPoolItem] 物体{name}不是从对象池中取出,无法回收,直接销毁");
+				Destroy(this.gameObject);
+				return;
+			}
+
 			isInPool = true;
 			mData = null;
 			OnReturnToPool();

@@ -64,7 +64,7 @@ namespace Dungeon
 
         private void OnHeroStartExploreDungeonEventHandler(object sender, GameEventArgs e)
         {
-            ReleaseHeroTeam(Vector3.zero);
+            ReleaseHeroTeam(HeroTeamSpawnPositionInWorldCoord);
         }
 
         private void Update() 
@@ -127,6 +127,9 @@ namespace Dungeon
 
             return true;
         }
+
+        [Header("勇者小队生成设置")]
+        [SerializeField,LabelText("勇者小队出生位置(世界坐标)")] private Vector2 HeroTeamSpawnPositionInWorldCoord;
 
         [SerializeField] private List<GameObject> heroPrefabs = new ();
         [ReadOnly] public List<HeroEntityBase> currentBehavouringHeroTeam = new ();//地牢中还能动的勇者

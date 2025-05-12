@@ -96,7 +96,13 @@ namespace Dungeon
         // 成熟时自动调用
         public void ShowGatherUI()
         {
+            CloseCurrentUI();
             gatherButtonPrefab.gameObject.SetActive(true);
+        }
+
+        public void CloseGatherUI()
+        {
+            gatherButtonPrefab.gameObject.SetActive(false);
         }
 
         // 缺水时自动调用的

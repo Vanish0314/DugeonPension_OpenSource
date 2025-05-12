@@ -134,9 +134,9 @@ namespace Dungeon.GridSystem
                     break;
             }
         }
-        private Tilemap m_BackGroundTileMap;
-        private Tilemap m_BuildingsTileMap;
-        private Tilemap m_DecorateTileMap;
+        [SerializeField] private Tilemap m_BackGroundTileMap;
+        [SerializeField] private Tilemap m_BuildingsTileMap;
+        [SerializeField] private Tilemap m_DecorateTileMap;
 
         public enum VisualLayer
         {
@@ -152,24 +152,29 @@ namespace Dungeon.GridSystem
             { TileFunctionType.Door, VisualLayer.Buildings },
         };
 
-// #if UNITY_EDITOR
-//         private void OnValidate()
-//         {
-//             if (!Application.isPlaying)
-//             {
-//                 var bg = transform.Find("BackGround")?.gameObject ?? new GameObject("BackGround");
-//                 var bt = transform.Find("Buildings")?.gameObject ?? new GameObject("Buildings");
-//                 var dc = transform.Find("Debug")?.gameObject ?? new GameObject("Debug");
+#if UNITY_EDITOR
+        public void UpdateVisualGrid()
+        {
+            if (!Application.isPlaying)
+            {
+                var bg = transform.Find("BackGround")?.gameObject;
+                var bt = transform.Find("Buildings")?.gameObject;
+                var dc = transform.Find("Debug")?.gameObject;
 
-//                 bg.transform.SetParent(transform);
-//                 bt.transform.SetParent(transform);
-//                 dc.transform.SetParent(transform);
+                if (bg == null || bt == null || dc == null)
+                {
+                    GameFrameworkLog.Error("[VisualGrid] 保存个头,这哪有地图给你保存啊.\n确保GridSystem中有三个子物体:BackGround,Buildings,Debug. 要有Tilemap组件.");
+                }
 
-//                 m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
-//                 m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
-//                 m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
-//             }
-//         }
-// #endif
+                bg.transform.SetParent(transform);
+                bt.transform.SetParent(transform);
+                dc.transform.SetParent(transform);
+
+                m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
+                m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
+                m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
+            }
+        }
+#endif
     }
 }

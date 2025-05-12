@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DG.Tweening;
 using Dungeon.AgentLowLevelSystem;
@@ -9,6 +10,7 @@ using Dungeon.DungeonGameEntry;
 using Dungeon.SkillSystem;
 using Dungeon.Vision2D;
 using GameFramework;
+using NodeCanvas.BehaviourTrees;
 using Sirenix.OdinInspector;
 using UnityEditor.EditorTools;
 using UnityEngine;
@@ -26,7 +28,7 @@ namespace Dungeon.DungeonEntity.Monster
             get => basicInfo.hp; set
             {
                 if (value <= 0)
-                    OnDead();
+                    StartCoroutine(OnDead());
                 else
                     basicInfo.hp = value > basicInfo.maxHp ? basicInfo.maxHp : value;
             }
@@ -92,6 +94,9 @@ namespace Dungeon.DungeonEntity.Monster
 
         private void Update()
         {
+            if(mIsDead)
+                return;
+            
             UpdateBehaviourTreeHelper();
             UpdateAnimator();
 
@@ -136,7 +141,7 @@ namespace Dungeon.DungeonEntity.Monster
         {
             m_BtHelper.targetsInVision.Clear();
 
-            var results = new Collider2D[6];
+            var results = new Collider2D[64];
             Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, results, m_HeroLayerMask);
 
             foreach (var result in results)
@@ -152,6 +157,8 @@ namespace Dungeon.DungeonEntity.Monster
 
                 m_BtHelper.targetsInVision.Add(result.transform);
             }
+
+            m_BtHelper.CurrentTarget = m_BtHelper.targetsInVision.FirstOrDefault();
         }
         private void UpdateValues()
         {
@@ -210,9 +217,16 @@ namespace Dungeon.DungeonEntity.Monster
             DungeonGameEntry.DungeonGameEntry.DungeonEntityManager.UnregisterDungeonEntity(this);
         }
 #endif
-        protected virtual void OnDead()
+        protected virtual IEnumerator OnDead()
         {
-            Destroy(gameObject);
+            m_Animator.SetBool("isDead", true);
+            m_Motor.Stop();
+
+            var bto = GetComponent<BehaviourTreeOwner>();
+            if (bto!= null) bto.enabled = false;
+
+            yield return new WaitForSeconds(1f);
+            ReturnToPool();
         }
 
         public void Stun(float duration)
@@ -252,5 +266,6 @@ namespace Dungeon.DungeonEntity.Monster
         protected DungeonMonsterBehaviourTreeHelper m_BtHelper;
         private LayerMask m_HeroLayerMask;
         private float skillColdingDownTime;
+        private bool mIsDead;
     }
 }

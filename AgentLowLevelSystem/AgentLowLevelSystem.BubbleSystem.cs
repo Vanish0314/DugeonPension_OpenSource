@@ -56,8 +56,8 @@ namespace Dungeon.AgentLowLevelSystem
         //TODO(xy)
         public void BumpSeeATrapBubble(DungeonTrapBase trap)
         {
-            string trapString = "陷阱：" + trap;
-            BubbleManager.Instance.ShowBubble(transform, trapString, BubbleID.DialogueBubble);
+            string msg = $"察觉 {trap.trapName}";
+            BubbleManager.Instance.ShowBubble(transform, msg, BubbleID.DialogueBubble);
         }
 
         //TODO(xy)

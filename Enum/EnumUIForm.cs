@@ -62,8 +62,13 @@ namespace Dungeon
         FightSettlementForm = 1010,
         
         /// <summary>
+        /// 返回经营按钮
+        /// </summary>
+        ReturnBusinessButton = 1011,
+        
+        /// <summary>
         /// 诅咒界面
         /// </summary>
-        CurseForm = 1011,
+        CurseForm = 1012,
     }
 }

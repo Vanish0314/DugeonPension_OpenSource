@@ -29,7 +29,7 @@ namespace Dungeon
             // 测试用数据
             foreach (var btn in buildingButtons)
             {
-                BuildModel.Instance.SetCount(btn.type, (int)btn.type + 1);
+                BuildModel.Instance.SetCount(btn.type, 9);
             }
 
             InitializeButtons();

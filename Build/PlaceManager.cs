@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Dungeon.Common.MonoPool;
+using Dungeon.DungeonEntity.Trap;
 using Dungeon.GridSystem;
 using GameFramework;
 using GameFramework.Event;
@@ -17,15 +18,22 @@ namespace Dungeon
         [SerializeField] private PreviewHelper previewHelper;
 
         // 字典存储对应 放置物 信息
-        private Dictionary<BuildingType, BuildingData> m_BuildingDataDict = new Dictionary<BuildingType, BuildingData>();
+        private Dictionary<BuildingType, BuildingData>
+            m_BuildingDataDict = new Dictionary<BuildingType, BuildingData>();
+
         private Dictionary<TrapType, TrapData> m_TrapDataDict = new Dictionary<TrapType, TrapData>();
         private Dictionary<MonsterType, MonsterData> m_MonsterDataDict = new Dictionary<MonsterType, MonsterData>();
 
 
         // 字典对应 对象池 信息
-        private Dictionary<BuildingData, MonoPoolComponent> m_BuildingMonoPoolComponentDict = new Dictionary<BuildingData, MonoPoolComponent>();
-        private Dictionary<TrapData, MonoPoolComponent> m_TrapMonoPoolComponentDict = new Dictionary<TrapData, MonoPoolComponent>();
-        private Dictionary<MonsterData, MonoPoolComponent> m_MonsterMonoPoolComponentDict = new Dictionary<MonsterData, MonoPoolComponent>();
+        private Dictionary<BuildingData, MonoPoolComponent> m_BuildingMonoPoolComponentDict =
+            new Dictionary<BuildingData, MonoPoolComponent>();
+
+        private Dictionary<TrapData, MonoPoolComponent> m_TrapMonoPoolComponentDict =
+            new Dictionary<TrapData, MonoPoolComponent>();
+
+        private Dictionary<MonsterData, MonoPoolComponent> m_MonsterMonoPoolComponentDict =
+            new Dictionary<MonsterData, MonoPoolComponent>();
 
         // 存储当前拿到的放置物信息
         private MonoPoolComponent m_SelectedBuildingMonoPoolComponent;
@@ -43,6 +51,7 @@ namespace Dungeon
         private int m_Flag = 0;
 
         public static PlaceManager Instance { get; private set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -75,7 +84,9 @@ namespace Dungeon
             inputReader = Resources.Load<InputReader>("InputReader");
             inputReader.Subscribe();
         }
+
         bool m_hasSubscribed = false;
+
         private void Subscribe()
         {
             if (!m_hasSubscribed)
@@ -87,7 +98,7 @@ namespace Dungeon
                 DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
                 DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
                 DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
-                
+
                 m_hasSubscribed = true;
             }
         }
@@ -98,10 +109,13 @@ namespace Dungeon
             {
                 DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
                 DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
-                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
-                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId,
+                    FinalizePlacement);
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId,
+                    FinalizePlacement);
             }
         }
+
         private void OnDestroy()
         {
 
@@ -142,6 +156,7 @@ namespace Dungeon
         }
 
         #region Data Loading
+
         private void LoadPlacementData()
         {
             LoadBuildings();
@@ -149,66 +164,66 @@ namespace Dungeon
             LoadMonsters();
         }
 
+        // 新增类型映射字典
+        private Dictionary<BuildingType, MonoPoolComponent> m_BuildingTypeToPool =
+            new Dictionary<BuildingType, MonoPoolComponent>();
+
+        private Dictionary<TrapType, MonoPoolComponent> m_TrapTypeToPool =
+            new Dictionary<TrapType, MonoPoolComponent>();
+
+        private Dictionary<MonsterType, MonoPoolComponent> m_MonsterTypeToPool =
+            new Dictionary<MonsterType, MonoPoolComponent>();
+
         private void LoadBuildings()
         {
             m_BuildingDataDict.Clear();
             m_BuildingMonoPoolComponentDict.Clear();
+
+            // 自动建立类型映射
+            foreach (var config in buildingPools)
+            {
+                m_BuildingTypeToPool[config.buildingType] = GetPoolComponent(config.poolName);
+            }
+
             var buildingDatas = Resources.LoadAll<BuildingData>("BuildingData");
             foreach (var data in buildingDatas)
             {
                 m_BuildingDataDict.TryAdd(data.buildingType, data);
 
-                switch (data.buildingType)
+                // 自动匹配对象池
+                if (m_BuildingTypeToPool.TryGetValue(data.buildingType, out var pool))
                 {
-                    case BuildingType.Castle:
-                        m_BuildingMonoPoolComponentDict[data] = m_CastlePoolComponent;
-                        break;
-                    case BuildingType.MonsterLair:
-                        m_BuildingMonoPoolComponentDict[data] = m_MonsterLairPoolComponent;
-                        break;
-                    case BuildingType.ControlCenter:
-                        m_BuildingMonoPoolComponentDict[data] = m_ControlCenterPoolComponent;
-                        break;
-                    case BuildingType.Quarry:
-                        m_BuildingMonoPoolComponentDict[data] = m_QuarryPoolComponent;
-                        break;
-                    case BuildingType.LoggingCamp:
-                        m_BuildingMonoPoolComponentDict[data] = m_LoggingCampPoolComponent;
-                        break;
-                    case BuildingType.FarmLand:
-                        m_BuildingMonoPoolComponentDict[data] = m_FarmlandPoolComponent;
-                        break;
-                    case BuildingType.Canteen:
-                        m_BuildingMonoPoolComponentDict[data] = m_CanteenPoolComponent;
-                        break;
-                    case BuildingType.Dormitory:
-                        m_BuildingMonoPoolComponentDict[data] = m_DormitoryPoolComponent;
-                        break;
-                    default:
-                        Debug.LogError($"No pool mapped for {data.buildingType}");
-                        break;
+                    m_BuildingMonoPoolComponentDict[data] = pool;
+                }
+                else
+                {
+                    Debug.LogError($"找不到 {data.buildingType} 对应的对象池");
                 }
             }
-            Debug.Log(m_BuildingMonoPoolComponentDict.Count);
         }
 
         private void LoadTraps()
         {
             m_TrapDataDict.Clear();
             m_TrapMonoPoolComponentDict.Clear();
+
+            foreach (var config in trapPools)
+            {
+                m_TrapTypeToPool[config.trapType] = GetPoolComponent(config.poolName);
+            }
+
             var trapDatas = Resources.LoadAll<TrapData>("TrapData");
             foreach (var data in trapDatas)
             {
                 m_TrapDataDict.TryAdd(data.trapType, data);
 
-                switch (data.trapType)
+                if (m_TrapTypeToPool.TryGetValue(data.trapType, out var pool))
                 {
-                    case TrapType.Spike:
-                        m_TrapMonoPoolComponentDict[data] = m_SpikeTrapPoolComponent;
-                        break;
-                    default:
-                        Debug.LogError($"No pool mapped for {data.trapType}");
-                        break;
+                    m_TrapMonoPoolComponentDict[data] = pool;
+                }
+                else
+                {
+                    Debug.LogError($"找不到 {data.trapType} 对应的对象池");
                 }
             }
         }
@@ -217,25 +232,38 @@ namespace Dungeon
         {
             m_MonsterDataDict.Clear();
             m_MonsterMonoPoolComponentDict.Clear();
+
+            foreach (var config in monsterPools)
+            {
+                m_MonsterTypeToPool[config.monsterType] = GetPoolComponent(config.poolName);
+            }
+
             var monsterDatas = Resources.LoadAll<MonsterData>("MonsterData");
             foreach (var data in monsterDatas)
             {
                 m_MonsterDataDict.TryAdd(data.monsterType, data);
 
-                switch (data.monsterType)
+                if (m_MonsterTypeToPool.TryGetValue(data.monsterType, out var pool))
                 {
-                    case MonsterType.Slime:
-                        m_MonsterMonoPoolComponentDict[data] = m_SlimeMonsterPoolComponent;
-                        break;
-                    default:
-                        Debug.LogError($"No pool mapped for {data.monsterType}");
-                        break;
+                    m_MonsterMonoPoolComponentDict[data] = pool;
+                }
+                else
+                {
+                    Debug.LogError($"找不到 {data.monsterType} 对应的对象池");
                 }
             }
         }
+
+        private MonoPoolComponent GetPoolComponent(string configName)
+        {
+            var poolName = configName + "Pool"; // 与 InitPoolCategory 中的命名一致
+            return transform.Find(poolName)?.GetComponent<MonoPoolComponent>();
+        }
+
         #endregion
 
         #region Public API
+
         // 通过ID获取BuildingData
         public void SelectBuildingData(BuildingType type)
         {
@@ -244,6 +272,7 @@ namespace Dungeon
                 StartPlacement(data);
                 return;
             }
+
             GameFrameworkLog.Error($"BuildingData not found: {type}");
         }
 
@@ -254,6 +283,7 @@ namespace Dungeon
                 StartPlacement(data);
                 return;
             }
+
             GameFrameworkLog.Error($"TrapData not found: {type}");
         }
 
@@ -264,11 +294,14 @@ namespace Dungeon
                 StartPlacement(data);
                 return;
             }
+
             GameFrameworkLog.Error($"MonsterData not found: {monsterType}");
         }
+
         #endregion
 
         #region Placement Logic
+
         private void StartPlacement(IPlaceableData data)
         {
             CancelPlacement();
@@ -282,7 +315,8 @@ namespace Dungeon
                     {
                         m_SelectedBuildingMonoPoolComponent = buildingMonoPoolComponent;
                     }
-                    previewHelper.Initialize(GetPreviewSprite(m_SelectedBuildingMonoPoolComponent));// 初始化预览
+
+                    previewHelper.Initialize(GetPreviewSprite(m_SelectedBuildingMonoPoolComponent)); // 初始化预览
                     break;
                 case TrapData trap:
                     m_SelectedTrapData = trap;
@@ -291,6 +325,7 @@ namespace Dungeon
                     {
                         m_SelectedTrapMonoPoolComponent = trapMonoPoolComponent;
                     }
+
                     previewHelper.Initialize(GetPreviewSprite(m_SelectedTrapMonoPoolComponent));
                     break;
                 case MonsterData monster:
@@ -300,6 +335,7 @@ namespace Dungeon
                     {
                         m_SelectedMonsterMonoPoolComponent = monsterMonoPoolComponent;
                     }
+
                     previewHelper.Initialize(GetPreviewSprite(m_SelectedMonsterMonoPoolComponent));
                     break;
             }
@@ -362,9 +398,11 @@ namespace Dungeon
                 TryPlaceMonster();
             }
         }
+
         #endregion
 
         #region Building Placement
+
         private void TryPlaceBuilding()
         {
             if (m_SelectedBuildingData == null) return;
@@ -386,6 +424,7 @@ namespace Dungeon
         {
             return ResourceModel.Instance.HasEnoughResources(m_SelectedBuildingData.cost);
         }
+
         #endregion
 
         #region Trap Placement
@@ -393,13 +432,13 @@ namespace Dungeon
         private void TryPlaceTrap()
         {
             if (m_SelectedTrapData == null) return;
-            
+
             if (!CanAffordTrap())
                 return;
 
-            if (m_SpikeTrapPoolComponent != null)
+            if (m_SelectedTrapMonoPoolComponent != null)
             {
-                m_SelectedPoolItem = m_SpikeTrapPoolComponent.GetItem(null);
+                m_SelectedPoolItem = m_SelectedTrapMonoPoolComponent.GetItem(null);
             }
 
             DungeonGameEntry.DungeonGameEntry.Event.Fire(this,
@@ -414,10 +453,11 @@ namespace Dungeon
         #endregion
 
         #region Monster Placement
+
         private void TryPlaceMonster()
         {
             if (m_SelectedMonsterData == null) return;
-            
+
             if (!CanAffordMonster())
                 return;
 
@@ -434,6 +474,7 @@ namespace Dungeon
         {
             return ResourceModel.Instance.HasEnoughResources(m_SelectedMonsterData.cost);
         }
+
         #endregion
 
         #region Common Logic
@@ -441,8 +482,8 @@ namespace Dungeon
         private Vector2Int GetCurrentSize()
         {
             return (m_SelectedBuildingData?.size ??
-                   m_SelectedTrapData?.size ??
-                   m_SelectedMonsterData?.size) ?? Vector2Int.one;
+                    m_SelectedTrapData?.size ??
+                    m_SelectedMonsterData?.size) ?? Vector2Int.one;
         }
 
         private void OnMouseMoved(Vector2 mouseScreenPos)
@@ -456,6 +497,7 @@ namespace Dungeon
                     m_CurrentMouseWorldPos = activeCamera.ScreenToWorldPoint(mouseScreenPos);
                 }
             }
+
             m_CurrentMouseWorldPos.z = 0; // 确保z坐标为0
         }
 
@@ -463,8 +505,15 @@ namespace Dungeon
         {
             if (m_Pools.TryGetValue(selectedPoolComponent, out MonoPoolItem selectedPoolItem))
             {
+                if (selectedPoolItem is DungeonTrapBase)
+                {
+                    var trap = selectedPoolItem as DungeonTrapBase;
+                    return trap.GetSprite();
+                }
+
                 return selectedPoolItem.GetComponent<SpriteRenderer>().sprite;
             }
+
             return null;
         }
 

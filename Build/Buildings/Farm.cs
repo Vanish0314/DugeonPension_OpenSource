@@ -69,7 +69,6 @@ namespace Dungeon
 
         private void OnBuildingClicked(GameObject clickedBuilding)
         {
-            Debug.Log(clickedBuilding.name);
             if (CurrentState == BuildingState.Completed)
             {
                 if (clickedBuilding != gameObject)
@@ -158,6 +157,7 @@ namespace Dungeon
                     if (waterCountdown <= 0)
                     {
                         isWaterNeeded = true;
+                        hasWork = true;
                         waterCountdown = currentCrop.waterInterval;
                         farmUI.ShowWarningUI();
                     }
@@ -201,6 +201,8 @@ namespace Dungeon
         {
             waterCountdown = currentCrop.waterInterval;
             isWatering = false;
+            hasWork = false;
+            FireAllWorkers();
             farmUI.CloseCurrentUI();
         }
         
@@ -218,7 +220,10 @@ namespace Dungeon
 
             // 重置状态
             currentCrop = null;
+            growthProgress = 0f;
+            isWaterNeeded = false;
             isMature = false;
+            farmUI.CloseGatherUI();
             HideUI();
             StopAllCoroutines();
         }
@@ -228,6 +233,7 @@ namespace Dungeon
         #region 建筑状态
         public override void StartCompletedBehavior()
         {
+            base.StartCompletedBehavior();
             // 建筑完成后初始化农田
             currentCrop = null;
         }

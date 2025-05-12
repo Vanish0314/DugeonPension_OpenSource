@@ -21,6 +21,7 @@ namespace Dungeon
     public class MetropolisHeroBehaviorTreeHelper : MonoBehaviour
     {
         public MetropolisHeroAIState state;
+        public MetropolisHeroAIState targetState;
         public MetropolisHeroAIState previousState;
         public MetropolisHeroAIState commandType;
         
@@ -30,11 +31,10 @@ namespace Dungeon
         public bool isCommandale = false;
         public bool hasCommand = false;
         public bool hasFoodAvailable = false;
-        public bool hasDormitoryAvailable = false;
         public bool hasWorkAvailable = false;
         public bool workComplete = false;
         public Vector3 nearestFood;
-        public Vector3 nearestDormitory;
+        public Vector3 dormitoryPosition;
         public Vector3 workPosition;
         public bool canTalk = false;
         public float talkTime;
@@ -92,13 +92,15 @@ namespace Dungeon
 
         public void MoveToNearestDormitory()
         {
-            nearestDormitory = m_HeroBase.FindNearestDormitoryPosition();
-            m_Motor.MoveTo(nearestDormitory);
+            var sleepPlace = m_HeroBase.TryFindNearestDormitory();
+            dormitoryPosition = sleepPlace.Item1;
+            var dormitoryCollider = sleepPlace.Item2;
+            m_Motor.MoveTo(dormitoryPosition, dormitoryCollider);
         }
         
         public bool ReachTargetDormitory()
         {
-            return m_Motor.ReachedTarget(nearestDormitory);
+            return m_Motor.ReachedTarget(dormitoryPosition);
         }
         
         public void Sleep()
@@ -113,26 +115,20 @@ namespace Dungeon
 
         public void AssignWorkPlace()
         {
-            m_HeroBase.FindNearestWorkplacePosition();
+            m_HeroBase.FindHighestPriorityWorkplace();
         }
         
         public void MoveToWorkPosition()
         {
-            var workPlace = m_HeroBase.FindNearestWorkplacePosition();
+            var workPlace = m_HeroBase.FindHighestPriorityWorkplace();
             workPosition = workPlace.Item1;
             var workPlaceCollider = workPlace.Item2;
             m_Motor.MoveTo(workPosition, workPlaceCollider);
         }
-
-        public void MoveToCommandWorkPosition()
-        {
-            workPosition = m_HeroBase.FindWorkplacePositionOfType();
-            m_Motor.MoveTo(workPosition);
-        }
         
         public bool ReachTargetWorkPosition()
         {
-            return m_Motor.ReachedTarget(workPosition);
+            return m_Motor.ReachedTarget(m_HeroBase.FindHighestPriorityWorkplace().Item1);
         }
     
         public void Work()
