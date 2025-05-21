@@ -74,7 +74,7 @@ namespace Dungeon
             cookUI.SetActive(false);
         }
         
-        public void UpdateSlot(int slotIndex, FoodData? data)
+        public void UpdateSlot(int slotIndex, FoodData data)
         {
             if (slotIndex < 0 || slotIndex >= cookingSlotsParent.childCount)
             {

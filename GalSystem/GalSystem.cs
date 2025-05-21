@@ -100,7 +100,7 @@ namespace Dungeon.Gal
 
                 var dto = GetDto(args.HeroEntity.HeroName, DialogueType.Capture);
 
-                StartDialogue(dto, args.HeroEntity.HeroName);
+                StartDialogue(dto, args.HeroEntity);
             }
         }
 
@@ -113,7 +113,7 @@ namespace Dungeon.Gal
 
                 var dto = GetDto(args.HeroEntity.HeroName, DialogueType.Convincing);
 
-                StartDialogue(dto, args.HeroEntity.HeroName);
+                StartDialogue(dto, args.HeroEntity);
             }
         }
 
@@ -130,7 +130,7 @@ namespace Dungeon.Gal
                     GameFrameworkLog.Error($"[GalSystem][对话树] 未找到名字为 {arg.MainHero.HeroName} 的 DialogueTree");
                 }
 
-                StartDialogue(dto, arg.MainHero.HeroName);
+                StartDialogue(dto, arg.MainHero);
             }
         }
 
@@ -139,30 +139,12 @@ namespace Dungeon.Gal
             m_GalGUI.SetActive(false);
             m_DialogueTreeController.gameObject.SetActive(false);
         }
-        private void StartDialogue(DialogueTree dialogueTree, string heroName)
+        private void StartDialogue(DialogueTree dialogueTree, HeroEntityBase hero)
         {
-
-            // Done in dto manager
-            // foreach (var param in dialogueTree.actorParameters)
-            // {
-            //     if (param == null || string.IsNullOrEmpty(param.name))
-            //         continue;
-
-            //     var actor = GetDungeonGalActor(param.name);
-
-            //     if (actor != null)
-            //     {
-            //         param.actor = actor;
-            //     }
-            //     else
-            //     {
-            //         GameFrameworkLog.Error($"[GalSystem] 未找到名字为 {param.name} 的 DialogueActor");
-            //     }
-            // }
+            currentTalkingHero = hero;
 
             m_DialogueTreeController.updateMode = Graph.UpdateMode.FixedUpdate;
-
-            m_DialogueTreeController.StartDialogue(dialogueTree, GetDungeonGalActor(heroName), null);
+            m_DialogueTreeController.StartDialogue(dialogueTree, GetDungeonGalActor(hero.HeroName), null);
         }
         private DialogueTree GetDto(string name, DialogueType type)
         {

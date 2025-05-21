@@ -25,6 +25,8 @@ namespace Dungeon
         [SerializeField] private Button quarryButton;
         [SerializeField] private Button loggingCampButton;
         [SerializeField] private Button farmButton;
+        [SerializeField] private Button sleepButton;
+        [SerializeField] private Button eatButton;
 
         private MetropolisHeroBase targetHero;
         private float yOffset;
@@ -43,6 +45,8 @@ namespace Dungeon
             quarryButton.onClick.AddListener(() => SendCommand("quarry"));
             loggingCampButton.onClick.AddListener(() => SendCommand("loggingcamp"));
             farmButton.onClick.AddListener(() => SendCommand("farm"));
+            sleepButton.onClick.AddListener(() => SendCommand("sleep"));
+            eatButton.onClick.AddListener(() => SendCommand("eat"));
 
             // 默认显示主面板
             ShowMainPanel();

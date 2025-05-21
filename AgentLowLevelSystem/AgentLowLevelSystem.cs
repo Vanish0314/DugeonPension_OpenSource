@@ -19,6 +19,8 @@ namespace Dungeon.AgentLowLevelSystem
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
         public string HeroName { get => m_Properties.heroName; }
+        public CharacterTrait CharacterTrait { get => m_Properties.characterTrait; }
+        public DndSkillData DndSkillData { get => m_Properties.dndSkillData; }
 
         public BlackboardController GetBlackboard() => m_BlackboardController;
         public void OnSpawn()
@@ -65,6 +67,8 @@ namespace Dungeon.AgentLowLevelSystem
                 return;
 
             UpdateVisionSystem();
+            UpdateSkillCoolDown();
+            UpdateBuffs();
         }
 
         private void FixedUpdateSystem()

@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
 using Codice.Client.Commands;
+using Dungeon.AgentLowLevelSystem;
+using Dungeon.SkillSystem;
+using log4net.Filter;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -72,6 +75,7 @@ namespace Dungeon
         /// 魅力调整值
         /// </summary>
         public int CharismaModifyValue => (Charisma - 10) / 2;
+
     }
 
     [Serializable]
@@ -118,7 +122,7 @@ namespace Dungeon
         public ResistanceLevel posionResistance;
     }
     [Serializable]
-    public struct StatusBarSetting
+    public class StatusBarSetting
     {
         [LabelText("血条位置偏移")] public Vector3 offset;
     }

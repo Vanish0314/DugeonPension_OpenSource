@@ -86,6 +86,13 @@ namespace Dungeon.GridSystem
     [RequireComponent(typeof(PolygonCollider2D), typeof(Rigidbody2D))]
     public class DungeonRoom : MonoBehaviour
     {
+        public struct RoomCapacity
+        {
+            public int currentMagic;
+            public int currentMaterial;
+            public int maxMagic; 
+            public int maxMaterial;
+        }
         public void Init(GridSystem.Room room)
         {
             this.room = room;
@@ -220,5 +227,6 @@ namespace Dungeon.GridSystem
         }
         private GridSystem.Room room;
         private bool isDungeonExit;
+        private RoomCapacity capacity;
     }
 }

@@ -38,9 +38,14 @@ namespace Dungeon
 
                     if (string.IsNullOrEmpty(valueStr))
                     {
-                        var method = galSysType.GetMethod(functionName,
-                            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+                        var method = galSysType.GetMethod(
+                            functionName,
+                            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                            null,
+                            Type.EmptyTypes,
+                            null
                         );
+
                         if (method != null)
                             method.Invoke(galSys, null);
                         else

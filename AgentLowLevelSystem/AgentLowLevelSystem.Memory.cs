@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Codice.Client.BaseCommands;
+using Dungeon.Character.Hero;
 using Dungeon.DungeonEntity.InteractiveObject;
 using Dungeon.DungeonEntity.Monster;
 using Dungeon.DungeonEntity.Trap;
+using Dungeon.DungeonGameEntry;
 using GameFramework;
 using UnityEngine;
 using static Dungeon.GridSystem.GridSystem;
@@ -46,6 +48,32 @@ namespace Dungeon.AgentLowLevelSystem
                     result = monster;
                 }
             }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 返回最近的队友
+        /// </summary>
+        /// <returns></returns>
+        public HeroEntityBase GetNearestTeammate()
+        {
+            HeroEntityBase result = GetComponent<HeroEntityBase>();
+
+            DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentGameProgressingHeroTeam.ForEach(
+                hero =>
+                {
+                    if(hero == this)
+                    {
+                        return;
+                    }
+                    
+                    if(Vector3.Distance(transform.position, hero.transform.position) < Vector3.Distance(transform.position, result.transform.position))
+                    {
+                        result = hero;
+                    }
+                }    
+            );
 
             return result;
         }

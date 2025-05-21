@@ -8,7 +8,7 @@ using Dungeon.GOAP.Targets;
 using Dungeon.GridSystem;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensor.Target
+namespace Dungeon.GOAP
 {
     public class DungeonExitTargetSensor : LocalTargetSensorBase
     {

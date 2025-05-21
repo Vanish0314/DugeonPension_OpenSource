@@ -72,6 +72,8 @@ namespace Dungeon
         public readonly float TotalUsageTime => skillData.TotalUsageTime;
         public void FuckMe(ICombatable target)
         {
+            skillData.ResetCoolDown();
+
             var calculator = new SkillCalculator(attacker, target, this);
 
             foreach (var effect in skillData.skillEffects)

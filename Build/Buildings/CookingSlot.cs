@@ -8,7 +8,7 @@ namespace Dungeon
     public class CookingSlot : MonoBehaviour
     {
         [SerializeField] private Image iconImage;
-        [SerializeField] private GameObject highlightEffect;
+        [SerializeField] private Sprite defaultSprite;
         private int m_SlotIndex;
         private CanteenUI m_UI;
         private FoodData m_CurrentFood;
@@ -20,13 +20,24 @@ namespace Dungeon
             GetComponent<Button>().onClick.AddListener(OnSlotClicked);
         }
 
+        // 在 CookingSlot 类中增强状态控制
         public void UpdateSlot(FoodData data)
         {
             m_CurrentFood = data;
-            iconImage.sprite = data?.foodIcon;
-            iconImage.enabled = data != null;
-        }
+    
+            // 当数据为空时显示默认状态
+            if (data == null)
+            {
+                iconImage.sprite = defaultSprite;
+                iconImage.enabled = true;
+                return;
+            }
 
+            // 正常显示食物
+            iconImage.sprite = data.foodIcon;
+            iconImage.enabled = true;
+        }
+        
         private void OnSlotClicked()
         {
             if (m_UI.mSelectedFood != null)
@@ -46,11 +57,6 @@ namespace Dungeon
                     m_UI.m_Canteen.RemoveFromCookingPlan(m_SlotIndex);
                 }
             }
-        }
-
-        public void ToggleHighlight(bool state)
-        {
-            highlightEffect.SetActive(state);
         }
     }
 }

@@ -105,6 +105,21 @@ namespace Dungeon.SkillSystem
 
         //==============HIDE IN INSPECTOR=================
 
+        public void UpdateCoolDown(float deltaTime)
+        {
+            timeToColdDown -= deltaTime;
+        }
+        public void ResetCoolDown()
+        {
+            timeToColdDown = cooldownTimeInSec;
+        }
+        public bool IsCooledDown()
+        {
+            return timeToColdDown <= 0f;
+        }
+        private float timeToColdDown = 0f;
+
+
 
         public static SkillData GetFromSkillDesc(SkillDesc desc)
         {

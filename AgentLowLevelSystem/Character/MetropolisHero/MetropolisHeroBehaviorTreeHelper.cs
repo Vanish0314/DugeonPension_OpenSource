@@ -1,7 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using GameFramework;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Dungeon
 {
@@ -49,7 +52,7 @@ namespace Dungeon
             m_Motor = GetComponent<MetropolisHeroMotor>();
             state = MetropolisHeroAIState.Idle;
         }
-    
+
         // 带冷却时间的随机检查
         public bool RandomCheckWithCooldown(float randomChance, float cooldown = -1)
         {
@@ -115,7 +118,8 @@ namespace Dungeon
 
         public void AssignWorkPlace()
         {
-            m_HeroBase.FindHighestPriorityWorkplace();
+            if(!m_HeroBase.RegisterWorkPlace())
+                GameFrameworkLog.Warning("没能Register work place");
         }
         
         public void MoveToWorkPosition()

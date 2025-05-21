@@ -16,15 +16,6 @@ namespace Dungeon.SkillSystem.SkillEffect
         public abstract void Fuck(SkillCalculator calculator);
     }
 
-    public enum DndModifyChannel
-    {
-        Physical = 0,
-        Fire = 1 << 0,
-        Ice = 1 << 1,
-        Holy = 1 << 2,
-        Poison = 1 << 3,
-    }
-
     [Serializable]
     /// <summary>
     /// 伤害
@@ -36,22 +27,66 @@ namespace Dungeon.SkillSystem.SkillEffect
 
         public int Claculate(ICombatable target) => value.Claculate();
     }
-    /// <summary>
-    /// 调整值
-    /// </summary>
-    public struct DndModifier
-    {
-        public NDX value;
-        public DndModifyChannel channel;
-    }
+    // /// <summary>
+    // /// Buff
+    // /// </summary>
+    // public class Buff
+    // {
+    //     public class BuffLifeSpan
+    //     {
+    //         // 结束方式: 
+    //         // 1. 时间到了
+    //         // 2. 达到使用次数
+    //         public BuffLifeSpan(float duration)
+    //         {
+    //             this.duration = duration;
+    //             this.useCount = 0;
+    //         }
+    //         public BuffLifeSpan(int useCount)
+    //         {
+    //             this.duration = 0;
+    //             this.useCount = useCount;
+    //         }
+    //         private BuffLifeSpan(){}
 
-    /// <summary>
-    /// Buff
-    /// </summary>
-    public struct Buff
-    {
+    //         public void OnUsed()
+    //         {
+    //             useCount--;
+    //         }
+    //         public void Tick(float deltaTime)
+    //         {
+    //             duration -= deltaTime;
+    //         }
+    //         public bool IsEnd()
+    //         {
+    //             return duration <= 0 && useCount <= 0;
+    //         }
 
-    }
+    //         private float duration;
+    //         private int useCount;
+    //     }
+
+    //     public void OnTick()
+    //     {
+    //         if(lifeSpan.IsEnd())
+    //         {
+    //             OnBuffEnd();
+    //         }
+    //     }
+
+    //     public event Action OnBuffInvoked;
+    //     public void Invoke()
+    //     {
+
+    //     }
+
+    //     public event Action OnBuffEnded;
+    //     private void OnBuffEnd()
+    //     {
+    //         OnBuffEnded?.Invoke();
+    //     }
+    //     private BuffLifeSpan lifeSpan;
+    // }
     public class SkillCalculator
     {
         public SkillCalculator(ICombatable attacker, ICombatable target, Skill skill)
@@ -89,9 +124,19 @@ namespace Dungeon.SkillSystem.SkillEffect
             }
             return this;
         }
-        public SkillCalculator ApplyBuff(Buff buff)
+        public SkillCalculator GiveBuff(Buff buff)
         {
-            //TODO: 增加buff效果
+            var hero = target.GetGameObject().GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+
+            if(hero == null)
+            {
+                GameFrameworkLog.Error("[Skill Calculator] 技能结算出错: buff只能加给勇者目前");
+            }
+            else
+            {
+                hero.AddBuff(buff);
+            }
+            
             return this;
         }
         public SkillCalculator GiveEffect_DamageOverTime(Damage damagePerSecond, float duration)

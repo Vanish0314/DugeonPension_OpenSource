@@ -12,6 +12,15 @@ namespace Dungeon.Character.Hero
 {
     public partial class HeroEntityBase : DungeonVisitorEntity
     {
+        public int GetHp()
+        {
+            return m_LowLevelSystem.Hp;
+        }
+        public int GetMaxHp()
+        {
+            return m_LowLevelSystem.MaxHp;
+        }
+
         public bool IsAlive()
         {
             return m_LowLevelSystem.IsAlive();

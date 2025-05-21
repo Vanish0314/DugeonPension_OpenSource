@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon.Common.MonoPool;
+using ParadoxNotion;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -28,7 +29,7 @@ namespace Dungeon
         [SerializeField] private Vector3 uiOffset = new Vector3(0, 2f, 0); // UI显示偏移
         
         [Header("烹饪相关")]
-        private FoodData?[] m_CookingSlots = new FoodData?[4]; // 改为固定长度数组
+        private FoodData[] m_CookingSlots = new FoodData[4]; // 改为固定长度数组
         private Queue<FoodData> m_CookingQueue = new Queue<FoodData>();
         private Coroutine m_CookingCoroutine;
         
@@ -210,9 +211,23 @@ namespace Dungeon
 
         public void StopCooking()
         {
+            // 清空所有烹饪槽
+            for (int i = 0; i < m_CookingSlots.Length; i++)
+            {
+                m_CookingSlots[i] = null;
+                canteenUI.UpdateSlot(i, null); // 更新UI槽位显示
+            }
+
+            // 重置队列和状态
+            m_CookingQueue.Clear();
             canteenUI.HideProgressUI();
             FireAllWorkers();
-            m_CookingCoroutine = null;
+    
+            if (m_CookingCoroutine != null)
+            {
+                StopCoroutine(m_CookingCoroutine);
+                m_CookingCoroutine = null;
+            }
         }
 
         void GenerateFood(FoodData data)
@@ -224,10 +239,10 @@ namespace Dungeon
                 {
                     food.Initialize(data.satietyValue, data.mentalValue);
                 
-                    var spawnPos = transform.position + new Vector3(
-                        Random.Range(-spawnArea.x/2, spawnArea.x/2),
-                        0,
-                        Random.Range(-spawnArea.y/2, spawnArea.y/2)
+                    var spawnPos = spawnAreaCenter.position + new Vector3(
+                        Random.Range(-spawnArea.x, spawnArea.x),
+                        Random.Range(-spawnArea.y, spawnArea.y),
+                        0
                     );
                 
                     food.transform.position = spawnPos;

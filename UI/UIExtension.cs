@@ -18,7 +18,7 @@ namespace Dungeon
             float originalAlpha = canvasGroup.alpha;
             while (time < duration)
             {
-                time += Time.deltaTime;
+                time += Time.unscaledDeltaTime;
                 canvasGroup.alpha = Mathf.Lerp(originalAlpha, alpha, time / duration);
                 yield return new WaitForEndOfFrame();
             }

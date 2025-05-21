@@ -45,6 +45,7 @@ namespace Dungeon
 
         private void OnMenuButtonClick(Button clickedButton)
         {
+            Debug.Log("OnMenuButtonClick");
             // 根据按钮name解析英雄类型
             string heroName = clickedButton.name.Replace("Btn", "");
             HeroType type = (HeroType)System.Enum.Parse(typeof(HeroType), heroName);

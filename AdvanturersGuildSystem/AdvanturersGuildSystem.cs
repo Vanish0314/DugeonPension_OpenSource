@@ -81,6 +81,7 @@ namespace Dungeon
         {
             return currentMainHero;
         }
+        public List<HeroEntityBase> GetCurrentGameProgressingHeroTeam => currentGameProgressingHeroTeam;
         private void ReleaseHeroTeam(Vector3 worldPos)
         {
             foreach(var hero in currentBehavouringHeroTeam)

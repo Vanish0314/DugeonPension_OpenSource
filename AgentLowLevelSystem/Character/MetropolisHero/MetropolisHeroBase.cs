@@ -47,16 +47,16 @@ namespace Dungeon
         }
 
         // 精神力
-        public int EnergyLevel
+        public int MentalLevel
         {
-            get => basicInfo.EnergyLevel;
-            set => basicInfo.EnergyLevel = value;
+            get => basicInfo.MentalLevel;
+            set => basicInfo.MentalLevel = value;
         }
 
-        public int MaxEnergyLevel
+        public int MaxMentalLevel
         {
-            get => basicInfo.MaxEnergyLevel;
-            set => basicInfo.MaxEnergyLevel = value;
+            get => basicInfo.MaxMentalLevel;
+            set => basicInfo.MaxMentalLevel = value;
         }
 
         // 疲劳度
@@ -108,7 +108,7 @@ namespace Dungeon
         private WorkplaceType m_TargetWorkType;
         private MetropolisBuildingBase m_CurrentWorkBuilding;
 
-        private void Start()
+        protected override void Start()
         {
             m_BTHelper = GetComponent<MetropolisHeroBehaviorTreeHelper>();
             m_Animator = GetComponent<Animator>();
@@ -117,14 +117,14 @@ namespace Dungeon
             m_BTHelper.Init(this);
             m_TargetWorkType = WorkplaceType.None;
         }
-        
-        private void OnEnable()
+
+        protected override void OnEnable()
         {
             m_InputReader.OnHeroClickedEvent += OnHeroClicked;
             m_InputReader.OnNoHeroClickedEvent += HideCommandUI;
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
             m_InputReader.OnHeroClickedEvent -= OnHeroClicked;
             m_InputReader.OnNoHeroClickedEvent -= HideCommandUI;
@@ -223,7 +223,7 @@ namespace Dungeon
         private void UpdateValues()
         {
             m_BTHelper.hungerLevel = HungerLevel;
-            m_BTHelper.energyLevel = EnergyLevel;
+            m_BTHelper.energyLevel = MentalLevel;
             m_BTHelper.tiredLevel = TiredLevel;
 
             m_BTHelper.talkTime = m_TalkingTime;
@@ -288,7 +288,7 @@ namespace Dungeon
 
         public virtual void Work()
         {
-            if(m_CurrentWorkBuilding ==null)
+            if(m_CurrentWorkBuilding == null)
                 return;
             
             if (m_IsWorking) return;
@@ -310,8 +310,6 @@ namespace Dungeon
         // 执行具体指令
         public void SetUpCommand()
         {
-            ForceEndCurrentState();
-            
             switch (m_Command.ToLower())
             {
                 case "quarry":
@@ -350,6 +348,7 @@ namespace Dungeon
             if (clickedHero != this.gameObject)
                 return;
             m_BTHelper.isCommandale = true;
+            ForceEndCurrentState();
             ToggleCommandUI();
         }
 
@@ -397,7 +396,7 @@ namespace Dungeon
 
         #endregion
 
-        #region
+        #region Actions
 
         #region Wander
 
@@ -567,8 +566,10 @@ namespace Dungeon
         IEnumerator EatCoroutine()
         {
             m_IsEating = true;
+            var food = FindNearestAvailableFood();
             yield return new WaitForSeconds(2f);
-            HungerLevel = Mathf.Clamp(HungerLevel + 10, 0, MaxHungerLevel);
+            HungerLevel = Mathf.Clamp(HungerLevel - food.SatietyValue, 0, MaxHungerLevel);
+            MentalLevel = Mathf.Clamp(MentalLevel - food.MentalValue, 0, MaxMentalLevel);
             EndEat();
         }
 
@@ -582,24 +583,21 @@ namespace Dungeon
 
         private bool HasFoodAvailable()
         {
-            return FindNearestFoodPosition() != Vector3.zero;
+            return FindNearestAvailableFood() != null;
         }
-
-        // 返回最近食物的位置，如果没有则返回Vector3.zero
+        
         public Vector3 FindNearestFoodPosition()
         {
-            // 获取场景中所有食物对象
-            GameObject[] allFoods = GameObject.FindGameObjectsWithTag("Food");
+            // 获取所有有效食物对象
+            Food nearestFood = FindNearestAvailableFood();
+            return nearestFood != null ? nearestFood.transform.position : Vector3.zero;
+        }
 
-            // 如果没有食物则返回空
-            if (allFoods.Length == 0) return Vector3.zero;
-
-            // 使用LINQ找到最近的食物
-            GameObject nearestFood = allFoods
+        private Food FindNearestAvailableFood()
+        {
+            return FindObjectsOfType<Food>()
                 .OrderBy(food => Vector3.Distance(transform.position, food.transform.position))
                 .FirstOrDefault();
-
-            return nearestFood != null ? nearestFood.transform.position : Vector3.zero;
         }
 
         #endregion
@@ -712,7 +710,6 @@ namespace Dungeon
                 StopCoroutine(m_WorkRoutine);
     
             m_WorkRoutine = null;
-            m_TargetWorkType = WorkplaceType.None;
             m_BTHelper.workComplete = true;
         }
         
@@ -720,6 +717,37 @@ namespace Dungeon
         public bool HasWorkplaceAvailable()
         {
             return FindHighestPriorityWorkplace().Item2 != null;
+        }
+
+        public bool RegisterWorkPlace()
+        {
+            if (m_TargetWorkType != WorkplaceType.None)
+            {
+                var building = FindNearestAvailableBuildingOfType(m_TargetWorkType);
+                if (building != null)
+                {
+                    m_CurrentWorkBuilding = building;
+                    return true;
+                }
+            }
+            
+            // 按优先级排序类型
+            var sortedTypes = workplacePriorities
+                .OrderBy(p => p.priority)
+                .Select(p => p.type)
+                .ToList();
+
+            foreach (var type in sortedTypes)
+            {
+                var building = FindNearestAvailableBuildingOfType(type);
+                if (building != null)
+                {
+                    m_CurrentWorkBuilding = building;
+                    return true;
+                }
+            }
+            
+            return false;
         }
         
         // 返回（位置, 建筑）元组，支持优先级和强制分配
@@ -741,13 +769,10 @@ namespace Dungeon
                 var building = FindNearestAvailableBuildingOfType(type);
                 if (building != null)
                 {
-                    m_CurrentWorkBuilding = building;
                     return (building.transform.position, building.GetComponent<Collider2D>());
                 }
             }
             
-            m_CurrentWorkBuilding = null;
-            m_BTHelper.state = MetropolisHeroAIState.Idle;
             return (Vector3.zero, null);
         }
 
@@ -756,7 +781,6 @@ namespace Dungeon
             var building = FindNearestAvailableBuildingOfType(m_TargetWorkType);
             if (building != null)
             {
-                m_CurrentWorkBuilding = building;
                 return (building.transform.position, building.GetComponent<Collider2D>());
             }
             return (Vector3.zero, null);

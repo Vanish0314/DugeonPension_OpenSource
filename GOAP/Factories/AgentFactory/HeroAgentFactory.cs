@@ -15,6 +15,12 @@ namespace Dungeon.GOAP.Factories.AgentFactory
             var builder = new AgentTypeBuilder(AgentTypeIDs.Hero);
 
             builder.AddCapability<FinishDungeonCapabilityFactory>();
+            builder.AddCapability<TripSlashCapabilityFactory>();
+            builder.AddCapability<HolySlashCapabilityFactory>();
+            builder.AddCapability<HealingSpellSkillFactory>();
+            builder.AddCapability<FireballSpellSkillFactory>();
+            builder.AddCapability<MindShieldSkillFactory>();
+            builder.AddCapability<UseSkillCapabilityFactory>();
 
             return builder.Build();
         }

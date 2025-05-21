@@ -529,7 +529,6 @@ namespace Dungeon.Procedure
             m_MetropolisControl.OnEnter();
             
             GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
-            GameEntry.UI.OpenUIForm(EnumUIForm.TimelineForm);
             GameEntry.UI.OpenUIForm(EnumUIForm.StartFightButtonForm);
 
             SubscribeEvents();
@@ -691,6 +690,8 @@ namespace Dungeon.Procedure
             m_CurseUIControl = CurseUIControl.Create(CursesManager.Instance);
             m_CurseUIControl.OnEnter();
 
+            GameEntry.UI.OpenUIForm(EnumUIForm.HeroInfoForm);
+
             GameEntry.Event.Fire(this, OnSwitchedToHeroExploringDungeonProcedureEvent.Create());
 
             SubscribeEvents();
@@ -699,6 +700,8 @@ namespace Dungeon.Procedure
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
+            
+            GameEntry.UI.CloseAllLoadedUIForms();
 
             m_CurseUIControl.OnLeave();
             

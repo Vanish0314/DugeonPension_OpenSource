@@ -13,6 +13,18 @@ namespace Dungeon.AgentLowLevelSystem
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
+        public bool CheckIsSkillReady(string skillName)
+        {
+            if (m_SkillDict.TryGetValue(skillName, out var skillData))
+            {
+                return skillData.IsCooledDown();
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public bool TakeSkill(Skill skill)
         {
             // skill.FuckMe()
@@ -45,6 +57,14 @@ namespace Dungeon.AgentLowLevelSystem
             if (m_SkillDict.Count == 0)
                 GameFrameworkLog.Warning("[AgentLowLevelSystem] 勇者一个技能都没有,你确定吗?:" + name);
 #endif
+        }
+
+        private void UpdateSkillCoolDown()
+        {
+            foreach (var skillData in m_SkillDict.Values)
+            {
+                skillData.UpdateCoolDown(Time.deltaTime);
+            }
         }
 
         public GameObject GetGameObject() => gameObject;

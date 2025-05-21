@@ -41,7 +41,8 @@ namespace Dungeon
             {
                 width = tilemap.size.x,
                 height = tilemap.size.y,
-                originPoint = tilemap.origin
+                // 将originPoint设置为Tilemap单元格原点对应的世界坐标
+                originPoint = tilemap.CellToWorld(tilemap.origin)
             };
             Init(gridDesc);
             

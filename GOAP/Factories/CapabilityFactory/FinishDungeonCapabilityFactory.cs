@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Goap.Core;
@@ -75,9 +76,8 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
             builder.AddAction<MeleeAttackAction>()
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonMonster>>()
                 .AddEffect<LocalNearByEntityCountOf<StandardDungeonMonster>>(EffectType.Decrease)
-                .AddCondition<LocalHeroPropertyPointOf<IHealthPointProperty>>(Comparison.GreaterThan, 0)
+                .AddCondition<LocalHeroPropertyPointOf<IHealthPointProperty>>(Comparison.GreaterThan, UnityEngine.Random.Range(1, 10))
                 .SetBaseCost(10);
-
 #endregion
 
 #region Sensors
@@ -89,10 +89,7 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardTorch>>();
             builder.AddTargetSensor<NearestChestTargetSensor>()
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonTreasureChest>>();
-            builder.AddTargetSensor<NearestMonsterTargetSensor>()
-                .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardDungeonMonster>>();
             
-
             builder.AddWorldSensor<HeroIsAtDungeonExitSensor>()
                 .SetKey<HeroIsAtDungeonExitWorldKey>();
 

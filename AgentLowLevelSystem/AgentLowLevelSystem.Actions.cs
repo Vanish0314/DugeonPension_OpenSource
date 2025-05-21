@@ -87,6 +87,12 @@ namespace Dungeon.AgentLowLevelSystem
 
             if (m_SkillDict.TryGetValue(skillDesc.name, out SkillData data))
             {
+                if(!data.IsCooledDown())
+                {
+                    GameFrameworkLog.Error($"[AgentLowLevelSystem] 技能冷却中,无法使用,但是goap发出了使用技能的指令.\n 勇者物体:{gameObject.name},技能:{skillDesc.name},勇者名称:{HeroName}");
+                    return ActionRunState.Stop;
+                }
+
                 GameFrameworkLog.Info("[AgentLowLevelSystem] UseSkill: " + data.name);
                 BumpUseSkillBubbule(data.name);
 
@@ -102,15 +108,23 @@ namespace Dungeon.AgentLowLevelSystem
                 SkillTween = currentTween;
                 WipTweens.Add(currentTween);
 
-
-
                 return ActionRunState.Continue;
             }
+#if UNITY_EDITOR
             else
             {
-                GameFrameworkLog.Error("[UseSkill] Skill not found: " + skillDesc.name + " 勇者没有这个技能");
+                if (m_LevelSkillData.ContainsSkill(skillDesc.name))
+                {
+                    GameFrameworkLog.Error($"[AgentLowLevelSystem] 勇者还没有升级解锁这个技能,但是goap已经发出使用技能的指令.\n勇者物体:{gameObject.name},技能:{skillDesc.name},勇者名称:{HeroName}");
+                }
+                else
+                {
+
+                    GameFrameworkLog.Error($"[AgentLowLevelSystem] 勇者没有这个技能,但是goap发出使用技能的指令.\n勇者物体:{gameObject.name},技能:{skillDesc.name},勇者名称:{HeroName}");
+                }
                 return ActionRunState.Stop;
             }
+#endif
         }
 
         public bool IsDisarmingTrap(DungeonTrapBase trap)

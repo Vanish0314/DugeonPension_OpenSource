@@ -7,9 +7,9 @@ namespace Dungeon.GOAP.Action
 {
     public class ActionDataForSkillUsage : IActionData
     {
-        public Vector3 PositionToUseSkill => posToUseSkill;
-        public Vector3 DirectionToUseSkill => dirToUseSkill;
-
+        public Vector3 PositionToUseSkill => posToUseSkill; // 怪物的位置
+        public Vector3 DirectionToUseSkill => dirToUseSkill; // 怪物相对勇者的方向
+ 
         private ITarget _target;
         private Vector3 dirToUseSkill;
         private Vector3 posToUseSkill;

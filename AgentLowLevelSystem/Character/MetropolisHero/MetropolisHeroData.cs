@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Dungeon
 {
@@ -17,8 +18,8 @@ namespace Dungeon
         public int MaxHungerLevel = 0;
         
         // 精神力
-        public int EnergyLevel = 0;
-        public int MaxEnergyLevel = 0;
+        public int MentalLevel = 0;
+        public int MaxMentalLevel = 0;
         
         // 疲劳度
         public int TiredLevel = 0;
