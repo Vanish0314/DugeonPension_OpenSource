@@ -11,11 +11,11 @@ namespace Dungeon
     {
         public Vector3 SkillPosition;
         public Vector3 SkillDirection;
-        public float SkillRangeScaler;
+        public float SkillRangeScalers;
 
         public LayerMask SkillLayerToShootMask; // Layer to use skill on
 
-        public static SkillDeployMethod CreateSkillDeployMethod(SkillData skillData, SkillShooter user, Vector3 posToUseSkill,Vector3 dirToUseSkill)
+        public static SkillDeployMethod CreateSkillDeployMethod(SkillData skillData, SkillShooter user, Vector3 posToUseSkill, Vector3 dirToUseSkill)
         {
             var desc = skillData.deployMethodDesc;
             var result = new SkillDeployMethod();
@@ -40,6 +40,12 @@ namespace Dungeon
                         result.SkillDirection = Vector3.up;
                         break;
                     }
+                case SkillDeployDesc.SkillShootType.Bullet:
+                    {
+                        result.SkillPosition = user.transform.position;
+                        result.SkillDirection = (posToUseSkill - user.transform.position).normalized;
+                        break;
+                    }
             }
 
             switch (desc.aoeType)
@@ -54,9 +60,29 @@ namespace Dungeon
                     throw new ArgumentOutOfRangeException();
             }
 
-            var layer = SkillShooterLayer.GetOppsiteLayer(user.ShooterLayer).Layer;
-            result.SkillLayerToShootMask = layer;
-            result.SkillRangeScaler = desc.range;
+            {
+                switch (desc.useageLayer)
+                {
+                    case SkillDeployDesc.SkillUseageLayer.Enemy:
+                        {
+                            result.SkillLayerToShootMask = SkillShooterLayer.GetOppsiteLayer(user.ShooterLayer).Layer;
+                            break;
+                        }
+                    case SkillDeployDesc.SkillUseageLayer.Friendly:
+                        {
+                            result.SkillLayerToShootMask = SkillShooterLayer.GetLayer(user.ShooterLayer).Layer;
+                            break;
+                        }
+                    case SkillDeployDesc.SkillUseageLayer.All:
+                        {
+                            GameFrameworkLog.Error($"[Skill] 暂时不支持All层");
+                            break;
+                        }
+                }
+
+            }
+
+            result.SkillRangeScalers = desc.range;
 
             return result;
         }
@@ -91,7 +117,4 @@ namespace Dungeon
             this.skillDeployMethod = skillDeployMethod;
         }
     }
-
-
-
 }

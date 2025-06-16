@@ -1,14 +1,8 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using DG.Tweening;
-using Dungeon.Character.Hero;
-using Dungeon.Character.Struct;
-using Dungeon.DungeonGameEntry;
-using Dungeon.Vision2D;
+using Dungeon.DungeonEntity;
 using UnityEngine;
 
-namespace Dungeon.Character.Hero
+namespace Dungeon.Character
 {
     public partial class HeroEntityBase : DungeonVisitorEntity
     {
@@ -19,6 +13,11 @@ namespace Dungeon.Character.Hero
         public int GetMaxHp()
         {
             return m_LowLevelSystem.MaxHp;
+        }
+
+        public int GetMp()
+        {
+            return m_LowLevelSystem.Mp;
         }
 
         public bool IsAlive()
@@ -45,25 +44,48 @@ namespace Dungeon.Character.Hero
                 m_GoapAgent.enabled = false;
                 
                 var rb= GetComponent<Rigidbody2D>();
-                rb.bodyType = RigidbodyType2D.Static;
+                rb.bodyType = RigidbodyType2D.Dynamic;
                 rb.velocity = Vector2.zero;
                 rb.angularVelocity = 0;
+                rb.mass = 0.01f;
+                rb.drag = 1f;
+                
+                // 死后获得资源
+                GetComponent<AgentLowLevelSystem>().m_Backpack.GatherResource();
             });
+        }
+
+        public void OnRevival()
+        {
+            m_GoapActionProvider.enabled = true;
+
+            m_LowLevelSystem.enabled = true;
+            m_HighLevelSystem.enabled = true;
+            m_GoapActionProvider.enabled = true;
+            m_GoapAgent.enabled = true;
+
+            var rb = GetComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0;
+            rb.mass = 1.0f;
+            rb.drag = 0f;
         }
 
         public void OnArrivedAtDungeonExit()
         {
             m_IsHappyingAtDungeonExit = true;
 
-            DOVirtual.DelayedCall(1.5f,()=>{
+            DOVirtual.DelayedCall(2f, () =>
+            {
                 //TODO(vanish): 设置动画为 happy
 
                 m_LowLevelSystem.enabled = false;
                 m_HighLevelSystem.enabled = false;
                 m_GoapActionProvider.enabled = false;
                 m_GoapAgent.enabled = false;
-                
-                var rb= GetComponent<Rigidbody2D>();
+
+                var rb = GetComponent<Rigidbody2D>();
                 rb.velocity = Vector2.zero;
                 rb.angularVelocity = 0;
                 rb.bodyType = RigidbodyType2D.Static;
@@ -75,6 +97,11 @@ namespace Dungeon.Character.Hero
             return m_IsHappyingAtDungeonExit;
         }
 
-        private bool  m_IsHappyingAtDungeonExit;
+        public void SetIsHappyingAtDungeonExit(bool value)
+        {
+            m_IsHappyingAtDungeonExit = value;
+        }
+
+        private bool m_IsHappyingAtDungeonExit;
     }
 }

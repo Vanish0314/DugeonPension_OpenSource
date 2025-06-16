@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 using UnityEngine.Tilemaps;
+using Sirenix.OdinInspector;
 
 namespace Dungeon.Vision2D
 {
@@ -157,8 +158,9 @@ namespace Dungeon.Vision2D
             }
 
             RaycastHit2D raycastHit =
-                Physics2D.Linecast(closePoint, transform.position, blockLayerMask | (1 << gameObject.layer));
-            return raycastHit && raycastHit.collider == selfCollider;
+                Physics2D.Linecast(closePoint, transform.position, blockLayerMask);
+            return !raycastHit;
+
         }
 
         private float GetAngle360(Vector2 dir1, Vector2 dir2)
@@ -204,12 +206,13 @@ namespace Dungeon.Vision2D
                 hitInfo.rightHit = true;
                 hitInfo.rightHitPoint = rightPointRaycastHit.point;
             }
-
+#if UNITY_EDITOR
             if (debug)
             {
                 Debug.DrawLine(transform.position, hitInfo.leftPoint, Color.yellow);
                 Debug.DrawLine(transform.position, hitInfo.rightPoint, Color.red);
             }
+#endif
         }
 
         private Vector2 GetHitRightPoint(HitInfo hitInfo)
@@ -298,7 +301,7 @@ namespace Dungeon.Vision2D
 
         public float radius = 20;
         public LayerMask blockLayerMask;
-        public bool debug;
+        [ShowInInspector] public static bool debug = false;
 
         private Vision vision;
 

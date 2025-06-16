@@ -1,36 +1,35 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DG.Tweening;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.Character.Hero;
-using Dungeon.DungeonGameEntry;
+using Dungeon.Character;
+using Dungeon.Common;
 using Dungeon.SkillSystem;
-using Dungeon.Vision2D;
 using GameFramework;
 using NodeCanvas.BehaviourTrees;
 using Sirenix.OdinInspector;
-using UnityEditor.EditorTools;
 using UnityEngine;
-using UnityEngine.UIElements;
 
-namespace Dungeon.DungeonEntity.Monster
+namespace Dungeon.DungeonEntity
 {
-    [RequireComponent(typeof(SpriteRenderer))]
-    [RequireComponent(typeof(Animator), typeof(Rigidbody2D), typeof(DungeonMonsterBehaviourTreeHelper))]
-    [RequireComponent(typeof(DungeonEntityMotor), typeof(BoxCollider2D), typeof(SpriteRenderer))]
+    [RequireComponent(typeof(RepelNearbyColliders))]
+    [RequireComponent(typeof(Rigidbody2D), typeof(DungeonMonsterBehaviourTreeHelper))]
+    [RequireComponent(typeof(DungeonEntityMotor), typeof(Collider2D))]
     public abstract class DungeonMonsterBase : DungeonVisibleEntity, ICombatable
     {
         public int Hp
         {
-            get => basicInfo.hp; set
+            get => basicInfo.hp;
+            set
             {
+                value = Mathf.Clamp(value, 0, MaxHp);
+                basicInfo.hp = value;
+
                 if (value <= 0)
+                {
                     StartCoroutine(OnDead());
-                else
-                    basicInfo.hp = value > basicInfo.maxHp ? basicInfo.maxHp : value;
+                }
             }
         }
         public int MaxHp { get => basicInfo.maxHp; set => basicInfo.maxHp = value; }
@@ -39,6 +38,7 @@ namespace Dungeon.DungeonEntity.Monster
         public float AttackSpeed { get => basicInfo.attackSpeed; set => basicInfo.attackSpeed = value; }
         public CombatorData BasicInfo { get => basicInfo; set => basicInfo = value; }
         public StatusBarSetting StatusBarSetting { get => statusBarSetting; set => statusBarSetting = value; }
+        public CombataEvent CombatEvents { get; set; } = new CombataEvent();
 
         public GameObject GetGameObject() => gameObject;
         public override VisitInformation OnUnvisited(VisitInformation visiter)
@@ -55,7 +55,7 @@ namespace Dungeon.DungeonEntity.Monster
             }
             else
             {
-                var low = visiter.visiter.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+                var low = visiter.visiter.GetComponent<AgentLowLevelSystem>();
 
                 if (low == null)
                     return visiter;
@@ -72,6 +72,7 @@ namespace Dungeon.DungeonEntity.Monster
         {
             OnTakeSkill(skill);
             skill.FuckMe(this);
+            CombatEvents.OnBeAttacked?.Invoke(skill);
 
             return Hp <= 0;
         }
@@ -85,18 +86,44 @@ namespace Dungeon.DungeonEntity.Monster
             m_HeroLayerMask = LayerMask.GetMask("Hero");
             m_SkillShooter = gameObject.GetOrAddComponent<SkillShooter>();
             m_BtHelper = GetComponent<DungeonMonsterBehaviourTreeHelper>();
-            m_Animator = GetComponent<Animator>();
+            m_BtHelper.Init(this, skill);
+
+            {
+                m_Animator = GetComponent<Animator>();
+                if (m_Animator == null)
+                {
+                    m_Animator = transform.GetComponentInChildren<Animator>();
+                    if (m_Animator == null)
+                    {
+                        GameFrameworkLog.Error($"[DungeonMonsterBase] 没有找到{gameObject.name}的Animator组件");
+                    }
+                }
+            }
+
             m_Motor = GetComponent<DungeonEntityMotor>();
             m_Motor.InitMotor(moveSpeed, m_Animator.transform);
-            m_BtHelper.Init(this, skill);
             Init();
+
+            var rb = GetComponent<Rigidbody2D>();
+            if (rb == null)
+            {
+                GameFrameworkLog.Error($"[DungeonMonsterBase] 没有找到{gameObject.name}的Rigidbody2D组件");
+            }
+            else
+            {
+                rb.bodyType = RigidbodyType2D.Dynamic;
+                rb.gravityScale = 0;
+                rb.freezeRotation = true;
+            }
+
+            m_Animator.transform.localScale = new Vector3(-1, 1, 1);
         }
 
         private void Update()
         {
-            if(mIsDead)
+            if (Hp <= 0)
                 return;
-            
+
             UpdateBehaviourTreeHelper();
             UpdateAnimator();
 
@@ -140,6 +167,8 @@ namespace Dungeon.DungeonEntity.Monster
         private void UpdateVision()
         {
             m_BtHelper.targetsInVision.Clear();
+            if (m_BtHelper.CurrentTarget != null)
+                m_BtHelper.CurrentTarget.GetComponent<HeroEntityBase>().GoapStatus.RemoveAttacker(this);
 
             var results = new Collider2D[64];
             Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, results, m_HeroLayerMask);
@@ -159,6 +188,9 @@ namespace Dungeon.DungeonEntity.Monster
             }
 
             m_BtHelper.CurrentTarget = m_BtHelper.targetsInVision.FirstOrDefault();
+
+            if (m_BtHelper.CurrentTarget != null)
+                m_BtHelper.CurrentTarget.GetComponent<HeroEntityBase>().GoapStatus.AddAttacker(this);
         }
         private void UpdateValues()
         {
@@ -219,13 +251,25 @@ namespace Dungeon.DungeonEntity.Monster
 #endif
         protected virtual IEnumerator OnDead()
         {
+            GetComponent<Collider2D>().enabled = false;
+
             m_Animator.SetBool("isDead", true);
             m_Motor.Stop();
 
             var bto = GetComponent<BehaviourTreeOwner>();
-            if (bto!= null) bto.enabled = false;
+            if (bto != null) bto.enabled = false;
 
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(sMonsterDieDurationBeforeFadingOut);
+
+            float timer = 0f;
+            var sprite = m_Animator.GetComponent<SpriteRenderer>();
+            while (timer < sMonsterFadingOutTime)
+            {
+                timer += Time.deltaTime;
+                sprite.color = new Color(1, 1, 1, 1 - timer);
+                yield return null;
+            }
+
             ReturnToPool();
         }
 
@@ -247,19 +291,26 @@ namespace Dungeon.DungeonEntity.Monster
             GameFrameworkLog.Info($"[DungeonMonsterBase] {gameObject.name} killed {killed.GetGameObject().name}");
         }
 
+        public string GetName() => monsterName;
+
         [Header("使用说明")]
         [ReadOnly, TextArea, LabelText("Animator可使用的变量如下:")] public string animatorParametersHint = "isIdle, isMoving, isAttacking, isDead";
 
         [Space]
         [Header("基本信息")]
+        [SerializeField, LabelText("名称")] protected string monsterName = "怪物";
         [SerializeField, LabelText("基本属性")] protected CombatorData basicInfo;
         [SerializeField, LabelText("状态条设置")] protected StatusBarSetting statusBarSetting;
         [Space]
         [SerializeField, LabelText("可见检定"), Tooltip("被看见是否需要过一个检定,不需要置空即可")]
         protected DndCheckTarget visibleCheckTarget;
-        [Required, SerializeField, LabelText("使用技能")] protected SkillData skill;
+        [Required, LabelText("使用技能")] public SkillData skill;
         [SerializeField, LabelText("移动速度")] protected float moveSpeed = 5f;
         [SerializeField, LabelText("视野范围")] protected float visionRange = 10f;
+        [Space]
+        [Header("死亡")]
+        [ShowInInspector, LabelText("死亡动画持续时间")] public float sMonsterDieDurationBeforeFadingOut = 3f;
+        [ShowInInspector, LabelText("死亡淡出时间")] public float sMonsterFadingOutTime = 1f;
         protected SkillShooter m_SkillShooter;
         protected Animator m_Animator;
         protected DungeonEntityMotor m_Motor;

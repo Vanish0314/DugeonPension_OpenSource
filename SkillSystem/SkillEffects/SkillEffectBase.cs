@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DG.Tweening;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
 using GameFramework;
 using UnityEngine;
 
@@ -126,7 +126,7 @@ namespace Dungeon.SkillSystem.SkillEffect
         }
         public SkillCalculator GiveBuff(Buff buff)
         {
-            var hero = target.GetGameObject().GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var hero = target.GetGameObject().GetComponent<AgentLowLevelSystem>();
 
             if(hero == null)
             {
@@ -150,7 +150,7 @@ namespace Dungeon.SkillSystem.SkillEffect
         public SkillCalculator GiveEffect_IncreaseSubmissiveness(int amount)
         {
             immediateEffects.Add(new ImmediateEffect(() =>{
-                var low = target.GetGameObject().GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+                var low = target.GetGameObject().GetComponent<AgentLowLevelSystem>();
 
                 if(low!= null)
                 {
@@ -183,25 +183,21 @@ namespace Dungeon.SkillSystem.SkillEffect
             immediateEffects.Add(new ImmediateEffect(() => target.Stun(duration)));
             return this;
         }
-        public SkillCalculator GiveEffect_KnockBack(float distance)
+        public SkillCalculator GiveEffect_KnockBack(float KnockbackForce)
         {
             var dir = deployDesc.SkillDirection;
-            var dreamPos = deployDesc.SkillPosition + dir * distance;
-            var wallPos = DungeonGameEntry.DungeonGameEntry.GridSystem.FindNearestWallInDirection(deployDesc.SkillPosition, dir);
-
-            Vector2 finalPos = Vector2.zero;
-            if (Vector2.Dot(dir, (wallPos - dreamPos).normalized) > 0)
-                finalPos = wallPos;
-            else
-                finalPos = dreamPos;
 
             immediateEffects.Add(new ImmediateEffect(() =>
             {
-                target.Stun(1f);
-                DOTween.To((float t) =>
+                target.GetGameObject().GetComponent<Rigidbody2D>().AddForce(dir * KnockbackForce, ForceMode2D.Impulse);
+
+#if UNITY_EDITOR
+                var rb = target.GetGameObject().GetComponent<Rigidbody2D>();
+                if (rb == null)
                 {
-                    target.GetGameObject().transform.position = Vector3.Lerp(deployDesc.SkillPosition, finalPos, t);
-                }, 0, 1, 1f);
+                    GameFrameworkLog.Error($"[Skill Calculator] 找不到{target.GetGameObject().name}(AgentLowLevelSystem)的Rigidbody2D");
+                }
+#endif
             }));
             return this;
         }
@@ -217,6 +213,7 @@ namespace Dungeon.SkillSystem.SkillEffect
 
             totalDamage += phy + fire + ice + holy + posion;
 
+            int hpBefore = target.Hp;
             target.Hp -= totalDamage;
 
             KillCheck();
@@ -227,6 +224,7 @@ namespace Dungeon.SkillSystem.SkillEffect
               .AppendLine($"攻击者: {attacker.GetGameObject().name},使用了技能{skill.SkillName}")
               .AppendLine($"受击者: {target.GetGameObject().name}")
               .AppendLine($"造成总伤害: {totalDamage}")
+              .AppendLine($"受击者原本血量: {hpBefore}")
               .AppendLine($"受击者剩余血量: {target.Hp}")
               .AppendLine($"具体伤害明细:")
               .AppendLine($"物理伤害: {phy}")
@@ -251,7 +249,8 @@ namespace Dungeon.SkillSystem.SkillEffect
                   .AppendLine($"攻击者: {attacker.GetGameObject().name},使用了技能{skill.SkillName}")
                   .AppendLine($"受击者: {target.GetGameObject().name}")
                   .AppendLine($"效果: {effect.Effect.Method.Name}");
-                GameFrameworkLog.Info(sb.ToString());
+                var res = sb.ToString();
+                GameFrameworkLog.Info(res);
 #endif
             }
             KillCheck();

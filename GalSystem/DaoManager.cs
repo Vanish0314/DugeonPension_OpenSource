@@ -23,6 +23,11 @@ namespace Dungeon.Gal
 
         [ShowInInspector, ReadOnly]
         private Dictionary<string, DungeonGalActor> actors = new();
+
+        [SerializeField,ShowInInspector]
+        private DungeonGalActor tutorialActor;
+
+        public DungeonGalActor GetTutorialActor() => tutorialActor;
         private void Awake()
         {
             foreach (var entry in actorEntries)

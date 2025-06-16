@@ -12,6 +12,7 @@ namespace Dungeon.Overload
         [LabelText("诅咒Icon")] readonly public Sprite curseIcon;
         [LabelText("诅咒描述")] [TextArea] public string curseDescription;
         [LabelText("诅咒效果")] public CurseType curseType;
+        [LabelText("诅咒消耗")] public float curseConsume;
     }
 
 }

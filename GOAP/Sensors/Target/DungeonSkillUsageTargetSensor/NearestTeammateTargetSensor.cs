@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
+using Dungeon.Character;
 using Dungeon.Target;
 using UnityEngine;
 
@@ -16,7 +17,7 @@ namespace Dungeon.GOAP
 
         public override ITarget Sense(IActionReceiver agent, IComponentReference references, ITarget existingTarget)
         {
-            var low = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var low = references.GetCachedComponent<AgentLowLevelSystem>();
 
             var teammate = low.GetNearestTeammate();
             

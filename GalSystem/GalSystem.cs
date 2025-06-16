@@ -1,17 +1,14 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using DG.Tweening;
-using Dungeon.Character.Hero;
-using Dungeon.DungeonGameEntry;
+using Dungeon.Character;
 using Dungeon.Evnents;
 using Dungeon.Overload;
 using GameFramework;
 using GameFramework.Event;
 using NodeCanvas.DialogueTrees;
+using NodeCanvas.DialogueTrees.UI.Examples;
 using NodeCanvas.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Dungeon.Gal
 {
@@ -38,7 +35,8 @@ namespace Dungeon.Gal
             "1. 勇者初次亮相结束 : <-OnHeroFinishedFirstAppearance>\n" +
             "2. 勇者捕获对话结束,结果是成功被捕获 : <-OnHeroCapturedSuccessfully>\n" +
             "3. 勇者捕获对话结束,结果是失败被捕获 : <-OnHeroCapturedFailed>\n" +
-            "4. 勇者说服对话结束: <-OnHeroPersuadedEnd>\n"
+            "4. 勇者说服对话结束: <-OnHeroPersuadedEnd>\n" +
+            "5. 教程对话结束: <-OnTutorialDialogueEnd>\n"
         )]
         [LabelText("本策划所有对话树都填啦")] public bool MeRemberered1;
 
@@ -62,18 +60,52 @@ namespace Dungeon.Gal
             return m_DialogueTreeController.transform;
         }
 
+        public void PlayTutorialDialogue(TutorialType tutorial)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                GameFrameworkLog.Error($"[GalSystem] 启动教程对话,对话名字不能为空");
+                return;
+            }
+
+            var dto = GetDto(tutorial);
+            if (dto == null)
+            {
+                GameFrameworkLog.Error($"[GalSystem] 启动教程对话,找不到{tutorial.ToString()}对应的Dto");
+                return;
+            }
+
+            StartTutorialDialogue(dto);
+        }
+
+        public void PlayCorruptLevelDialogue(MetropolisHeroBase hero, DialogueType dialogueType)
+        {
+            m_DialogueTreeController.gameObject.SetActive(true);
+
+            var dto = GetDto(hero.HeroName, dialogueType);
+
+            if (dto != null)
+            {
+                StartDialogue(dto, hero);
+            }
+            else
+            {
+                GameFrameworkLog.Error($"[GalSystem] 找不到{hero}对应的Dto");
+            }
+        }
+        
         private void Start()
         {
-            m_GalGUI = transform.GetChild(0).gameObject;
+            m_GalGUI = GetComponentInChildren<DialogueUGUI>();
             m_Dto = transform.GetComponentInChildren<DtoManager>();
             m_Dao = transform.GetComponentInChildren<DaoManager>();
             m_DialogueTreeController = transform.GetComponentInChildren<DialogueTreeController>();
 
-            m_GalGUI.SetActive(false);
+            m_GalGUI.Hide();
 
             SubscribeEvents();
-
         }
+        
         void OnDestroy()
         {
             UnSubscribeEvents();
@@ -87,20 +119,44 @@ namespace Dungeon.Gal
             GameEntry.Event.Subscribe(OnOneHeroStartBeingPersuadedEventArgs.EventId, OnOneHeroStartBeingPersuadedEventHandler);
             GameEntry.Event.Subscribe(OnOneHeroStartBeingCapturedEventArgs.EventId, OnOneHeroStartBeingCapturedEventHandler);
 
-            GameEntry.Event.Subscribe(OnOneHeroEndBeingCapturedEventArgs.EventId, OnHeroStartExploreDungeonEventHandler);
-            GameEntry.Event.Subscribe(OnOneHeroEndBeingPersuadedEventArgs.EventId, OnHeroStartExploreDungeonEventHandler);
+            GameEntry.Event.Subscribe(OnOneHeroEndBeingCapturedEventArgs.EventId, OnHeroEndBeingCapturedEventHandler);
+            GameEntry.Event.Subscribe(OnOneHeroEndBeingPersuadedEventArgs.EventId, OnHeroEndBeingPersuadedEventHandler);
         }
+
+        private void OnHeroEndBeingPersuadedEventHandler(object sender, GameEventArgs e)
+        {
+            if (e is OnOneHeroStartBeingPersuadedEventArgs args)
+            {
+
+            }
+        }
+
+
+        private void OnHeroEndBeingCapturedEventHandler(object sender, GameEventArgs e)
+        {
+            if (e is OnOneHeroEndBeingCapturedEventArgs args)
+            {
+
+            }
+        }
+
 
         private void OnOneHeroStartBeingCapturedEventHandler(object sender, GameEventArgs e)
         {
             if (e is OnOneHeroStartBeingCapturedEventArgs args)
             {
-                m_GalGUI.SetActive(true);
                 m_DialogueTreeController.gameObject.SetActive(true);
 
                 var dto = GetDto(args.HeroEntity.HeroName, DialogueType.Capture);
 
-                StartDialogue(dto, args.HeroEntity);
+                if (dto != null)
+                {
+                    StartDialogue(dto, args.HeroEntity);
+                }
+                else
+                {
+                    GameFrameworkLog.Error($"[GalSystem] 找不到{args.HeroEntity.HeroName}对应的Dto");
+                }
             }
         }
 
@@ -108,7 +164,6 @@ namespace Dungeon.Gal
         {
             if (e is OnOneHeroStartBeingPersuadedEventArgs args)
             {
-                m_GalGUI.SetActive(true);
                 m_DialogueTreeController.gameObject.SetActive(true);
 
                 var dto = GetDto(args.HeroEntity.HeroName, DialogueType.Convincing);
@@ -121,7 +176,6 @@ namespace Dungeon.Gal
         {
             if (e is OnHeroArrivedInDungeonEvent arg)
             {
-                m_GalGUI.SetActive(true);
                 m_DialogueTreeController.gameObject.SetActive(true);
 
                 var dto = GetDto(arg.MainHero.HeroName, DialogueType.EnterDungeon);
@@ -136,19 +190,70 @@ namespace Dungeon.Gal
 
         private void OnHeroStartExploreDungeonEventHandler(object sender, GameEventArgs e)
         {
-            m_GalGUI.SetActive(false);
-            m_DialogueTreeController.gameObject.SetActive(false);
+            m_GalGUI.Hide();
+            // m_DialogueTreeController.gameObject.SetActive(false);
         }
+
+        private void StartDialogue(DialogueTree dialogueTree, MetropolisHeroBase hero)
+        {
+            m_DialogueTreeController.gameObject.SetActive(true);
+            m_DialogueTreeController.updateMode = Graph.UpdateMode.FixedUpdate;
+            m_DialogueTreeController.StartDialogue(dialogueTree, GetDungeonGalActor(hero.HeroName), null);
+            
+            dialoguing = true;
+            DisableEventSystem();
+            
+            GameEntry.UI.GetUIForm(EnumUIForm.BuildForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.PlaceArmyForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.CurseForm)?.Close();
+        }
+        
         private void StartDialogue(DialogueTree dialogueTree, HeroEntityBase hero)
         {
             currentTalkingHero = hero;
 
+            m_DialogueTreeController.gameObject.SetActive(true);
             m_DialogueTreeController.updateMode = Graph.UpdateMode.FixedUpdate;
             m_DialogueTreeController.StartDialogue(dialogueTree, GetDungeonGalActor(hero.HeroName), null);
+            
+            dialoguing = true;
+            DisableEventSystem();
+            
+            GameEntry.UI.GetUIForm(EnumUIForm.BuildForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.PlaceArmyForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.CurseForm)?.Close();
+        }
+        private void StartTutorialDialogue(DialogueTree dialogueTree)
+        {
+            var dao = m_Dao.GetTutorialActor();
+
+            if (dao == null)
+            {
+                GameFrameworkLog.Error($"[GalSystem] 未找到Tutorial Actor ,没有找到教程大姐姐,无法播放教程");
+                return;
+            }
+
+            if(pauseTimeWhilePlayTuytorial)
+                Time.timeScale = 0.01f;
+
+            m_DialogueTreeController.gameObject.SetActive(true);
+            m_DialogueTreeController.updateMode = Graph.UpdateMode.FixedUpdate;
+            m_DialogueTreeController.StartDialogue(dialogueTree, dao, null);
+            
+            dialoguing = true;
+            DisableEventSystem();
+            
+            GameEntry.UI.GetUIForm(EnumUIForm.BuildForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.PlaceArmyForm)?.Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.CurseForm)?.Close();
         }
         private DialogueTree GetDto(string name, DialogueType type)
         {
             return m_Dto.GetClonedHeroDialogue(name, type);
+        }
+        private DialogueTree GetDto(TutorialType tutorial)
+        {
+            return m_Dto.GetClonedTutorialDialogue(tutorial);
         }
         private void UnSubscribeEvents()
         {
@@ -159,11 +264,26 @@ namespace Dungeon.Gal
             GameEntry.Event.Unsubscribe(OnOneHeroStartBeingCapturedEventArgs.EventId, OnOneHeroStartBeingCapturedEventHandler);
         }
 
-        private GameObject m_GalGUI;
+        public bool pauseTimeWhilePlayTuytorial = false;
+        DialogueUGUI m_GalGUI;
         private DtoManager m_Dto;
         private DaoManager m_Dao;
         DialogueTreeController m_DialogueTreeController;
 
+        public bool dialoguing = false;
+        private EventSystem cachedEventSystem; // 缓存引用
 
+        void DisableEventSystem() {
+            cachedEventSystem = EventSystem.current; // 先保存
+            if (cachedEventSystem != null) {
+                cachedEventSystem.enabled = false;
+            }
+        }
+
+        void EnableEventSystem() {
+            if (cachedEventSystem != null) {
+                cachedEventSystem.enabled = true;
+            }
+        }
     }
 }

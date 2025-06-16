@@ -1,4 +1,7 @@
 using System;
+using Dungeon.Overload;
+using Dungeon.Procedure;
+using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +27,7 @@ namespace Dungeon
         
         [SerializeField] private Button trapOption;
         [SerializeField] private Button monsterOption;
+        [SerializeField] private Button closeButton;
         
         [SerializeField] private TrapTypeButton[] trapButtons;
         [SerializeField] private MonsterTypeButton[] monsterTypeButtons;
@@ -35,17 +39,6 @@ namespace Dungeon
         {
             m_PlaceArmyForm = GetComponent<PlaceArmyForm>();
             m_PlaceManager = PlaceManager.Instance;
-
-            // 测试用数据
-            foreach (var btn in trapButtons)
-            {
-                PlaceArmyModel.Instance.SetTrapCount(btn.type, 99);
-            }
-
-            foreach (var btn in monsterTypeButtons)
-            {
-                PlaceArmyModel.Instance.SetMonsterCount(btn.type, 99);
-            }
             
             InitializeButtons();
         }
@@ -53,6 +46,10 @@ namespace Dungeon
         private void OnEnable()
         {
             m_PlaceArmyForm.ShowTrapPanel();
+            
+            if(GameEntry.Procedure.CurrentProcedure is ProcedureHeroExploringDungeonStage)
+                m_PlaceArmyForm.ShowCloseButton();
+            
             SubscribeEvents();
             RefreshAllUI();
         }
@@ -61,6 +58,8 @@ namespace Dungeon
         {
             trapOption.onClick.AddListener(() => m_PlaceArmyForm.ShowTrapPanel());
             monsterOption.onClick.AddListener(() => m_PlaceArmyForm.ShowMonsterPanel());
+            closeButton.onClick.AddListener(() =>
+                DungeonGameEntry.DungeonGameEntry.Event.Fire(this, OnOverlordEndRedeployedEventArgs.Create()));
             
             foreach (var btn in trapButtons)
             {
@@ -75,20 +74,20 @@ namespace Dungeon
 
         private void SubscribeEvents()
         {
-            PlaceArmyModel.Instance.OnTrapCountChanged += UpdateTrapUI;
-            PlaceArmyModel.Instance.OnMonsterCountChanged += UpdateMonsterUI;
-            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnTrapPlacedEventArgs.EventId,ReduceTrapCount);
-            GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnMonsterPlacedEventArgs.EventId,ReduceMonsterCount);
+             PlaceArmyModel.Instance.OnTrapCountChanged += UpdateTrapUI;
+             PlaceArmyModel.Instance.OnMonsterCountChanged += UpdateMonsterUI;
+            // GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnTrapPlacedEventArgs.EventId,ReduceTrapCount);
+            // GameEntry.Event.GetComponent<EventComponent>().Subscribe(OnMonsterPlacedEventArgs.EventId,ReduceMonsterCount);
         }
 
         private void OnDisable()
         {
             if (PlaceArmyModel.Instance != null)
             {
-                PlaceArmyModel.Instance.OnTrapCountChanged -= UpdateTrapUI;
-                PlaceArmyModel.Instance.OnMonsterCountChanged -= UpdateMonsterUI;
-                GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnTrapPlacedEventArgs.EventId,ReduceTrapCount);
-                GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnMonsterPlacedEventArgs.EventId,ReduceMonsterCount);
+                 PlaceArmyModel.Instance.OnTrapCountChanged -= UpdateTrapUI;
+                 PlaceArmyModel.Instance.OnMonsterCountChanged -= UpdateMonsterUI;
+                // GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnTrapPlacedEventArgs.EventId,ReduceTrapCount);
+                // GameEntry.Event.GetComponent<EventComponent>().Unsubscribe(OnMonsterPlacedEventArgs.EventId,ReduceMonsterCount);
             }
         }
 
@@ -102,23 +101,27 @@ namespace Dungeon
             m_PlaceManager.SelectMonsterData(type);
         }
 
-        private void ReduceTrapCount(object sender, GameEventArgs gameEventArgs)
+        private void UpdateAllTrapButton()
         {
-            OnTrapPlacedEventArgs e = (OnTrapPlacedEventArgs)gameEventArgs;
-            PlaceArmyModel.Instance.ModifyTrapCount(e.TrapData.trapType, -1);
+            foreach (var btn in trapButtons)
+            {
+                var trapData = PlaceManager.Instance.GetTrapData(btn.type);
+                //btn.button.interactable = ResourceModel.Instance.HasEnoughResources(trapData.cost);
+            }
         }
-
-        private void ReduceMonsterCount(object sender, GameEventArgs gameEventArgs)
-        {
-            OnMonsterPlacedEventArgs e = (OnMonsterPlacedEventArgs)gameEventArgs;
-            PlaceArmyModel.Instance.ModifyMonsterCount(e.MonsterData.monsterType, -1);
-        }
-
         private void UpdateTrapUI(TrapType type, int count)
         {
             m_PlaceArmyForm.UpdateTrapUI(type, count);
         }
 
+        private void UpdateAllMonsterButton()
+        {
+            foreach (var btn in monsterTypeButtons)
+            {
+                var monsterData = PlaceManager.Instance.GetMonsterData(btn.type);
+                //btn.button.interactable = ResourceModel.Instance.HasEnoughResources(monsterData.cost);
+            }
+        }
         private void UpdateMonsterUI(MonsterType type, int count)
         {
             m_PlaceArmyForm.UpdateMonsterUI(type, count);
@@ -126,16 +129,30 @@ namespace Dungeon
 
         private void RefreshAllUI()
         {
-            foreach (var btn in trapButtons)
-            {
-                UpdateTrapUI(btn.type, PlaceArmyModel.Instance.GetTrapCount(btn.type));
-            }
-
-            foreach (var btn in monsterTypeButtons)
-            {
-                UpdateMonsterUI(btn.type, PlaceArmyModel.Instance.GetMonsterCount(btn.type));
-            }
+            UpdateAllTrapButton();
+            UpdateAllMonsterButton();
+            
+            // foreach (var btn in trapButtons)
+            // {
+            //     UpdateTrapUI(btn.type, PlaceArmyModel.Instance.GetTrapCount(btn.type));
+            // }
+            //
+            // foreach (var btn in monsterTypeButtons)
+            // {
+            //     UpdateMonsterUI(btn.type, PlaceArmyModel.Instance.GetMonsterCount(btn.type));
+            // }
         }
         
+        // private void ReduceTrapCount(object sender, GameEventArgs gameEventArgs)
+        // {
+        //     OnTrapPlacedEventArgs e = (OnTrapPlacedEventArgs)gameEventArgs;
+        //     PlaceArmyModel.Instance.ModifyTrapCount(e.TrapData.trapType, -1);
+        // }
+        //
+        // private void ReduceMonsterCount(object sender, GameEventArgs gameEventArgs)
+        // {
+        //     OnMonsterPlacedEventArgs e = (OnMonsterPlacedEventArgs)gameEventArgs;
+        //     PlaceArmyModel.Instance.ModifyMonsterCount(e.MonsterData.monsterType, -1);
+        // }
     }
 }

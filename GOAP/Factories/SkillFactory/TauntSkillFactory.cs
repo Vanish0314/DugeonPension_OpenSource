@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.Monster;
+using Dungeon.Character;
+using Dungeon.DungeonEntity;
 using Dungeon.GOAP;
-using Dungeon.GOAP.Action;
-using Dungeon.GOAP.Keys.TargetKey;
-using Dungeon.GOAP.Keys.WorldKey.Local;
-using UnityEngine;
 
 namespace Dungeon
 {
@@ -26,6 +23,7 @@ namespace Dungeon
                 .AddCondition<LocalSkillCooldownReadyKey<TauntSkill>>(Comparison.GreaterThanOrEqual, 1) // 技能冷却
                 .AddCondition<LocalNearByEntityCountOf<StandardDungeonMonster>>(Comparison.GreaterThan, 0) // 范围内有敌人
                 //TODO 效果
+                .AddEffect<GolbalHeroTeamBeingAttackedHeroCountKey>(EffectType.Decrease)
                 .SetBaseCost(5); // 基础 Cost
 
             #endregion
@@ -49,7 +47,7 @@ namespace Dungeon
         {
             var baseCost = base.GetCost(agent, references, target);
 
-            var trait = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().CharacterTrait;
+            var trait = references.GetCachedComponent<AgentLowLevelSystem>().CharacterTrait;
 
             return baseCost + trait.Sympathy; // Cost = 5 - 同理
         }

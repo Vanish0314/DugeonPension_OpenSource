@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dungeon.Evnents;
+using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -34,14 +36,24 @@ namespace Dungeon
         public void Subscribe()
         {
             // 订阅场景加载事件
-            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnSceneLoaded);
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnProcedureChange);
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSwitchedToDungeonPlacingProcedureEvent.EventId,OnProcedureChange);
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSwitchedToHeroExploringDungeonProcedureEvent.EventId,OnProcedureChange);
         }
 
         private void OnDisable()
         {
             // 取消订阅事件，避免内存泄漏
-            DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnSceneLoaded);
-
+            if (DungeonGameEntry.DungeonGameEntry.Event != null)
+            {
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSwitchedToMetroplisProcedureEvent.EventId,
+                    OnProcedureChange);
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSwitchedToDungeonPlacingProcedureEvent.EventId,
+                    OnProcedureChange);
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(
+                    OnSwitchedToHeroExploringDungeonProcedureEvent.EventId, OnProcedureChange);
+            }
+               
             // 清理输入系统
             if (m_GameInput != null)
             {
@@ -50,7 +62,7 @@ namespace Dungeon
                 m_GameInput = null;
             }
         }
-
+        
         public void SetUIActions()
         {
             m_GameInput.UI.Enable();
@@ -63,9 +75,8 @@ namespace Dungeon
             m_GameInput.Place.Enable();
         }
         // 场景加载时的回调
-        private void OnSceneLoaded(object sender, GameEventArgs gameEventArgs)
+        private void OnProcedureChange(object sender, GameEventArgs gameEventArgs)
         {
-            // 每次场景加载时重置状态
             m_MainCamera = Camera.main;
             m_isBuilding = false;
         }
@@ -98,7 +109,8 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Performed)
             {
-                OnMouseMoveEvent?.Invoke(context.ReadValue<Vector2>());
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnMouseMoveEvent?.Invoke(context.ReadValue<Vector2>());
             }
         }
 
@@ -106,13 +118,17 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Started)
             {
-                DetectClickedObject();
-                OnLeftPressBeginEvent?.Invoke();
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                {
+                    DetectClickedObject();
+                    OnLeftPressBeginEvent?.Invoke();
+                }
             }
 
             if (context.phase == InputActionPhase.Canceled)
             {
-                OnLeftPressEndEvent?.Invoke();
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnLeftPressEndEvent?.Invoke();
             }
         }
 
@@ -120,7 +136,8 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Started)
             {
-                OnRightPressBeginEvent?.Invoke();
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnRightPressBeginEvent?.Invoke();
             }
         }
 
@@ -128,10 +145,13 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Started)
             {
-                if (m_isBuilding)
-                    OnCloseTargetUIEvent?.Invoke();
-                else
-                    OnOpenTargetUIEvent?.Invoke();
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                {
+                    if (m_isBuilding)
+                        OnCloseTargetUIEvent?.Invoke();
+                    else
+                        OnOpenTargetUIEvent?.Invoke();
+                }
             }
 
             if (context.phase == InputActionPhase.Canceled)
@@ -144,8 +164,12 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Performed)
             {
-                Vector2 scrollValue = context.ReadValue<Vector2>();
-                OnCameraZoomEvent?.Invoke(scrollValue.y);
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                {
+                    Vector2 scrollValue = context.ReadValue<Vector2>();
+                    OnCameraZoomEvent?.Invoke(scrollValue.y);
+                }
+                
             }
         }
 
@@ -154,32 +178,32 @@ namespace Dungeon
             if (context.phase == InputActionPhase.Performed)
             {
                 // 持续获取移动方向
-                OnCameraMoveEvent?.Invoke(context.ReadValue<Vector2>());
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnCameraMoveEvent?.Invoke(context.ReadValue<Vector2>());
             }
             else if (context.phase == InputActionPhase.Canceled)
             {
-                OnCameraMoveEndEvent?.Invoke();
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnCameraMoveEndEvent?.Invoke();
             }
         }
 
         private void DetectClickedObject()
         {
-            // 检查是否点击在UI上
-            if (EventSystem.current.IsPointerOverGameObject())
+            // 直接进行射线检测，不依赖 IsPointerOverGameObject()
+            PointerEventData pointerData = new PointerEventData(EventSystem.current);
+            pointerData.position = Pointer.current.position.ReadValue();
+
+            List<RaycastResult> results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointerData, results);
+            
+            // 检查是否有真正的UI元素（Graphic组件）
+            bool isOverUI = results.Any(r => r.gameObject.GetComponent<Graphic>() != null);
+
+            if(isOverUI) 
             {
-                // 进一步确认是否真的是UI
-                PointerEventData pointerData = new PointerEventData(EventSystem.current);
-                pointerData.position = Pointer.current.position.ReadValue();
-        
-                List<RaycastResult> results = new List<RaycastResult>();
-                EventSystem.current.RaycastAll(pointerData, results);
-        
-                bool isRealUI = results.Any(r => r.gameObject.GetComponent<Graphic>() != null);
-        
-                if(isRealUI) {
-                    Debug.Log("点击在真实UI上");
-                    return;
-                }
+                // GameFrameworkLog.Debug("点击在真实UI上");
+                return;
             }
             
             if (m_MainCamera == null )
@@ -271,8 +295,12 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Performed)
             {
-                Vector2 scrollValue = context.ReadValue<Vector2>();
-                OnTrapRotateEvent?.Invoke(scrollValue.y);
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                {
+                     Vector2 scrollValue = context.ReadValue<Vector2>();
+                     OnTrapRotateEvent?.Invoke(scrollValue.y);
+                }
+               
             }
         }
 
@@ -280,7 +308,8 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Performed)
             {
-                OnPlacePositionEvent?.Invoke(context.ReadValue<Vector2>());
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnPlacePositionEvent?.Invoke(context.ReadValue<Vector2>());
             }
         }
 
@@ -288,12 +317,11 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Started)
             {
-                // 检查是否点击在UI上
-                if (EventSystem.current.IsPointerOverGameObject())
-                {
+                if(CheckOverUI())
                     return;
-                }
-                OnTryPlaceEvent?.Invoke();
+
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnTryPlaceEvent?.Invoke();
             }
         }
 
@@ -301,8 +329,34 @@ namespace Dungeon
         {
             if (context.phase == InputActionPhase.Started)
             {
-                OnCancelPlaceEvent?.Invoke();
+                if (!DungeonGameEntry.DungeonGameEntry.GalSystem.dialoguing)
+                    OnCancelPlaceEvent?.Invoke();
             }
+        }
+
+        private bool CheckOverUI()
+        {
+            // 直接进行射线检测，不依赖 IsPointerOverGameObject()
+            PointerEventData pointerData = new PointerEventData(EventSystem.current);
+            pointerData.position = Pointer.current.position.ReadValue();
+
+            List<RaycastResult> results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointerData, results);
+
+            for (int i = 0; i < results.Count; i++)
+            {
+                GameFrameworkLog.Debug(results[i]);
+            }
+            
+            // 检查是否有真正的UI元素（Graphic组件）
+            bool isOverUI = results.Any(r => r.gameObject.GetComponent<Graphic>() != null);
+
+            if(isOverUI) 
+            {
+                GameFrameworkLog.Debug("点击在真实UI上");
+                return true;
+            }
+            return false;
         }
     }
 }

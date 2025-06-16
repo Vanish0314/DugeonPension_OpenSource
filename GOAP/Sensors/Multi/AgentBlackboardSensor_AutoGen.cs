@@ -5,13 +5,11 @@
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Trap;
-using Dungeon.GOAP.Keys.WorldKey.Local;
+using Dungeon.Character;
+using Dungeon.DungeonEntity;
 using GameFramework;
 
-namespace Dungeon.GOAP.Sensors.Multi
+namespace Dungeon.GOAP
 {
     public class AgentBlackboardSensor_AutoGen : MultiSensorBase
     {
@@ -37,7 +35,7 @@ namespace Dungeon.GOAP.Sensors.Multi
 
         private SenseValue SenseNumInBlackboardStandardTrap(IActionReceiver agent, IComponentReference references)
         {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
+            var blackboard = references.GetCachedComponent<AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
 #if UNITY_EDITOR
             {
                 if (blackboard == null)
@@ -65,7 +63,7 @@ namespace Dungeon.GOAP.Sensors.Multi
 
         private SenseValue SenseNumInBlackboardStandardDungeonMonster(IActionReceiver agent, IComponentReference references)
         {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
+            var blackboard = references.GetCachedComponent<AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
 #if UNITY_EDITOR
             {
                 if (blackboard == null)
@@ -93,7 +91,7 @@ namespace Dungeon.GOAP.Sensors.Multi
 
         private SenseValue SenseNumInBlackboardStandardTorch(IActionReceiver agent, IComponentReference references)
         {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
+            var blackboard = references.GetCachedComponent<AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
 #if UNITY_EDITOR
             {
                 if (blackboard == null)
@@ -121,7 +119,7 @@ namespace Dungeon.GOAP.Sensors.Multi
 
         private SenseValue SenseNumInBlackboardDungeonTreasureChestBase(IActionReceiver agent, IComponentReference references)
         {
-            var blackboard = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
+            var blackboard = references.GetCachedComponent<AgentLowLevelSystem>()?.GetBlackboard()?.GetBlackboard();
 #if UNITY_EDITOR
             {
                 if (blackboard == null)

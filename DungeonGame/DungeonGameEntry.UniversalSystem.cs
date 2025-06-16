@@ -10,13 +10,21 @@ namespace Dungeon.DungeonGameEntry
         {
             PlaceManager.Instance.Initialize();
             
-            TimeManager.Instance.Subscribe();
-            
             HPManager.Instance.Initialize();
             
             CursesManager.Instance.Initialize();
             
-            DungeonHeroUIManager.Instance.Initialize();
+            TechnologyTreeManager.Instance.Initialize();
+            
+            BuildModel.Instance.Initialize();
+            
+            MetropolisHeroManager.Instance.Initialize(null);
+            
+            MetropolisBuildingManager.Instance.Initialize(null);
+            
+            MetropolisHeroTransverter.Instance.Initialize();
+            
+            MetropolisHPManager.Instance.Initialize();
         }
     }
 }

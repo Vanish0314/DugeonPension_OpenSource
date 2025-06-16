@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.Goap;
+using Dungeon.Character;
 using Dungeon.GOAP;
-using GameFramework;
-using UnityEngine;
 
 namespace Dungeon
 {
@@ -38,7 +36,7 @@ namespace Dungeon
         {
             return (receiver, reference) =>
             {
-                var result = reference.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().CheckIsSkillReady(skillName);
+                var result = reference.GetCachedComponent<AgentLowLevelSystem>().CheckIsSkillReady(skillName);
                 return result? 1 : 0;
             };
         }

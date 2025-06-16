@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
 using DG.Tweening;
-using Dungeon.DUngeonCalculator;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Trap;
+using Dungeon.DungeonCalculator;
+using Dungeon.DungeonEntity;
+using Dungeon.DungeonEntity;
+using Dungeon.DungeonEntity;
 using Dungeon.SkillSystem;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
@@ -94,7 +94,7 @@ namespace Dungeon.AgentLowLevelSystem
                 }
 
                 GameFrameworkLog.Info("[AgentLowLevelSystem] UseSkill: " + data.name);
-                BumpUseSkillBubbule(data.name);
+                BumpUseSkillBubbule(data.skillName);
 
                 SetAnimatorState(ANIMATOR_BOOL_ATTACKING, data.TotalUsageTime);
 
@@ -122,9 +122,9 @@ namespace Dungeon.AgentLowLevelSystem
 
                     GameFrameworkLog.Error($"[AgentLowLevelSystem] 勇者没有这个技能,但是goap发出使用技能的指令.\n勇者物体:{gameObject.name},技能:{skillDesc.name},勇者名称:{HeroName}");
                 }
-                return ActionRunState.Stop;
             }
 #endif
+            return ActionRunState.Stop;
         }
 
         public bool IsDisarmingTrap(DungeonTrapBase trap)

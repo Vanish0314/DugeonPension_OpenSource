@@ -2,17 +2,22 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using Dungeon.Character;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.DungeonEntity.Trap
+namespace Dungeon.DungeonEntity
 {
-    [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
     public class DungeonTrapEffectAreaCollider : MonoBehaviour
     {
         private DungeonTrapBase trap;
         private List<BoxCollider2D> boxes = new();
         private Dictionary<Collider2D, int> map = new();
+        private bool isOnceUsed;
+        private float trapSkillColdDownTime;
+        private bool isUsingSkill = false;
+        private float timer = 0.0f;
 
         public void Init(List<Vector2Int> area, DungeonTrapBase trapBase)
         {
@@ -34,21 +39,56 @@ namespace Dungeon.DungeonEntity.Trap
 
             var rb = GetComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Kinematic;
+
+            isOnceUsed = trapBase.IsOnceTrap;
+            trapSkillColdDownTime = trapBase.skill.cooldownTimeInSec;
         }
+
+
+        void FixedUpdate()
+        {
+            if (isOnceUsed)
+                return;
+
+            timer -= Time.fixedDeltaTime;
+
+            if (timer <= 0)
+            {
+                timer = trapSkillColdDownTime;
+                List<Collider2D> targets = new(map.Keys);
+                foreach (var col in targets)
+                {
+                    if (col == null) continue;
+
+                    var low = col.GetComponent<AgentLowLevelSystem>();
+                    if (low != null && !low.IsDisarmingTrap(trap))
+                    {
+                        trap.OnEffectEnter(low);
+                    }
+                }
+            }
+        }
+
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
+            var low = collision.GetComponent<AgentLowLevelSystem>();
+            if (low == null)
+            {
+                GameFrameworkLog.Error($"[DungeonTrapBase] 非勇者对象进入陷阱: {collision.gameObject.name}, 层级:{LayerMask.LayerToName(collision.gameObject.layer)}");
+                return;
+            }
+
+            if (!low.IsAlive())
+                return;
+
             if (!map.ContainsKey(collision))
             {
                 map[collision] = 1;
-                var lowLevel = collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
-                if (lowLevel != null)
+
+                if (isOnceUsed)
                 {
-                    TryExcuteTrap(lowLevel);
-                }
-                else
-                {
-                    GameFrameworkLog.Error($"[DungeonTrapBase] 有物体不是勇者,但检测了与陷阱的碰撞,请检查1. 层级设置是否正确, 2. 层级相交规则是否正确. 物体名称:{collision.gameObject.name},所在层级:{LayerMask.LayerToName(collision.gameObject.layer)}");
+                    TryExcuteTrap(low);
                 }
             }
             else
@@ -56,6 +96,7 @@ namespace Dungeon.DungeonEntity.Trap
                 map[collision]++;
             }
         }
+
 
         private void OnTriggerExit2D(Collider2D collision)
         {
@@ -69,7 +110,7 @@ namespace Dungeon.DungeonEntity.Trap
             }
         }
 
-        private void TryExcuteTrap(AgentLowLevelSystem.AgentLowLevelSystem low)
+        private void TryExcuteTrap(AgentLowLevelSystem low)
         {
 #if UNITY_EDITOR
             if (low == null)

@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Evnents;
+using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
 using UnityGameFramework.Runtime;
@@ -11,56 +13,61 @@ namespace Dungeon
     public class TimeManager: MonoBehaviour
     {
         public static TimeManager Instance { get; private set; }
-    
-        // 5分钟计时相关
-        public event Action OnFiveMinutesElapsed;
-        [SerializeField] private float fiveMinuteTimer;
-        private const float FiveMinutes = 20f; // 300秒=5分钟
+
+        [Header("波次计时器")] 
+        [SerializeField] private float firstReachCutdown = 3f;
+        [SerializeField] private float defaultReachCutdown = 100f;
+        [SerializeField] private float cutdownTimer;
+        
+        private float cutdown = 3f;
     
         // 游戏暂停控制
-        public bool IsPaused { get; private set; }
-        private bool _isFiveMinute;
+        public bool IsPaused { get; private set; } = false;
+        private bool _heroIsReaching;
         private int m_Flag = 0;
         
         private void Awake()
         {
             if (Instance == null) Instance = this;
+            Subscribe();
         }
 
         private void OnEnable()
         {
             if (m_Flag == 0)
             {
+                cutdown = firstReachCutdown;
                 m_Flag = 1;
             }
             else if (m_Flag == 1)
             {
+                cutdown = defaultReachCutdown;
                 Subscribe();
             }
         }
         
         public void Subscribe()
         {
-            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnSwitchedToMetroplisProcedureEvent.EventId, OnSwitchedToMetroplis);
         }
         private void OnDisable()
         {
-            DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId,OnSceneLoaded);
+            DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSwitchedToMetroplisProcedureEvent.EventId,OnSwitchedToMetroplis);
         }
         private void Update()
         {
             if (IsPaused) return;
 
-            if (_isFiveMinute)
+            if (_heroIsReaching)
             {
-                fiveMinuteTimer -= Time.deltaTime;
+                cutdownTimer -= Time.deltaTime;
                 if (TimelineModel.Instance != null)
-                    TimelineModel.Instance.Timeline = fiveMinuteTimer / FiveMinutes;
+                    TimelineModel.Instance.Timeline = cutdownTimer / cutdown;
         
-                if (fiveMinuteTimer <= 0f)
+                if (cutdownTimer <= 0f)
                 {
-                    OnFiveMinutesElapsed?.Invoke();
-                    _isFiveMinute = false;
+                    DungeonGameEntry.DungeonGameEntry.Event.Fire(this,OnHeroReachEventArgs.Create());
+                    _heroIsReaching = false;
                 }
             }
         }
@@ -71,20 +78,33 @@ namespace Dungeon
             Time.timeScale = paused ? 0f : 1f;
         }
         
-        private void OnSceneLoaded(object sender, GameEventArgs e)
+        private void OnSwitchedToMetroplis(object sender, GameEventArgs e)
         {
-            OnSceneLoadedEventArgs sceneLoadedEventArgs = e as OnSceneLoadedEventArgs;
-            if (sceneLoadedEventArgs.SceneID == 2)
+            cutdownTimer = cutdown;
+            _heroIsReaching = true;
+        }
+    }
+
+    public class OnHeroReachEventArgs : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnHeroReachEventArgs).GetHashCode();
+        public override int Id
+        {
+            get
             {
-                fiveMinuteTimer = FiveMinutes;
-                _isFiveMinute = true;
+                return EventId;
             }
         }
-        
-        // 用于UI显示
-        public float GetRemainingFiveMinuteTime()
+
+        public static OnHeroReachEventArgs Create()
         {
-            return fiveMinuteTimer;
+            OnHeroReachEventArgs onHeroReachEventArgs = ReferencePool.Acquire<OnHeroReachEventArgs>();
+            return onHeroReachEventArgs;
+        }
+
+        public override void Clear()
+        {
+            
         }
     }
 }

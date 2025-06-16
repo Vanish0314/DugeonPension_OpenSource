@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.GOAP.Action;
+using Dungeon.Character;
+using Dungeon.GOAP;
 using UnityEngine;
 
 namespace Dungeon
@@ -24,8 +24,8 @@ namespace Dungeon
         {
             var baseCost = base.GetCost(agent, references, target);
 
-            var characterTrait = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().CharacterTrait;
-            var dndSkill = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().DndSkillData;
+            var characterTrait = references.GetCachedComponent<AgentLowLevelSystem>().CharacterTrait;
+            var dndSkill = references.GetCachedComponent<AgentLowLevelSystem>().DndSkillData;
             return baseCost + characterTrait.Aggressive - dndSkill.DexterityModifyValue;
         }
     }

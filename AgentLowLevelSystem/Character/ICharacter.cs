@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Struct;
+using Dungeon.Character;
 
 namespace Dungeon.Character
 {

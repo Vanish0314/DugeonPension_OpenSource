@@ -6,8 +6,10 @@ using Cinemachine;
 using MoreMountains.Feedbacks;
 using MoreMountains.FeedbacksForThirdParty;
 using MoreMountains.Tools;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Dungeon
 {
@@ -30,6 +32,20 @@ namespace Dungeon
         private MMF_Player _timeFreezePlayer;
         private MMF_Player _timeScalePlayer;
         private MMF_Player _floatingTextPlayer;
+        private MMF_Player _textShakePlayer; // 新增Text抖动Player
+        private MMF_Player _textShakeWithColorPlayer; // 带颜色变化的抖动
+        
+        
+        [Header("Text Shake Settings")]
+        [SerializeField] private float defaultShakeDuration = 0.5f;
+        [SerializeField] private float defaultShakeSpeed = 20f;
+        [SerializeField] private float defaultShakeRange = 5f;
+        [SerializeField] private Vector3 defaultShakeDirection = Vector3.right;
+        [SerializeField] private Vector3 defaultAltDirection = Vector3.up;
+        [SerializeField] private bool defaultRandomizeDirection = true;
+        [SerializeField] private Vector3 defaultNoiseMin = Vector3.zero;
+        [SerializeField] private Vector3 defaultNoiseMax = Vector3.one;
+        [SerializeField] private AnimationCurve defaultColorCurve;
 
         private void Awake()
         {
@@ -48,8 +64,6 @@ namespace Dungeon
                // Destroy(virtualCamera);
             }
 
-           // SceneManager.sceneLoaded += OnSceneLoaded;
-
             // 屏幕震动
             _screenShakePlayer = InitMMF_Player("ScreenShake");
             AddScreenShakeFeedback(_screenShakePlayer);
@@ -65,18 +79,18 @@ namespace Dungeon
             // 冒气泡
             _floatingTextPlayer = InitMMF_Player("FloatingText");
             AddFloatingTextFeedback(_floatingTextPlayer);
+            // Text抖动
+            _textShakePlayer = InitMMF_Player("TextShake");
+            AddTextShakeFeedback(_textShakePlayer, false);
+            _textShakePlayer.ForceTimescaleMode = true;
+            _textShakePlayer.ForcedTimescaleMode = TimescaleModes.Unscaled;
+            // 带颜色变化的文本抖动
+            _textShakeWithColorPlayer = InitMMF_Player("TextShakeWithColor");
+            AddTextShakeFeedback(_textShakeWithColorPlayer, true);
+            _textShakeWithColorPlayer.ForceTimescaleMode = true;
+            _textShakeWithColorPlayer.ForcedTimescaleMode = TimescaleModes.Unscaled;
         }
-
-        private void OnDestroy()
-        {
-           // SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
-
-        private void OnSceneLoaded(Scene arg0, LoadSceneMode arg1)
-        {
-            Camera.main.GetComponent<CinemachineBrain>();
-        }
-
+        
         private MMF_Player InitMMF_Player(string playerName)
         {
             // 创建 MMF_Player 对象并设置为 FeelSystem 的子物体
@@ -296,5 +310,191 @@ namespace Dungeon
             }
         }
 
+        private void AddTextShakeFeedback(MMF_Player player, bool includeColor)
+        {
+            // 添加位置抖动
+            MMF_PositionShake positionShake = new MMF_PositionShake();
+            //positionShake.Timing.TimescaleMode = TimescaleModes.Unscaled; 
+            positionShake.Duration = defaultShakeDuration;
+            positionShake.ShakeSpeed = defaultShakeSpeed;
+            positionShake.ShakeRange = defaultShakeRange;
+            positionShake.ShakeMainDirection = defaultShakeDirection;
+            positionShake.RandomizeDirection = defaultRandomizeDirection;
+            positionShake.ShakeAltDirection = defaultAltDirection;
+            positionShake.DirectionalNoiseStrengthMin = defaultNoiseMin;
+            positionShake.DirectionalNoiseStrengthMax = defaultNoiseMax;
+            positionShake.AddDirectionalNoise = true;
+            positionShake.Label = "TextPositionShake";
+            player.AddFeedback(positionShake);
+
+            if (includeColor)
+            {
+                // 使用MMF_TextColor替代MMF_TextMeshProColor
+                MMF_TextColor colorFeedback = new MMF_TextColor();
+                //colorFeedback.Timing.TimescaleMode = TimescaleModes.Unscaled;
+                colorFeedback.ColorMode = MMF_TextColor.ColorModes.Interpolate;
+                colorFeedback.Duration = defaultShakeDuration * 0.8f;
+                colorFeedback.DestinationColor = Color.red; // 目标颜色
+                colorFeedback.ColorCurve = defaultColorCurve;
+
+                colorFeedback.Label = "TextColorFlash";
+                player.AddFeedback(colorFeedback);
+            }
+        }
+
+        // 普通抖动方法（无颜色变化）
+        public void ShakeText(
+            Text text, 
+            float intensity = 1.0f, 
+            float? duration = null,
+            float? speed = null,
+            float? range = null,
+            Vector3? mainDirection = null,
+            Vector3? altDirection = null,
+            bool? randomizeDirection = null,
+            Vector3? noiseMin = null,
+            Vector3? noiseMax = null)
+        {
+            if (_textShakePlayer == null || text == null) return;
+
+            // 获取或添加Shaker组件
+            MMPositionShaker shaker = text.GetComponent<MMPositionShaker>();
+            if (shaker == null)
+            {
+                shaker = text.gameObject.AddComponent<MMPositionShaker>();
+                shaker.Mode = MMPositionShaker.Modes.RectTransform;
+                shaker.TargetRectTransform = text.rectTransform;
+            }
+
+            // 设置参数
+            MMF_PositionShake shakeFeedback = _textShakePlayer.GetFeedbackOfType<MMF_PositionShake>();
+            if (shakeFeedback != null)
+            {
+                shakeFeedback.TargetShaker = shaker;
+                shakeFeedback.Duration = duration ?? defaultShakeDuration;
+                shakeFeedback.ShakeSpeed = speed ?? defaultShakeSpeed;
+                shakeFeedback.ShakeRange = (range ?? defaultShakeRange) * intensity;
+                shakeFeedback.ShakeMainDirection = mainDirection ?? defaultShakeDirection;
+                shakeFeedback.ShakeAltDirection = altDirection ?? defaultAltDirection;
+                shakeFeedback.RandomizeDirection = randomizeDirection ?? defaultRandomizeDirection;
+                shakeFeedback.DirectionalNoiseStrengthMin = noiseMin ?? defaultNoiseMin;
+                shakeFeedback.DirectionalNoiseStrengthMax = noiseMax ?? defaultNoiseMax;
+            }
+
+            _textShakePlayer.PlayFeedbacks();
+        }
+
+        // 带颜色变化的抖动方法
+        public void ShakeTextWithColor(
+            Text text, 
+            Color flashColor,
+            float intensity = 1.0f,
+            float? duration = null,
+            float? speed = null,
+            float? range = null,
+            Vector3? mainDirection = null,
+            Vector3? altDirection = null,
+            bool? randomizeDirection = null,
+            Vector3? noiseMin = null,
+            Vector3? noiseMax = null)
+        {
+            if (_textShakeWithColorPlayer == null || text == null) return;
+
+            // 1. 保存初始颜色（如果尚未保存）
+            if (!_originalTextColors.ContainsKey(text))
+            {
+                _originalTextColors[text] = text.color;
+            }
+
+            // 2. 取消正在进行的颜色恢复
+            if (_activeColorRestorations.TryGetValue(text, out var runningCoroutine))
+            {
+                if (runningCoroutine != null)
+                {
+                    StopCoroutine(runningCoroutine);
+                }
+            }
+            
+            // 获取或添加Shaker组件
+            MMPositionShaker shaker = text.GetComponent<MMPositionShaker>();
+            if (shaker == null)
+            {
+                shaker = text.gameObject.AddComponent<MMPositionShaker>();
+                shaker.Mode = MMPositionShaker.Modes.RectTransform;
+                shaker.TargetRectTransform = text.rectTransform;
+            }
+
+            // 设置位置抖动参数
+            MMF_PositionShake shakeFeedback = _textShakeWithColorPlayer.GetFeedbackOfType<MMF_PositionShake>();
+            if (shakeFeedback != null)
+            {
+                shakeFeedback.TargetShaker = shaker;
+                shakeFeedback.Duration = duration ?? defaultShakeDuration;
+                shakeFeedback.ShakeSpeed = speed ?? defaultShakeSpeed;
+                shakeFeedback.ShakeRange = (range ?? defaultShakeRange) * intensity;
+                shakeFeedback.ShakeMainDirection = mainDirection ?? defaultShakeDirection;
+                shakeFeedback.ShakeAltDirection = altDirection ?? defaultAltDirection;
+                shakeFeedback.RandomizeDirection = randomizeDirection ?? defaultRandomizeDirection;
+                shakeFeedback.DirectionalNoiseStrengthMin = noiseMin ?? defaultNoiseMin;
+                shakeFeedback.DirectionalNoiseStrengthMax = noiseMax ?? defaultNoiseMax;
+            }
+
+            // 4. 设置颜色变化参数
+            MMF_TextColor colorFeedback = _textShakeWithColorPlayer.GetFeedbackOfType<MMF_TextColor>();
+            if (colorFeedback != null)
+            {
+                colorFeedback.TargetText = text;
+                colorFeedback.DestinationColor = flashColor;
+                colorFeedback.Duration = (duration ?? defaultShakeDuration) * 0.8f;
+            }
+
+            _textShakeWithColorPlayer.PlayFeedbacks();
+    
+            // 5. 启动新的颜色恢复协程
+            _activeColorRestorations[text] = StartCoroutine(
+                RestoreTextColorAfterShake(
+                    text, 
+                    _originalTextColors[text], // 总是使用最初存储的颜色
+                    (duration ?? defaultShakeDuration) * 0.8f
+                )
+            );
+        }
+        
+        // 在类中添加字段存储初始颜色
+        private Dictionary<Text, Color> _originalTextColors = new Dictionary<Text, Color>();
+        private Dictionary<Text, Coroutine> _activeColorRestorations = new Dictionary<Text, Coroutine>();
+        
+        // 修改后的恢复协程
+        private IEnumerator RestoreTextColorAfterShake(Text text, Color originalColor, float delay)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+
+            if (text != null)
+            {
+                float elapsedTime = 0f;
+                float restoreDuration = 0.3f;
+                Color currentColor = text.color;
+        
+                while (elapsedTime < restoreDuration)
+                {
+                    if (text == null) yield break;
+            
+                    elapsedTime += Time.unscaledDeltaTime;
+                    text.color = Color.Lerp(currentColor, originalColor, elapsedTime / restoreDuration);
+                    yield return null;
+                }
+        
+                if (text != null)
+                {
+                    text.color = originalColor;
+                }
+            }
+    
+            // 清理字典
+            if (_activeColorRestorations.ContainsKey(text))
+            {
+                _activeColorRestorations.Remove(text);
+            }
+        }
     }
 }

@@ -8,10 +8,10 @@ namespace Dungeon.SkillSystem.SkillEffect
     [CreateAssetMenu(fileName = "New Knockback Effect", menuName = "Skill System/Skill Effect/Knockback")]
     public class SkillEffect_Knockback : SkillEffectBase
     {
-        public float KnockbackDistance;
+        public float KnockbackForce;
         public override void Fuck(SkillCalculator calculator)
         {
-            calculator.GiveEffect_KnockBack(KnockbackDistance);
+            calculator.GiveEffect_KnockBack(KnockbackForce);
         }
 
     }

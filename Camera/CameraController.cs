@@ -7,6 +7,7 @@ namespace Dungeon
     {
         [Header("Base Settings")]
         [SerializeField] private InputReader inputReader;
+        [SerializeField] private AnimationCurve moveSpeedCurve = AnimationCurve.Linear(0, 0, 1, 1);
         [SerializeField] private float moveSpeed = 15f;
         [SerializeField] private float zoomSpeed = 0.25f;
         
@@ -17,7 +18,7 @@ namespace Dungeon
         [Header("Move Bounds")] 
         [SerializeField] private Vector2 minBounds = new Vector2(-10, -10);
         [SerializeField] private Vector2 maxBounds = new Vector2(10, 10);
-
+        
         private Camera m_MainCamera;
         private bool m_IsMoving = false;
         private Vector3 m_Dir;
@@ -32,7 +33,11 @@ namespace Dungeon
         {
             if (m_IsMoving)
             {
-                transform.position += m_Dir * (moveSpeed * Time.deltaTime);
+                // 根据当前缩放级别计算动态速度
+                float speedMultiplier = moveSpeedCurve.Evaluate(m_MainCamera.orthographicSize);
+                float currentSpeed = moveSpeed * speedMultiplier;
+                
+                transform.position += m_Dir * (currentSpeed * Time.unscaledDeltaTime);
                 // 添加边界限制
                 ClampCameraPosition();
             }
@@ -40,6 +45,8 @@ namespace Dungeon
 
         private void OnEnable()
         {
+            transform.position = new Vector3(0, 0, -10);
+            
             inputReader.OnCameraMoveEvent += HandleCameraMove;
             inputReader.OnCameraMoveEndEvent += HandleCameraMoveEnd;
             inputReader.OnCameraZoomEvent += HandleCameraZoom;
@@ -55,21 +62,30 @@ namespace Dungeon
 
         private void HandleCameraMove(Vector2 moveDirection)
         {
+            if(GatherEffectHelper.Instance.IsGathering)
+                return;
+            
             m_IsMoving = true;
             m_Dir = new Vector3(moveDirection.x, moveDirection.y, 0);
         }
         
         private void HandleCameraMoveEnd()
         {
+            if(GatherEffectHelper.Instance.IsGathering)
+                return;
+            
             m_IsMoving = false;
             m_Dir = Vector3.zero;
         }
 
         private void HandleCameraZoom(float zoomInput)
         {
+            if(GatherEffectHelper.Instance.IsGathering)
+                return;
+            
             float zoomDelta = -zoomInput; // 反转滚动方向
             m_MainCamera.orthographicSize = Mathf.Clamp(
-                m_MainCamera.orthographicSize + zoomDelta * zoomSpeed * Time.deltaTime,
+                m_MainCamera.orthographicSize + zoomDelta * zoomSpeed * Time.unscaledDeltaTime,
                 minZoom,
                 maxZoom
             );

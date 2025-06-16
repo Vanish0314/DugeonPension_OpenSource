@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
+using Dungeon.DungeonEntity;
 using Dungeon.Vision2D;
 using UnityEngine;
 
-namespace Dungeon.Character.Hero
+namespace Dungeon.Character
 {
     public partial class HeroEntityBase : DungeonVisitorEntity
     {
@@ -20,7 +21,7 @@ namespace Dungeon.Character.Hero
 
         public override void InitViewer()
         {
-            mViewer = GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>().GetViewer();
+            mViewer = GetComponent<AgentLowLevelSystem>().GetViewer();
             mVision = mViewer.GetVision();
         }
 

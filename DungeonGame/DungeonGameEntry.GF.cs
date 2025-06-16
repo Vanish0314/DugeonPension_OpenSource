@@ -187,7 +187,7 @@ namespace Dungeon.DungeonGameEntry
             private set;
         }
  
-        private static void InitGameFramwork()
+        public static void InitGameFramwork()
         {
             Base = UnityGameFramework.Runtime.GameEntry.GetComponent<BaseComponent>();
             Config = UnityGameFramework.Runtime.GameEntry.GetComponent<ConfigComponent>();

@@ -1,11 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
-using Dungeon.GOAP.Targets;
+using Dungeon.GOAP;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Action
+namespace Dungeon.GOAP
 {
     public class ActionDataDungeonExit : IActionData
     {

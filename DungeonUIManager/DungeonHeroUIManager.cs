@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.Character.Hero;
-using Dungeon.Common.MonoPool;
+using Dungeon.Character;
+using Dungeon.Character;
+using Dungeon.Common;
+using Dungeon.Evnents;
 using GameFramework.Event;
 using UnityEngine;
 
@@ -30,6 +31,7 @@ namespace Dungeon
 
             Instance = this;
             transform.position = Vector3.zero;
+            Initialize();
         }
 
         private void Update()
@@ -47,22 +49,39 @@ namespace Dungeon
         {
             m_captureButtonPool = gameObject.GetOrAddComponent<MonoPoolComponent>();
             m_captureButtonPool.Init("CaptureButtonPool", m_CaptureButtonPrefab, transform, m_InitialPoolSize);
-        }
-        
-        private void OnEnable()
-        {
             DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnHeroFaintedBySubmissiveness.EventId, OnHeroFainted);
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnLeaveHeroExploringDungeonProcedureEvent.EventId, OnLeaveHeroExploringDungeon);
         }
 
+        private int flag = 0;
+        private void OnEnable()
+        {
+            if (flag == 0)
+            {
+                flag = 1;
+            }
+            else
+            {
+                DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnHeroFaintedBySubmissiveness.EventId, OnHeroFainted);
+                DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnLeaveHeroExploringDungeonProcedureEvent.EventId, OnLeaveHeroExploringDungeon);
+            }
+        }
+        
         private void OnDisable()
         {
             DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnHeroFaintedBySubmissiveness.EventId, OnHeroFainted);
+            DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnLeaveHeroExploringDungeonProcedureEvent.EventId, OnLeaveHeroExploringDungeon);
         }
-
+        
         private void OnHeroFainted(object sender, GameEventArgs e)
         {
             OnHeroFaintedBySubmissiveness eventData = (OnHeroFaintedBySubmissiveness)e;
             CreateCaptureButton(eventData.MainHero);
+        }
+
+        private void OnLeaveHeroExploringDungeon(object sender, GameEventArgs e)
+        {
+            ReturnAllCaptureButtons();
         }
 
         private void CreateCaptureButton(HeroEntityBase hero)
@@ -78,13 +97,13 @@ namespace Dungeon
             m_ActiveCaptureButtons.Add(button);
         }
 
-        public void ReturnCaptureButton(CaptureButton button)
+        private void ReturnAllCaptureButtons()
         {
-            if (m_ActiveCaptureButtons.Contains(button))
+            foreach (var button in m_ActiveCaptureButtons)
             {
                 button.ReturnToPool();
-                m_ActiveCaptureButtons.Remove(button);
             }
+            m_ActiveCaptureButtons.Clear();
         }
     }
 }

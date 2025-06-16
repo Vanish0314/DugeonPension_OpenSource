@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.GOAP.Keys.WorldKey.Local;
+using Dungeon.Character;
+using Dungeon.GOAP;
 using GameFramework;
 using UnityEngine;
 
@@ -31,12 +31,12 @@ namespace Dungeon
 
         private SenseValue SenseMP(IActionReceiver receiver, IComponentReference reference)
         {
-            return reference.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().Mp;
+            return reference.GetCachedComponent<AgentLowLevelSystem>().Mp;
         }
 
         private SenseValue SenseHP(IActionReceiver receiver, IComponentReference reference)
         {
-            return reference.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().Hp;
+            return reference.GetCachedComponent<AgentLowLevelSystem>().Hp;
         }
     }
 }

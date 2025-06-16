@@ -50,6 +50,15 @@ namespace Dungeon
 
         public void ShowBubble(Transform target, string content, BubbleID id)
         {
+            // 检查是否已经有相同目标的气泡
+            foreach(var existingBubble in FindObjectsOfType<BubbleAnimator>())
+            {
+                if (existingBubble.target == target && existingBubble.bubbleID == id)
+                {
+                    return; // 不再创建新气泡
+                }
+            }
+            
             StartCoroutine(ProcessBubble(target, content, id));
         }
         
@@ -72,6 +81,8 @@ namespace Dungeon
             InitializeBubbleContent(bubbleObj, content, profile);
 
             BubbleAnimator animator = bubbleObj.AddComponent<BubbleAnimator>();
+            animator.target = target;
+            animator.bubbleID = id;
             yield return StartCoroutine(ExecuteAnimation(animator, bubbleObj, target, profile)); 
             
             Destroy(bubbleObj);

@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Dungeon.DungeonEntity;
 using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public static class AgentBlackBoardEnum
     {

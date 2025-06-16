@@ -1,7 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.DungeonEntity.Trap;
+using Dungeon.DungeonEntity;
+using Dungeon.DungeonGameEntry;
 using Dungeon.GridSystem;
 using GameFramework;
 using UnityEngine;
@@ -64,9 +65,9 @@ namespace Dungeon.GridSystem
 
         public void Init()
         {
-            for(int i = transform.childCount - 1; i >= 0 ; i--)
+            for (int i = transform.childCount - 1; i >= 0; i--)
             {
-                if(transform.GetChild(i).gameObject.GetComponent<Tilemap>()!= null)
+                if (transform.GetChild(i).gameObject.GetComponent<Tilemap>() != null)
                 {
                     DestroyImmediate(transform.GetChild(i).gameObject);
                 }
@@ -74,7 +75,23 @@ namespace Dungeon.GridSystem
 
             m_BackGroundTileMap = GetOrCreateTilemap("BackGround");
             m_BuildingsTileMap = GetOrCreateTilemap("Buildings");
-            m_DecorateTileMap = GetOrCreateTilemap("Debug");
+            m_DecorateTileMap = GetOrCreateTilemap("Decorate");
+
+            var backRender = m_BackGroundTileMap.GetComponent<TilemapRenderer>();
+            var buildRender = m_BuildingsTileMap.GetComponent<TilemapRenderer>();
+            var decorRender = m_DecorateTileMap.GetComponent<TilemapRenderer>();
+
+            backRender.sortingLayerName = "BackGround";
+            buildRender.sortingLayerName = "Buildings";
+            decorRender.sortingLayerName = "Decorators";
+
+            var mat = DungeonGameEntry.DungeonGameEntry.GridSystem.m_TileMapMaterial;
+            if (mat != null)
+            {
+                backRender.material = mat;
+                buildRender.material = mat;
+                decorRender.material = mat;
+            }
 
             InitTilemapCollider();
         }
@@ -90,16 +107,31 @@ namespace Dungeon.GridSystem
         }
         private void InitTilemapCollider()
         {
-            var go = m_BackGroundTileMap.gameObject;
+            {
+                var go = m_BackGroundTileMap.gameObject;
 
-            var rb = go.GetOrAddComponent<Rigidbody2D>();
-            var collider = go.GetOrAddComponent<TilemapCollider2D>();
-            var composite = go.GetOrAddComponent<CompositeCollider2D>();
+                var rb = go.GetOrAddComponent<Rigidbody2D>();
+                var collider = go.GetOrAddComponent<TilemapCollider2D>();
+                var composite = go.GetOrAddComponent<CompositeCollider2D>();
 
-            rb.bodyType = RigidbodyType2D.Static;
-            collider.usedByComposite = true;
-            composite.geometryType = CompositeCollider2D.GeometryType.Polygons;
-            composite.generationType = CompositeCollider2D.GenerationType.Synchronous;
+                rb.bodyType = RigidbodyType2D.Static;
+                collider.usedByComposite = true;
+                composite.geometryType = CompositeCollider2D.GeometryType.Polygons;
+                composite.generationType = CompositeCollider2D.GenerationType.Synchronous;
+            }
+
+            {
+                var go = m_DecorateTileMap.gameObject;
+
+                var rb = go.GetOrAddComponent<Rigidbody2D>();
+                var collider = go.GetOrAddComponent<TilemapCollider2D>();
+                var composite = go.GetOrAddComponent<CompositeCollider2D>();
+
+                rb.bodyType = RigidbodyType2D.Static;
+                collider.usedByComposite = true;
+                composite.geometryType = CompositeCollider2D.GeometryType.Polygons;
+                composite.generationType = CompositeCollider2D.GenerationType.Synchronous;
+            }
         }
 
         [Obsolete("Visual should only be responsible for rendering, not for getting grid properties")]
@@ -146,10 +178,11 @@ namespace Dungeon.GridSystem
         }
         public static Dictionary<TileFunctionType, VisualLayer> mFunctionToLayerMap = new()
         {
-            { TileFunctionType.Default, VisualLayer.BackGround },
-            { TileFunctionType.Trap, VisualLayer.Decorate },
-            { TileFunctionType.Treasure, VisualLayer.Decorate },
-            { TileFunctionType.Door, VisualLayer.Buildings },
+            { TileFunctionType.Default   , VisualLayer.BackGround },
+            { TileFunctionType.Trap      , VisualLayer.Decorate   },
+            { TileFunctionType.Treasure  , VisualLayer.Decorate   },
+            { TileFunctionType.Decorator , VisualLayer.Decorate   },
+            { TileFunctionType.Door      , VisualLayer.Buildings  },
         };
 
 #if UNITY_EDITOR
@@ -159,11 +192,11 @@ namespace Dungeon.GridSystem
             {
                 var bg = transform.Find("BackGround")?.gameObject;
                 var bt = transform.Find("Buildings")?.gameObject;
-                var dc = transform.Find("Debug")?.gameObject;
+                var dc = transform.Find("Decorate")?.gameObject;
 
                 if (bg == null || bt == null || dc == null)
                 {
-                    GameFrameworkLog.Error("[VisualGrid] 保存个头,这哪有地图给你保存啊.\n确保GridSystem中有三个子物体:BackGround,Buildings,Debug. 要有Tilemap组件.");
+                    GameFrameworkLog.Error("[VisualGrid] 保存个头,这哪有地图给你保存啊.\n确保GridSystem中有三个子物体:BackGround,Buildings,Decorate. 要有Tilemap组件.");
                 }
 
                 bg.transform.SetParent(transform);
@@ -173,6 +206,10 @@ namespace Dungeon.GridSystem
                 m_BackGroundTileMap = bg.GetOrAddComponent<Tilemap>();
                 m_BuildingsTileMap = bt.GetOrAddComponent<Tilemap>();
                 m_DecorateTileMap = dc.GetOrAddComponent<Tilemap>();
+
+                bg.GetComponent<TilemapRenderer>().sortingLayerName = "BackGround";
+                bt.GetComponent<TilemapRenderer>().sortingLayerName = "Buildings";
+                dc.GetComponent<TilemapRenderer>().sortingLayerName = "Decorators";
             }
         }
 #endif

@@ -1,9 +1,10 @@
 using CrashKonijn.Agent.Core;
+using Dungeon.DungeonEntity;
 using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem,ICombatable
     {

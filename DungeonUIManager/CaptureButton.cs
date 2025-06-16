@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Hero;
-using Dungeon.Common.MonoPool;
+using Dungeon.Character;
+using Dungeon.Common;
 using Dungeon.Overload;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +17,7 @@ namespace Dungeon
 
         public void Initialize(HeroEntityBase target, Vector3 offset)
         {
+            transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
             m_TargetHero = target;
             m_Offset = offset;
             UpdatePosition();
@@ -61,6 +62,9 @@ namespace Dungeon
         {
             base.OnReturnToPool();
             transform.localPosition = Vector3.zero;
+            m_Button.onClick.RemoveAllListeners();
+            m_TargetHero = null;
+            gameObject.SetActive(false);
         }
     }
 }

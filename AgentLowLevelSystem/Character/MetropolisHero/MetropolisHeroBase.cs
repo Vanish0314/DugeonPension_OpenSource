@@ -2,7 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Dungeon.Common.MonoPool;
+using Dungeon.Character;
+using Dungeon.Common;
+using Dungeon.Overload;
+using GameFramework;
+using GameFramework.Event;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,7 +16,7 @@ using Random = System.Random;
 namespace Dungeon
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    [RequireComponent(typeof(Animator), typeof(Rigidbody2D), typeof(MetropolisHeroBehaviorTreeHelper))]
+    [RequireComponent(typeof(Animator),typeof(MetropolisHeroBehaviorTreeHelper))]
     [RequireComponent(typeof(MetropolisHeroMotor), typeof(BoxCollider2D), typeof(SpriteRenderer))]
     public class MetropolisHeroBase : MonoPoolItem
     {
@@ -24,13 +28,36 @@ namespace Dungeon
         public int CorruptLevel
         {
             get => basicInfo.CorruptLevel;
-            set => basicInfo.CorruptLevel = value;
+            set
+            {
+                basicInfo.CorruptLevel = value;
+                DungeonGameEntry.DungeonGameEntry.Event.Fire(this,OnOneHeroCorruptLevelChangeEventArgs.Create());
+                if (value >= 30 && value <= 60)
+                {
+                    AbsoluteCorruptLevel = 1;
+                }
+                else if (value >= 60 && value <= 100)
+                {
+                    AbsoluteCorruptLevel = 2;
+                }
+                else if (value >= 100)
+                {
+                    AbsoluteCorruptLevel = 3;
+                }
+            }
         }
 
         public int MaxCorruptLevel
         {
             get => basicInfo.MaxCorruptLevel;
             set => basicInfo.MaxCorruptLevel = value;
+        }
+        
+        // 绝对堕落等级
+        public int AbsoluteCorruptLevel
+        {
+            get => basicInfo.AbsoluteCorruptLevel;
+            set => basicInfo.AbsoluteCorruptLevel = value;
         }
 
         // 饱食度
@@ -79,12 +106,6 @@ namespace Dungeon
             set => basicInfo.Efficiency = value;
         }
 
-        public int MaxEfficiency
-        {
-            get => basicInfo.MaxEfficiency;
-            set => basicInfo.MaxEfficiency = value;
-        }
-
         public MetropolisHeroData BasicInfo
         {
             get => basicInfo;
@@ -105,9 +126,12 @@ namespace Dungeon
         private string m_Command;
 
         private Vector3 m_CurrentWorkPosition;
-        private WorkplaceType m_TargetWorkType;
+        [SerializeField] private float workInterval = 1f;
+        [SerializeField] private float tiredParameter = 1f;
+        [SerializeField] private float hungerParameter = 1f;
+        [SerializeField] private WorkplaceType m_TargetWorkType;
+        public WorkplaceType m_CurrentWorkType;
         private MetropolisBuildingBase m_CurrentWorkBuilding;
-
         protected override void Start()
         {
             m_BTHelper = GetComponent<MetropolisHeroBehaviorTreeHelper>();
@@ -116,10 +140,15 @@ namespace Dungeon
             m_Motor.InitMotor(moveSpeed);
             m_BTHelper.Init(this);
             m_TargetWorkType = WorkplaceType.None;
+            bubbleData = Resources.Load<BubbleData>("Prefabs/MetropolisHeroPrefab/Bubble");
         }
 
         protected override void OnEnable()
         {
+            if (MetropolisHeroManager.Instance != null)
+            {
+                MetropolisHeroManager.Instance.RegisterHero(this);
+            }
             m_InputReader.OnHeroClickedEvent += OnHeroClicked;
             m_InputReader.OnNoHeroClickedEvent += HideCommandUI;
         }
@@ -128,12 +157,31 @@ namespace Dungeon
         {
             m_InputReader.OnHeroClickedEvent -= OnHeroClicked;
             m_InputReader.OnNoHeroClickedEvent -= HideCommandUI;
+            StopWandering();
+            EndEat();
+            EndSleep();
+            EndTalking();
+            EndWorking();
         }
 
+        private int lastTiredLevel = 0;
+        private int lastHungerLevel = 0;
         private void Update()
         {
             UpdateBehaviourTreeHelper();
             UpdateAnimator();
+            
+            if (TiredLevel == 80 && lastTiredLevel < TiredLevel)
+            {
+                BubbleManager.Instance.ShowBubble(transform, bubbleData.tired, BubbleID.DialogueBubble);
+            }
+            lastTiredLevel = TiredLevel;
+
+            if (HungerLevel == 80 && lastHungerLevel < HungerLevel)
+            {
+                BubbleManager.Instance.ShowBubble(transform, bubbleData.hunger, BubbleID.DialogueBubble);
+            }
+            lastHungerLevel = HungerLevel;
         }
 
         private void UpdateBehaviourTreeHelper()
@@ -146,8 +194,8 @@ namespace Dungeon
             switch (m_BTHelper.state)
             {
                 case MetropolisHeroAIState.Idle:
-                    m_Animator.SetBool("isIdle", true);
-                    m_Animator.SetBool("isMoving", false);
+                    // m_Animator.SetBool("isIdle", true);
+                    // m_Animator.SetBool("isMoving", false);
                     m_Animator.SetBool("isSleeping", false);
                     m_Animator.SetBool("isEating", false);
                     m_Animator.SetBool("isInteracting", false);
@@ -200,14 +248,6 @@ namespace Dungeon
                     m_Animator.SetBool("isEating", false);
                     m_Animator.SetBool("isInteracting", false);
                     m_Animator.SetBool("isAttacking", true);
-                    break;
-                case MetropolisHeroAIState.Building:
-                    m_Animator.SetBool("isIdle", false);
-                    m_Animator.SetBool("isMoving", false);
-                    m_Animator.SetBool("isSleeping", false);
-                    m_Animator.SetBool("isEating", false);
-                    m_Animator.SetBool("isInteracting", true);
-                    m_Animator.SetBool("isAttacking", false);
                     break;
                 case MetropolisHeroAIState.Command:
                     m_Animator.SetBool("isIdle", true);
@@ -300,6 +340,12 @@ namespace Dungeon
 
             m_CurrentWorkBuilding.ForceAssignWorker(this);
             m_WorkRoutine = StartCoroutine(Working());
+
+            if (bubbleData != null)
+            {
+                GameFrameworkLog.Info("气泡之前");
+                BubbleManager.Instance.ShowBubble(transform, bubbleData.work, BubbleID.ExpBubble);
+            }
         }
 
         public virtual void Revolt()
@@ -312,6 +358,10 @@ namespace Dungeon
         {
             switch (m_Command.ToLower())
             {
+                case "construction":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                    m_TargetWorkType = WorkplaceType.Construction;
+                    break;
                 case "quarry":
                     m_BTHelper.commandType = MetropolisHeroAIState.Working;
                     m_TargetWorkType = WorkplaceType.Quarry;
@@ -323,6 +373,18 @@ namespace Dungeon
                 case "farm":
                     m_BTHelper.commandType = MetropolisHeroAIState.Working;
                     m_TargetWorkType = WorkplaceType.Farm;
+                    break;
+                case "castle":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                    m_TargetWorkType = WorkplaceType.Castle;
+                    break;
+                case "monsterlair":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                    m_TargetWorkType = WorkplaceType.MonsterLair;
+                    break;
+                case "trapfactory":
+                    m_BTHelper.commandType = MetropolisHeroAIState.Working;
+                    m_TargetWorkType = WorkplaceType.TrapFactory;
                     break;
                 case "eat":
                     m_BTHelper.commandType = MetropolisHeroAIState.Eating;
@@ -345,7 +407,7 @@ namespace Dungeon
         // 点击角色时触发
         public void OnHeroClicked(GameObject clickedHero)
         {
-            if (clickedHero != this.gameObject)
+            if (clickedHero != gameObject)
                 return;
             m_BTHelper.isCommandale = true;
             ForceEndCurrentState();
@@ -355,30 +417,39 @@ namespace Dungeon
         // 显示/隐藏指令UI
         private void ToggleCommandUI()
         {
+            var commandUIPrefab = CommandUIComponent.Instance.gameObject;
             commandUIPrefab.gameObject.SetActive(true);
             commandUIPrefab.GetComponent<CommandUIComponent>().Setup(this, uiOffsetY);
         }
 
-        private void HideCommandUI()
+        public void HideCommandUI()
         {
             m_BTHelper.isCommandale = false;
-            commandUIPrefab.gameObject.SetActive(false);
+            CommandUIComponent.Instance.gameObject.SetActive(false);
         }
 
         // 接收指令
         public void ReceiveCommand(string command)
         {
-            Debug.Log($"接收到指令: {command}");
+            GameFrameworkLog.Debug($"接收到指令: {command}");
             m_BTHelper.isCommandale = false;
             m_BTHelper.hasCommand = true;
             m_Command = command;
-            commandUIPrefab.gameObject.SetActive(false);
+            CommandUIComponent.Instance.gameObject.SetActive(false);
+
+            BubbleManager.Instance.ShowBubble(transform, bubbleData.beCommand, BubbleID.ExpBubble);
         }
         
         private void ForceEndCurrentState()
         {
             switch (m_BTHelper.state)
             {
+                case MetropolisHeroAIState.Idle:
+                    m_Motor.PauseMoving();
+                    break;
+                case MetropolisHeroAIState.Moving:
+                    m_Motor.PauseMoving();
+                    break;
                 case MetropolisHeroAIState.Eating:
                     EndEat();
                     break;
@@ -414,11 +485,14 @@ namespace Dungeon
         private IEnumerator WanderRoutine()
         {
             m_IsWandering = true;
-            
+
             while (m_BTHelper.state == MetropolisHeroAIState.Idle)
             {
                 float startTime = Time.time;
-                
+            
+                m_Animator.SetBool("isIdle", false);
+                m_Animator.SetBool("isMoving", true);
+        
                 // 生成新位置直到找到有效位置
                 Vector3 newPos;
                 do 
@@ -429,14 +503,17 @@ namespace Dungeon
 
                 m_CurrentWanderTarget = newPos;
                 m_Motor.MoveTo(m_CurrentWanderTarget);
-
+                
                 // 等待指定间隔或提前到达
                 yield return new WaitUntil(() => 
                     Vector3.Distance(transform.position, m_CurrentWanderTarget) < positionCheckDistance || 
                     Time.time >= startTime + wanderInterval
                 );
                 
-                yield return new WaitForSeconds(UnityEngine.Random.Range(0, 1));
+                m_Animator.SetBool("isIdle", true);
+                m_Animator.SetBool("isMoving", false);
+                
+                yield return new WaitForSeconds(UnityEngine.Random.Range(2, 4));
             }
             
             StopWandering();
@@ -563,11 +640,14 @@ namespace Dungeon
 
         #region Eat
 
+        // 新增字段
+        [Header("吃饭设置")]
+        [SerializeField] private float eatInterval = 2f;
         IEnumerator EatCoroutine()
         {
             m_IsEating = true;
             var food = FindNearestAvailableFood();
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(eatInterval);
             HungerLevel = Mathf.Clamp(HungerLevel - food.SatietyValue, 0, MaxHungerLevel);
             MentalLevel = Mathf.Clamp(MentalLevel - food.MentalValue, 0, MaxMentalLevel);
             EndEat();
@@ -581,7 +661,7 @@ namespace Dungeon
             m_EatingRoutine = null;
         }
 
-        private bool HasFoodAvailable()
+        public bool HasFoodAvailable()
         {
             return FindNearestAvailableFood() != null;
         }
@@ -603,13 +683,13 @@ namespace Dungeon
         #endregion
 
         #region Sleep
-
-        // 新增字段
+        
         [Header("睡觉设置")]
         private Dormitory m_CurrentDormitory;
         private Dormitory m_TargetDormitory;
-        [SerializeField] private int bedEfficiency = 5; // 床上每分钟降低疲劳值
-        [SerializeField] private int groundEfficiency = 3; // 地上每分钟降低疲劳值
+        [SerializeField] private float sleepInterval = 1f;
+        [SerializeField] private int bedEfficiency = 5; // 床上每秒降低疲劳值
+        [SerializeField] private int groundEfficiency = 3; // 地上每秒降低疲劳值
         
         IEnumerator Sleeping()
         {
@@ -630,7 +710,7 @@ namespace Dungeon
             while (TiredLevel > 0 && m_BTHelper.state == MetropolisHeroAIState.Sleeping)
             {
                 TiredLevel = Mathf.Clamp(TiredLevel - efficiency, 0, MaxTiredLevel);
-                yield return new WaitForSeconds(1);
+                yield return new WaitForSeconds(sleepInterval);
             }
 
             EndSleep();
@@ -687,8 +767,9 @@ namespace Dungeon
 
             while (m_BTHelper.state == MetropolisHeroAIState.Working)
             {
-                yield return new WaitForSeconds(1f);
-                TiredLevel = Mathf.Clamp(TiredLevel + 1, 0, MaxTiredLevel);
+                yield return new WaitForSeconds(workInterval);
+                TiredLevel = (int)Mathf.Clamp(TiredLevel + tiredParameter, 0, MaxTiredLevel);
+                HungerLevel = (int)Mathf.Clamp(HungerLevel + hungerParameter, 0, MaxHungerLevel);
             }
 
             EndWorking();
@@ -702,7 +783,7 @@ namespace Dungeon
     
             if (m_CurrentWorkBuilding != null)
             {
-                m_CurrentWorkBuilding.WorkerLeave(this); // 新增建筑解绑
+                m_CurrentWorkBuilding.WorkerLeave(this); // 可能的循环引用
                 m_CurrentWorkBuilding = null;
             }
     
@@ -718,6 +799,11 @@ namespace Dungeon
         {
             return FindHighestPriorityWorkplace().Item2 != null;
         }
+        
+        public bool IsWorkplaceTypeAvailable(WorkplaceType type)
+        {
+            return ForceFindNearestAvailableBuildingOfType(type) != null;
+        }
 
         public bool RegisterWorkPlace()
         {
@@ -727,6 +813,7 @@ namespace Dungeon
                 if (building != null)
                 {
                     m_CurrentWorkBuilding = building;
+                    m_CurrentWorkType = m_TargetWorkType;
                     return true;
                 }
             }
@@ -742,6 +829,7 @@ namespace Dungeon
                 var building = FindNearestAvailableBuildingOfType(type);
                 if (building != null)
                 {
+                    m_CurrentWorkType = type;
                     m_CurrentWorkBuilding = building;
                     return true;
                 }
@@ -755,7 +843,8 @@ namespace Dungeon
         {
             if (m_TargetWorkType != WorkplaceType.None)
             {
-                return FindNearestAvailableWorkplaceOfType();
+                if (FindNearestAvailableWorkplaceOfType().Item2 != null)
+                    return FindNearestAvailableWorkplaceOfType();
             }
             
             // 按优先级排序类型
@@ -776,9 +865,9 @@ namespace Dungeon
             return (Vector3.zero, null);
         }
 
-        public (Vector3, Collider2D) FindNearestAvailableWorkplaceOfType()
+        private (Vector3, Collider2D) FindNearestAvailableWorkplaceOfType()
         {
-            var building = FindNearestAvailableBuildingOfType(m_TargetWorkType);
+            var building = ForceFindNearestAvailableBuildingOfType(m_TargetWorkType);
             if (building != null)
             {
                 return (building.transform.position, building.GetComponent<Collider2D>());
@@ -793,6 +882,31 @@ namespace Dungeon
                 .OrderBy(b => Vector3.Distance(transform.position, b.transform.position))
                 .FirstOrDefault();
         }
+        
+        private MetropolisBuildingBase ForceFindNearestAvailableBuildingOfType(WorkplaceType targetType)
+        {
+            // 第一次筛选：包含所有必要条件的建筑
+            var buildingsWithCapacity = FindObjectsOfType<MetropolisBuildingBase>()
+                .Where(b => b.workplaceType == targetType && 
+                            b.CanAcceptWorker() && 
+                            b.hasWork)
+                .OrderBy(b => Vector3.Distance(transform.position, b.transform.position))
+                .ToList();
+
+            if (buildingsWithCapacity.Count > 0)
+            {
+                return buildingsWithCapacity.First();
+            }
+
+            // 第二次筛选（备用）：排除容量检查
+            var anyAvailableBuildings = FindObjectsOfType<MetropolisBuildingBase>()
+                .Where(b => b.workplaceType == targetType && 
+                            b.hasWork)
+                .OrderBy(b => Vector3.Distance(transform.position, b.transform.position))
+                .ToList();
+
+            return anyAvailableBuildings.FirstOrDefault();
+        }
 
         #endregion
 
@@ -802,7 +916,12 @@ namespace Dungeon
 
         public override void OnSpawn(object data)
         {
-            
+            m_BTHelper = GetComponent<MetropolisHeroBehaviorTreeHelper>();
+            m_Animator = GetComponent<Animator>();
+            m_Motor = GetComponent<MetropolisHeroMotor>();
+            m_Motor.InitMotor(moveSpeed);
+            m_BTHelper.Init(this);
+            m_TargetWorkType = WorkplaceType.None;
         }
 
         public override void Reset()
@@ -816,7 +935,7 @@ namespace Dungeon
         [SerializeField] private InputReader m_InputReader;
         [SerializeField, LabelText("基本属性")] protected MetropolisHeroData basicInfo;
         [SerializeField, LabelText("移动速度")] protected float moveSpeed = 5f;
-        [Header("指令设置")] [SerializeField] private GameObject commandUIPrefab; // 指令UI预制体
+        [Header("指令设置")] //[SerializeField] private GameObject commandUIPrefab; // 指令UI预制体
         [SerializeField] private float uiOffsetY = 1.5f; // UI显示偏移量
         [Header("工作设置")]
         [SerializeField] 
@@ -827,6 +946,10 @@ namespace Dungeon
             new WorkplacePriority{ type = WorkplaceType.Farm, priority = 2 },
             new WorkplacePriority{ type = WorkplaceType.LoggingCamp, priority = 3 }
         };
+        [Header("勇者气泡")]
+        public string[] heroBubbles;
+        [SerializeField] private BubbleData bubbleData;
+        
         protected Animator m_Animator;
         protected MetropolisHeroMotor m_Motor;
         protected MetropolisHeroBehaviorTreeHelper m_BTHelper;
@@ -837,5 +960,29 @@ namespace Dungeon
     {
         public WorkplaceType type;
         public int priority; // 数值越小优先级越高
+    }
+    
+    public class OnOneHeroCorruptLevelChangeEventArgs : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnOneHeroCorruptLevelChangeEventArgs).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+        
+        public static OnOneHeroCorruptLevelChangeEventArgs Create()
+        {
+            OnOneHeroCorruptLevelChangeEventArgs a = ReferencePool.Acquire<OnOneHeroCorruptLevelChangeEventArgs>();
+            return a;
+        }
+
+        public override void Clear()
+        {
+
+        }
     }
 }

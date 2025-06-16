@@ -1,9 +1,9 @@
 using CrashKonijn.Agent.Core;
-using Dungeon.GOAP.Target;
+using Dungeon.GOAP;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Action
+namespace Dungeon.GOAP
 {
     public class ActionDataWithTransform : IActionData
     {

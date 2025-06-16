@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.Character.Hero;
+using Dungeon.Character;
 using Dungeon.Target;
 using UnityEngine;
 
-namespace Dungeon.Goap
+namespace Dungeon.GOAP
 {
     public class NearestHpBelow70PercentageFriendlyHeroTargetKeySensor : LocalTargetSensorBase
     {
@@ -20,7 +20,7 @@ namespace Dungeon.Goap
             var me = references.GetCachedComponent<HeroEntityBase>();
 
             HeroEntityBase result = null;
-            DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentGameProgressingHeroTeam.ForEach(
+            DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentGameProgressingHeroTeam().ForEach(
                 hero =>{
                     if(hero == me)
                     {

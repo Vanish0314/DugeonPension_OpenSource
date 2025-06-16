@@ -14,7 +14,7 @@ namespace Dungeon
 
         [Header("生产设置")] 
         [SerializeField] private ResourceType procedureResourceType;
-        [SerializeField] private int baseOutput = 1;
+        public int baseOutput = 1;
         public float productionInterval = 5f; // 生产间隔(秒)
         public int maxStock = 100;
         public int currentStock = 0;
@@ -28,6 +28,15 @@ namespace Dungeon
         protected override void OnEnable()
         {
             base.OnEnable();
+            if (currentStock >= maxStock)
+            {
+                currentStock = maxStock;
+                EndProductionProcess();
+            }
+            else
+            {
+                hasWork = true;
+            }
             m_inputReader.OnBuildingClickedEvent += OnBuildingClicked;
             m_inputReader.OnNoBuildingClickedEvent += HideResourceUI;
         }
@@ -36,6 +45,7 @@ namespace Dungeon
         protected override void OnDisable()
         {
             base.OnDisable();
+            EndProductionProcess();
             m_inputReader.OnBuildingClickedEvent -= OnBuildingClicked;
             m_inputReader.OnNoBuildingClickedEvent -= HideResourceUI;
         }
@@ -87,6 +97,7 @@ namespace Dungeon
             if (m_CurrentCoroutine != null)
                 return;
             m_CurrentCoroutine = StartCoroutine(ProductionProcess());
+            Audio.Instance.PlayAudio("采石场工作");
         }
         
         // 生产周期协程
@@ -102,9 +113,12 @@ namespace Dungeon
 
         private void EndProductionProcess()
         {
+            if (currentStock >= maxStock)
+                hasWork = false;
+            
             FireAllWorkers();
-            hasWork = false;
             m_CurrentCoroutine = null;
+            Audio.Instance.StopAudio("采石场工作");
             StopCurrentCoroutine();
         }
         
@@ -121,8 +135,13 @@ namespace Dungeon
             currentStock = Mathf.Min(currentStock + productionAmount, maxStock);
         }
 
-        public void GatherResources()
+        public virtual void GatherResources()
         {
+            // 生成资源icon，先扩散后飞入右上角资源图标处，然后消失
+            Sprite sprite = ResourceModel.Instance.GetResourceSprite(procedureResourceType.ToString());
+            Vector2 targetTransform = ResourceModel.Instance.GetResourceTransform(procedureResourceType.ToString());
+            GatherEffectHelper.Instance.OnGatherEffect(sprite, currentStock,transform.position,targetTransform);
+            
             // 为资源管理器增加对应的资源
             ResourceModel.Instance.GatherResource(procedureResourceType, currentStock);
             currentStock = 0;

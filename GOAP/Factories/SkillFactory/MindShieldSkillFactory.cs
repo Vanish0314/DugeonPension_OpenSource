@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
+using Dungeon.Character;
 using Dungeon.GOAP;
-using Dungeon.GOAP.Action;
-using Dungeon.GOAP.Keys.WorldKey.Local;
-using UnityEngine;
-
 namespace Dungeon
 {
     /// <summary>
@@ -26,7 +23,8 @@ namespace Dungeon
                 .AddCondition<LocalHeroPropertyPointOf<IMagicPointProperty>>(Comparison.GreaterThanOrEqual, 12) // · 释放条件：有足够MP ·
                 .AddCondition<LocalSkillCooldownReadyKey<MindShieldSkill>>(Comparison.GreaterThanOrEqual, 1) // · 释放条件：技能冷却完毕 ·
                 .AddEffect<LocalHeroPropertyPointOf<IMagicPointProperty>>(EffectType.Decrease) // 减少mp
-                .SetBaseCost(12); // · 基础Cost=12 ·
+                .AddEffect<GlobalHeroTeamDontHasPositiveBuffHeroCountKey>(EffectType.Decrease) // 减少队伍中没有buff队友数量
+                .SetBaseCost(99999); // · 基础Cost=12 ·
 
             #endregion
 
@@ -55,7 +53,7 @@ namespace Dungeon
         {
             var baseCost = base.GetCost(agent, references, target); // · 获取基础Cost ·
 
-            var trait = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().CharacterTrait;
+            var trait = references.GetCachedComponent<AgentLowLevelSystem>().CharacterTrait;
 
             return baseCost - trait.Sympathy; // · Cost=12 - 同理 ·
         }

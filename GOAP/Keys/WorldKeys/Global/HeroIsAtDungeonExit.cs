@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Keys.WorldKey
+namespace Dungeon.GOAP
 {
     public class HeroIsAtDungeonExitWorldKey : WorldKeyBase
     {

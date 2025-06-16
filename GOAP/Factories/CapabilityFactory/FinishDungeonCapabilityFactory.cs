@@ -1,21 +1,8 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Trap;
-using Dungeon.GOAP.Action;
-using Dungeon.GOAP.Goals;
-using Dungeon.GOAP.Keys.TargetKey;
-using Dungeon.GOAP.Keys.WorldKey;
-using Dungeon.GOAP.Keys.WorldKey.Local;
-using Dungeon.GOAP.Sensor.Key;
-using Dungeon.GOAP.Sensor.Target;
-using Dungeon.GOAP.Sensors.Multi;
+using Dungeon.DungeonEntity;
 
-namespace Dungeon.GOAP.Factories.CapabilityFactory
+namespace Dungeon.GOAP
 {
     public class FinishDungeonCapabilityFactory : CapabilityFactoryBase
     {
@@ -53,7 +40,7 @@ namespace Dungeon.GOAP.Factories.CapabilityFactory
                 .SetTargetKey<DungeonExitTargetKey>()
                 .AddEffect<HeroIsAtDungeonExitWorldKey>(EffectType.Increase)
                 .SetProperties(new FinishDungeonAction.Props())
-                .SetBaseCost(10);
+                .SetBaseCost(25);
 
             builder.AddAction<DisarmTrapAciton>()
                 .SetTargetKey<NearestEntityTransformTargetKeyOf<StandardTrap>>()

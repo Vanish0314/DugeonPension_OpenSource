@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Hero;
+using Dungeon.Character;
 using Dungeon.DungeonGameEntry;
 using GameFramework;
 using GameFramework.Event;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour
     {
@@ -23,7 +23,7 @@ namespace Dungeon.AgentLowLevelSystem
             if(args.diedHero != GetComponent<HeroEntityBase>())
             {
                 GameFrameworkLog.Info($"[AgentLowLevelSystem] {args.diedHero.name} 似了,这让{m_Properties.heroName} 非常不爽,屈服度增加10");
-                ModifySubmissiveness(10);
+                ModifySubmissiveness(0);
             }
         }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Keys.WorldKey.Local
+namespace Dungeon.GOAP
 {
     public class LocalHeroInventoryItemOf<T> : WorldKeyBase where T : IInventoryItem
     {

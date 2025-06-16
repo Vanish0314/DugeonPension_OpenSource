@@ -1,10 +1,8 @@
 using CrashKonijn.Agent.Core;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Trap;
+using Dungeon.DungeonEntity;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem
     {
@@ -28,35 +26,35 @@ namespace Dungeon.AgentLowLevelSystem
         //TODO(xy)
         public void BumpGetExperienceBubble(int expGet)
         {
-            string expString = expGet + " exp";
-            BubbleManager.Instance.ShowBubble(transform, expString, BubbleID.ExpBubble);
+            string str = $"经验+ {expGet} ";
+            BubbleManager.Instance.ShowBubble(transform, str, BubbleID.ExpBubble);
         }
 
         //TODO(xy)
         public void BumpLevelUpBubble(int upgradedLevel)
         {
-            string upgradedString = upgradedLevel + " upgraded";
-            BubbleManager.Instance.ShowBubble(transform, upgradedString, BubbleID.ExpBubble);
+            string str = $"升到了 {upgradedLevel} 级";
+            BubbleManager.Instance.ShowBubble(transform, str, BubbleID.ExpBubble);
         }
 
         //TODO(xy)
         public void BumpSeeAMonsterBubble(DungeonMonsterBase monster)
         {
-            string monsterString = "怪物：" + monster;
-            BubbleManager.Instance.ShowBubble(transform, monsterString, BubbleID.DialogueBubble);
+            string str = $"有{monster.GetName()}！";
+            BubbleManager.Instance.ShowBubble(transform, str, BubbleID.DialogueBubble);
         }
 
         //TODO(xy)
         public void BumpSeeATreasureChestBubble(StandardDungeonTreasureChest treasureChest)
         {
-            string treasureString = "宝物：" + treasureChest;
-            BubbleManager.Instance.ShowBubble(transform, treasureString, BubbleID.DialogueBubble);
+            string str = $"发现了 宝藏 !";
+            BubbleManager.Instance.ShowBubble(transform, str, BubbleID.DialogueBubble);
         }
 
         //TODO(xy)
         public void BumpSeeATrapBubble(DungeonTrapBase trap)
         {
-            string msg = $"察觉 {trap.trapName}";
+            string msg = $"察觉 {trap.trapName}成功！";
             BubbleManager.Instance.ShowBubble(transform, msg, BubbleID.DialogueBubble);
         }
 

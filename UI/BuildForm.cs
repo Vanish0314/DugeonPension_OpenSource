@@ -8,7 +8,7 @@ namespace Dungeon
     {
         Castle,
         MonsterLair,
-        ControlCenter,
+        TrapFactory,
         Quarry,
         LoggingCamp,
         FarmLand,
@@ -48,17 +48,16 @@ namespace Dungeon
                 }
             }
         }
-
+        
         public void UpdateBuildingUI(BuildingType type, int count)
         {
-            if (!m_BuildingUIDict.TryGetValue(type, out var buildingUI))
-            {
-                // Debug.LogError($"BuildingUI not found for type: {type}");
-                return;
-            }
+            if (!m_BuildingUIDict.TryGetValue(type, out var buildingUI)) return;
 
-            buildingUI.countText.text = $"X {count}";
-            buildingUI.button.gameObject.SetActive(count > 0);
+            // 处理无限数量显示
+            buildingUI.countText.text = count == int.MaxValue ? "∞" : $"X {count}";
+            
+            // 按钮可用条件：数量大于0 或 无限数量
+            buildingUI.button.gameObject.SetActive(count > 0 || count == int.MaxValue);
         }
     }
 }

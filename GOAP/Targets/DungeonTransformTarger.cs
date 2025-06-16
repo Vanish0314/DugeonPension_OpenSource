@@ -4,7 +4,7 @@ using CrashKonijn.Agent.Core;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Target
+namespace Dungeon.GOAP
 {
     public class DungeonTransformTarget : ITarget
     {

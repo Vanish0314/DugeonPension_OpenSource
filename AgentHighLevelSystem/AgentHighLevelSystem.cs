@@ -1,16 +1,12 @@
-using CrashKonijn.Agent.Runtime;
+using System.Linq;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonGameEntry;
-using Dungeon.GOAP.Enums;
-using Dungeon.GOAP.Goals;
+using Dungeon.GOAP;
 using UnityEngine;
 
 namespace Dungeon
 {
     public class AgentHighLevelSystem : MonoBehaviour
     {
-
-        private AgentBehaviour agent;
         private GoapActionProvider provider;
         private GoapBehaviour goap;
 
@@ -18,16 +14,19 @@ namespace Dungeon
         {
 
         }
-        public void OnSpawn()
+        public void OnSpawn(AgentGoapType agentGoapType)
         {
             goap = DungeonGameEntry.DungeonGameEntry.GOAP;
-            agent = GetComponent<AgentBehaviour>();
             provider = GetComponent<GoapActionProvider>();
 
             if (provider.AgentTypeBehaviour == null)
-                provider.AgentType = goap.GetAgentType(AgentTypeIDs.Hero);
+            {
+                provider.AgentType = goap.GetAgentType(agentGoapType.ToString());
 
-            provider.RequestGoal<EliminateThreatGoal, FinishDungeonGoal, LightDungeonRoomGoal, DesireFulfillmentGoal, AliveGoal>();
+                var allGoals = provider.AgentType.GetGoals();
+                var goalTypes = allGoals.Select(g => g.GetType()).ToArray();
+                provider.RequestGoal(goalTypes, true);
+            }
         }
 
         public void OnStunned()

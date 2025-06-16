@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Struct;
+using Dungeon.Character;
 using UnityEngine;
 
-namespace Dungeon.Character.Interfaces
+namespace Dungeon.Character
 {
     public interface IAttackable : ICharacterBehaviour
     {

@@ -5,7 +5,7 @@ using ParadoxNotion.Design;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     [CreateAssetMenu(fileName = "新英雄属性", menuName = "Hero/英雄属性")]
     public class HeroProperties : ScriptableObject

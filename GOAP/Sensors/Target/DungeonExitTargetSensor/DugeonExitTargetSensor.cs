@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.Trap;
+using Dungeon.Character;
+using Dungeon.DungeonEntity;
 using Dungeon.DungeonGameEntry;
-using Dungeon.GOAP.Targets;
+using Dungeon.GOAP;
 using Dungeon.GridSystem;
 using UnityEngine;
 
@@ -21,13 +22,13 @@ namespace Dungeon.GOAP
             if (existingTarget != null)
             {
                 var pos = existingTarget.Position;
-                var low = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+                var low = references.GetCachedComponent<AgentLowLevelSystem>();
                 DungeonGameEntry.DungeonGameEntry.GridSystem.GetRoomAt(pos, out var room);
                 if (!low.HaveVisitedRoom(room))
                     return existingTarget;
             }
 
-            var exitPos = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().GetUnvisitedRoomCenterPos();
+            var exitPos = references.GetCachedComponent<AgentLowLevelSystem>().GetUnvisitedRoomCenterPos();
             return exitPos.HasValue ? new DungeonExitTarget(exitPos.Value) : null;
         }
 

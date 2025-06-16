@@ -2,20 +2,67 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using GameFramework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Dungeon.DUngeonCalculator
+namespace Dungeon.DungeonCalculator
 {
     public class DungeonResultCalculator : MonoBehaviour
     {
-        public int GetUpgradeExperienceNeed(int level) => upgradeExperienceNeedRule.GetExpForLevel(level);
-        public int GetDropExpForLevel(int level) => experienceGetByLevelRule.GetDropExpForLevel(level);
-        public int GetExpForRoom() => experienceGetByRoomRule.experiencePerRoom;
+        public int GetUpgradeExperienceNeed(int level)
+        {
+            if (upgradeExperienceNeedRule == null)
+            {
+                GameFrameworkLog.Error($"[DungeonResultCalculator] 地牢升级经验规则未设置");
+                return 114514;
+            }
+
+            return upgradeExperienceNeedRule.GetExpForLevel(level);
+        }
+        public int GetDropExpForLevel(int level)
+        {
+            if (experienceGetByLevelRule == null)
+            {
+                GameFrameworkLog.Error($"[DungeonResultCalculator] 地牢等级经验获取规则未设置");
+                return 114514;
+            }
+
+            return experienceGetByLevelRule.GetDropExpForLevel(level);
+        }
+        public int GetExpForRoom()
+        {
+            if (experienceGetByRoomRule == null)
+            {
+                GameFrameworkLog.Error($"[DungeonResultCalculator] 地牢房间经验获取规则未设置");
+                return 114514;
+            }
+
+            return experienceGetByRoomRule.experiencePerRoom;
+        }
 
         public DungeonExperienceGetByLevelRule ExperienceGetByLevelRule { get => experienceGetByLevelRule; }
         public DungeonUpgardeExperienceNeedRule UpgradeExperienceNeedRule { get => upgradeExperienceNeedRule; }
         public DungeonExperienceGetByRoomRule ExperienceGetByRoomRule { get => experienceGetByRoomRule; }
+
+        void Start()
+        {
+            if (upgradeExperienceNeedRule == null)
+            {
+                GameFrameworkLog.Error($"[DungeonResultCalculator] 地牢升级经验规则未设置");
+            }
+
+            if (experienceGetByLevelRule == null)
+            {
+                GameFrameworkLog.Error($"[DungeonResultCalculator] 地牢等级经验获取规则未设置");
+            }
+
+            if (experienceGetByRoomRule == null)
+            {
+                GameFrameworkLog.Error($"[DungeonResultCalculator] 地牢房间经验获取规则未设置");
+            }
+        }
+
         [SerializeField] private DungeonUpgardeExperienceNeedRule upgradeExperienceNeedRule;
         [SerializeField] private DungeonExperienceGetByLevelRule experienceGetByLevelRule;
         [SerializeField] private DungeonExperienceGetByRoomRule experienceGetByRoomRule;
@@ -39,7 +86,7 @@ namespace Dungeon.DUngeonCalculator
             LevelExpList = new List<LevelExpPair>();
             for (int i = 2; i <= 20; i++)
             {
-                LevelExpList.Add(new LevelExpPair { Level = i, RequiredExp = 100 }); // 默认经验可自定义
+                LevelExpList.Add(new LevelExpPair { Level = i, RequiredExp = 100 });
             }
         }
 
@@ -125,4 +172,56 @@ namespace Dungeon.DUngeonCalculator
     {
         [LabelText("每一个房间的经验")] public int experiencePerRoom;
     }
+
+    [System.Serializable]
+    public class DungeonHeroResourceRule
+    {
+        [SerializeField]
+        public List<LevelResourcePair> LevelResourceList = new();
+
+        [System.Serializable]
+        public class LevelResourcePair
+        {
+            public int Level;
+            public int Gold;
+            public int ExpOrb;
+        }
+
+        public (int gold, int expOrb) GetResourcesForLevel(int level)
+        {
+            var match = LevelResourceList.Find(x => x.Level == level);
+            return match != null ? (match.Gold, match.ExpOrb) : (0, 0);
+        }
+    }
+
+
+    [System.Serializable]
+    public class SpecialResourcePack
+    {
+        [System.Serializable]
+        public class ResourceItem
+        {
+            public ResourceType Type;
+            public int Amount;
+        }
+
+        [System.Serializable]
+        public class CropSeedItem
+        {
+            public CropType CropType;
+            public int Amount;
+        }
+
+        [System.Serializable]
+        public class ResourceBundle
+        {
+            public string BundleName;
+            public List<ResourceItem> Resources = new();
+            public List<CropSeedItem> Seeds = new();
+        }
+
+        [SerializeField]
+        public List<ResourceBundle> Bundles = new();
+    }
+
 }

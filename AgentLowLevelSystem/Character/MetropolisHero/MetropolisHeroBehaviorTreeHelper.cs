@@ -17,7 +17,6 @@ namespace Dungeon
         Working,
         Talking,
         Revolting,
-        Building,
         Command     
     }
 
@@ -103,7 +102,10 @@ namespace Dungeon
         
         public bool ReachTargetDormitory()
         {
-            return m_Motor.ReachedTarget(dormitoryPosition);
+            var sleepPlace = m_HeroBase.TryFindNearestDormitory();
+            dormitoryPosition = sleepPlace.Item1;
+            var dormitoryCollider = sleepPlace.Item2;
+            return m_Motor.ReachedTarget(dormitoryPosition, dormitoryCollider);
         }
         
         public void Sleep()
@@ -132,7 +134,10 @@ namespace Dungeon
         
         public bool ReachTargetWorkPosition()
         {
-            return m_Motor.ReachedTarget(m_HeroBase.FindHighestPriorityWorkplace().Item1);
+            var workPlace = m_HeroBase.FindHighestPriorityWorkplace();
+            workPosition = workPlace.Item1;
+            var workPlaceCollider = workPlace.Item2;
+            return m_Motor.ReachedTarget(workPosition, workPlaceCollider);
         }
     
         public void Work()

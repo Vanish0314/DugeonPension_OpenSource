@@ -41,7 +41,7 @@ namespace Dungeon
 
         private void OnConstructionCompleted(object sender, GameEventArgs gameEventArgs)
         {
-            OnConstructionCompletedEvent eventData = (OnConstructionCompletedEvent)gameEventArgs;
+            var eventData = (OnConstructionCompletedEvent)gameEventArgs;
 
             if (m_Fsm.Owner == eventData.BuildingFsm)
             {
@@ -59,6 +59,12 @@ namespace Dungeon
                 // hero进来施工
                 building.StartConstructionProcess();
             }
+
+            if (building.constructionProgress >= 2f)
+            {
+                building.constructionProgress = 1f;
+                ChangeState<CompletedState>(m_Fsm);
+            }
             
             base.OnUpdate(fsm, elapseSeconds, realElapseSeconds);
         }
@@ -66,8 +72,7 @@ namespace Dungeon
         protected override void OnLeave(IFsm<MetropolisBuildingBase> fsm, bool isShutdown)
         {
             MetropolisBuildingBase building = fsm.Owner;
-
-            building.StopCurrentCoroutine();
+            
             building.hasWork = false;
             
             // 取消订阅
@@ -85,7 +90,6 @@ namespace Dungeon
             base.OnEnter(fsm);
             
             MetropolisBuildingBase building = fsm.Owner;
-            building.GetComponent<SpriteRenderer>().sprite = building.completedSprite;
             
             building.StartCompletedBehavior();
         }

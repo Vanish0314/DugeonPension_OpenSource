@@ -3,13 +3,9 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.Monster;
+using Dungeon.Character;
+using Dungeon.DungeonEntity;
 using Dungeon.GOAP;
-using Dungeon.GOAP.Action;
-using Dungeon.GOAP.Keys.TargetKey;
-using Dungeon.GOAP.Keys.WorldKey.Local;
-using UnityEngine;
-
 namespace Dungeon
 {
     /// <summary>
@@ -53,8 +49,8 @@ namespace Dungeon
         {
             var baseCost = base.GetCost(agent, references, target);
 
-            var trait = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().CharacterTrait;
-            var dnd = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().DndSkillData;
+            var trait = references.GetCachedComponent<AgentLowLevelSystem>().CharacterTrait;
+            var dnd = references.GetCachedComponent<AgentLowLevelSystem>().DndSkillData;
 
             return baseCost - trait.Aggressive - dnd.StrengthModifyValue; // Cost = 15 - 激进 - 力量
         }

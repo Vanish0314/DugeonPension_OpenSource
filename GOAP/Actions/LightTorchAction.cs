@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.GOAP.Target;
+using Dungeon.Character;
+using Dungeon.DungeonEntity;
+using Dungeon.GOAP;
 using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Action
+namespace Dungeon.GOAP
 {
     public class LightTorchAction : GoapActionBase<ActionDataWithTransform>
     {
@@ -28,7 +29,7 @@ namespace Dungeon.GOAP.Action
                     GameFrameworkLog.Error("[LightTorchAction] 火把已经点亮!,可能是sensor出错或是没有及时更新状态");
                 #endif
                 torch.LightUp();
-                var low = agent.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+                var low = agent.GetComponent<AgentLowLevelSystem>();
                 low.DecreaseBlackboardCountOfIVisible<StandardTorch>();
                 return ActionRunState.Completed;
             }

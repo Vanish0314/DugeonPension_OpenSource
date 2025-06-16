@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Character;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,11 +10,14 @@ namespace Dungeon
     {
         [SerializeField] private Button openButton;
         [SerializeField] private Button returnButton;
-        [SerializeField] private Button[] menuButtons;
+        [SerializeField] private Transform heroButtonsParent;
+        [SerializeField] private GameObject heroButtonPrefab;
         
         private HeroInfoForm m_HeroInfoForm;
         private HeroInfoModel m_HeroInfoModel;
-
+        
+        private Dictionary<HeroEntityBase, GameObject> heroButtonMap = new Dictionary<HeroEntityBase, GameObject>();
+        
         private void Start()
         {
             m_HeroInfoForm = GetComponent<HeroInfoForm>();
@@ -22,14 +26,12 @@ namespace Dungeon
             // 初始化按钮事件
             openButton.onClick.AddListener(OpenHeroInfo);
             returnButton.onClick.AddListener(CloseHeroInfo);
-            
-            foreach (var btn in menuButtons)
-            {
-                btn.onClick.AddListener(() => OnMenuButtonClick(btn));
-            }
 
             // 默认关闭详细信息面板
             m_HeroInfoForm.SetUIVisibility(false);
+            
+            // 初始更新按钮
+            UpdateHeroButtons();
         }
 
         private void OpenHeroInfo()
@@ -43,21 +45,69 @@ namespace Dungeon
             m_HeroInfoForm.SetUIVisibility(false);
         }
 
-        private void OnMenuButtonClick(Button clickedButton)
+         private void UpdateHeroButtons()
         {
-            Debug.Log("OnMenuButtonClick");
-            // 根据按钮name解析英雄类型
-            string heroName = clickedButton.name.Replace("Btn", "");
-            HeroType type = (HeroType)System.Enum.Parse(typeof(HeroType), heroName);
+            ClearExistingButtons();
             
-            m_HeroInfoModel.SwitchHeroType(type);
-            UpdateHeroInfoDisplay();
+            // 为活跃英雄创建按钮
+            foreach (var hero in m_HeroInfoModel.ActiveHeroes)
+            {
+                CreateHeroButton(hero, "Active");
+            }
+            
+            // 为被捕获英雄创建按钮
+            foreach (var hero in m_HeroInfoModel.CapturedHeroes)
+            {
+                CreateHeroButton(hero, "Captured");
+            }
         }
 
-        private void UpdateHeroInfoDisplay()
+        private void CreateHeroButton(HeroEntityBase hero, string status)
         {
-            var data = m_HeroInfoModel.GetCurrentHeroData();
-            m_HeroInfoForm.UpdateHeroInfo(data);
+            if (heroButtonPrefab == null || heroButtonsParent == null) return;
+            
+            var buttonObj = Instantiate(heroButtonPrefab, heroButtonsParent);
+            var button = buttonObj.GetComponent<Button>();
+            
+            // 设置按钮图片
+            var heroVisualData = m_HeroInfoModel.GetVisualData(hero.HeroName);
+            buttonObj.GetComponent<Image>().sprite = heroVisualData.buttonImage;
+            
+            // 设置按钮文本
+            var text = buttonObj.GetComponentInChildren<Text>();
+            if (text != null) text.text = $"{hero.HeroName} ({status})";
+            
+            heroButtonMap[hero] = buttonObj;
+            button.onClick.AddListener(() => OnHeroButtonClicked(hero));
+            
+            buttonObj.SetActive(true);
+        }
+
+        private void ClearExistingButtons()
+        {
+            foreach (var button in heroButtonMap.Values)
+            {
+                if (button != null) Destroy(button.gameObject);
+            }
+            heroButtonMap.Clear();
+        }
+
+        private void OnHeroButtonClicked(HeroEntityBase hero)
+        {
+            Debug.Log($"Hero button clicked: {hero.name}");
+            // 更新详细信息显示
+            UpdateHeroInfoDisplay(hero);
+        }
+
+        private void UpdateHeroInfoDisplay(HeroEntityBase hero = null)
+        {
+            // 如果有指定英雄则显示其信息，否则显示第一个英雄或默认信息
+            HeroEntityBase heroToDisplay = hero ?? 
+                                         (m_HeroInfoModel.ActiveHeroes.Count > 0 ? 
+                                          m_HeroInfoModel.ActiveHeroes[0] : 
+                                          null);
+            
+            m_HeroInfoForm.UpdateHeroInfo(heroToDisplay);
         }
     }
 }

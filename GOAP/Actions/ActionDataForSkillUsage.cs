@@ -3,7 +3,7 @@ using Dungeon.Target;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Action
+namespace Dungeon.GOAP
 {
     public class ActionDataForSkillUsage : IActionData
     {

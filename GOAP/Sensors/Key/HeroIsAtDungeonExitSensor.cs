@@ -5,7 +5,7 @@ using CrashKonijn.Goap.Runtime;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensor.Key
+namespace Dungeon.GOAP
 {
     public class HeroIsAtDungeonExitSensor : GlobalWorldSensorBase
     {

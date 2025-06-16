@@ -64,11 +64,41 @@ namespace Dungeon
         /// <summary>
         /// 返回经营按钮
         /// </summary>
-        ReturnBusinessButton = 1011,
+        StartPlaceArmyButtonForm = 1011,
         
         /// <summary>
         /// 诅咒界面
         /// </summary>
         CurseForm = 1012,
+        
+        /// <summary>
+        /// 科技树界面
+        /// </summary>
+        TechnologyTreeForm = 1013,
+        
+        /// <summary>
+        /// 查看升级界面
+        /// </summary>
+        BlueprintUpgradeForm = 1014,
+        
+        /// <summary>
+        /// 房间资源限制界面
+        /// </summary>
+        RoomLimitForm = 1015,
+        
+        /// <summary>
+        /// 房间资源限制界面
+        /// </summary>
+        MetropolisHPForm = 1016,
+        
+        /// <summary>
+        /// 陷阱解锁界面
+        /// </summary>
+        TrapBlueprintUpgradeForm = 1017,
+        
+        /// <summary>
+        /// 游戏结束界面
+        /// </summary>
+        GameOverForm = 1018,
     }
 }

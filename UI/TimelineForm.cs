@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +9,11 @@ namespace Dungeon
     public class TimelineForm : UGuiForm
     {
         [SerializeField] private Slider timelineSlider;
+
+        private void OnEnable()
+        {
+            
+        }
 
         public void UpdateTimeline(float timeline)
         {

@@ -3,12 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.Trap;
-using Dungeon.GOAP.Target;
+using Dungeon.DungeonEntity;
+using Dungeon.GOAP;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Action
+namespace Dungeon.GOAP
 {
     public class DisarmTrapAciton : GoapActionBase<ActionDataWithTransform>
     {

@@ -5,26 +5,45 @@ using GameFramework;
 using UnityEngine;
 using DG.Tweening;
 using Sirenix.OdinInspector;
-
-
+using Dungeon.Common;
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
+    [RequireComponent(typeof(RepelNearbyColliders))]
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
         [SerializeField] private bool enableAgentMoveDebug = true;
-        [SerializeField,LabelText("移动速度")] private float m_MoveMaxSpeed = 5f;
+        [SerializeField, LabelText("移动速度")] public float m_MoveMaxSpeed = 5f;
+        [ShowInInspector] public static float damping = 0.1f;
+        [ShowInInspector] public static float kP = 10f;
 
         private Stack<Vector3> m_MoveWayPoints = new();
 
+        private void InitRigidBody()
+        {
+            m_AgentRigdbody.bodyType = RigidbodyType2D.Dynamic;
+            m_AgentRigdbody.gravityScale = 0;
+            m_AgentRigdbody.freezeRotation = true;
+
+            m_AgentCollider = m_AgentRigdbody.GetComponent<CircleCollider2D>();
+            m_AgentCollider.radius = 0.35f;
+
+#if UNITY_EDITOR
+            if (GetComponent<BoxCollider2D>() != null)
+            {
+                GameFrameworkLog.Warning($"[AgentLowLevelSystem] {gameObject.name} 请使用CircleCollider2D 替代 BoxCollider2D");
+                GetComponent<BoxCollider2D>().enabled = false;
+            }
+            #endif
+        }
         private void InitMoveSystem() { }
         private void FixedUpdateMoveSystem()
         {
-            if(SkillTween != null && SkillTween.IsActive())
+            if (SkillTween != null && SkillTween.IsActive())
             {
                 m_MoveWayPoints.Clear();
                 m_AgentRigdbody.velocity = Vector2.zero;
@@ -35,7 +54,7 @@ namespace Dungeon.AgentLowLevelSystem
             {
                 var dis = Vector3.Magnitude(m_MoveWayPoints.Peek() - transform.position);
 
-                if (dis < 0.1f)
+                if (dis < 0.01f)
                 {
                     m_MoveWayPoints.Pop();
                     return;
@@ -46,15 +65,39 @@ namespace Dungeon.AgentLowLevelSystem
                 }
 
                 var nextMove = m_MoveWayPoints.Peek();
-                var dir = (nextMove - transform.position).normalized;
-                var v = m_MoveMaxSpeed * dir;
-                m_AgentRigdbody.velocity = new Vector2(v.x, v.y);
 
-                SetAnimatorState(ANIMATOR_BOOL_MOVING,1);
+                var dir = (nextMove - transform.position).normalized;
+
+                Vector2 targetVelocity = dir * m_MoveMaxSpeed;
+                Vector2 velocityDiff = new Vector2(targetVelocity.x, targetVelocity.y) - m_AgentRigdbody.velocity;
+
+                float closeEnough = 0.1f;
+                if ((m_AgentRigdbody.velocity - targetVelocity).magnitude < closeEnough)
+                {
+                    m_AgentRigdbody.velocity = targetVelocity;
+                }
+                else
+                {
+                    Vector3 force = velocityDiff * kP;
+                    m_AgentRigdbody.AddForce(force);
+                }
+
+                SetAnimatorState(ANIMATOR_BOOL_MOVING, 1);
 
                 SetSpriteDirection(dir.x > -0.1); // prevent sprite flip when moving diagonally
             }
-            else
+
+            if (m_AgentRigdbody.velocity.magnitude > m_MoveMaxSpeed)
+            {
+                m_AgentRigdbody.velocity *= damping;
+
+                if (m_AgentRigdbody.velocity.magnitude < m_MoveMaxSpeed)
+                {
+                    m_AgentRigdbody.velocity = m_AgentRigdbody.velocity.normalized * m_MoveMaxSpeed;
+                }
+
+            }   
+            if (m_AgentRigdbody.velocity.magnitude < 0.01f)
             {
                 m_AgentRigdbody.velocity = Vector2.zero;
             }
@@ -63,7 +106,7 @@ namespace Dungeon.AgentLowLevelSystem
         public void MoveTo(Vector3 targetPositionWorldCoord)
         {
             m_MoveWayPoints.Clear();
-            m_MoveWayPoints = DungeonGameEntry.DungeonGameEntry.GridSystem.FindPath(transform.position, targetPositionWorldCoord);
+            m_MoveWayPoints = DungeonGameEntry.DungeonGameEntry.GridSystem.FindPath_IgnoreFromToDynamicObstacle(transform.position, targetPositionWorldCoord);
 
             m_MoveWayPoints.Pop();
         }
@@ -73,19 +116,19 @@ namespace Dungeon.AgentLowLevelSystem
             if (inRange)
             {
                 m_MoveWayPoints.Clear();
-                SetAnimatorState(ANIMATOR_BOOL_IDLE,99999f);
+                SetAnimatorState(ANIMATOR_BOOL_IDLE, 99999f);
 
                 return;
             }
 
             MoveTo(target.Position);
-            SetAnimatorState(ANIMATOR_BOOL_MOVING,99999f);
+            SetAnimatorState(ANIMATOR_BOOL_MOVING, 99999f);
 
         }
 
         public void TargetPositionChanged(ITarget target)
         {
-            if(Vector3.Distance(transform.position, target.Position) < 0.3f)
+            if (Vector3.Distance(transform.position, target.Position) < 0.3f)
             {
                 return;
             }
@@ -96,20 +139,20 @@ namespace Dungeon.AgentLowLevelSystem
         public void TargetInRange(ITarget target)
         {
             m_MoveWayPoints.Clear();
-            SetAnimatorState(ANIMATOR_BOOL_IDLE,999999f);
+            SetAnimatorState(ANIMATOR_BOOL_IDLE, 999999f);
         }
 
         public void TargetLost()
         {
 
             m_MoveWayPoints.Clear();
-            SetAnimatorState(ANIMATOR_BOOL_IDLE,999999f);
+            SetAnimatorState(ANIMATOR_BOOL_IDLE, 999999f);
         }
 
         public void TargetNotInRange(ITarget target)
         {
             MoveTo(target.Position);
-            SetAnimatorState(ANIMATOR_BOOL_MOVING,999999f);
+            SetAnimatorState(ANIMATOR_BOOL_MOVING, 999999f);
         }
 
         private void ReCalculatePath()
@@ -123,12 +166,12 @@ namespace Dungeon.AgentLowLevelSystem
         }
         private void FlipSprite()
         {
-            m_AgentAnimator.transform.localScale = 
+            m_AgentAnimator.transform.localScale =
                 new Vector3(m_AgentAnimator.transform.localScale.x * -1, m_AgentAnimator.transform.localScale.y, m_AgentAnimator.transform.localScale.z);
         }
         private void SetSpriteDirection(bool right)
         {
-            m_AgentAnimator.transform.localScale = new Vector3(right? 1 : -1, m_AgentAnimator.transform.localScale.y, m_AgentAnimator.transform.localScale.z);
+            m_AgentAnimator.transform.localScale = new Vector3(right ? 1 : -1, m_AgentAnimator.transform.localScale.y, m_AgentAnimator.transform.localScale.z);
         }
 #if UNITY_EDITOR
         private void OnDrawGizmos()

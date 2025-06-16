@@ -1,11 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
 using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.DungeonEntity.Trap
+namespace Dungeon.DungeonEntity
 {
     public class StandardTrap : DungeonTrapBase
     {

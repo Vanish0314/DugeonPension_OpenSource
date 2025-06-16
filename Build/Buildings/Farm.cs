@@ -52,6 +52,11 @@ namespace Dungeon
         protected override void OnEnable()
         {
             base.OnEnable();
+            if (growthProgress >= 1)
+            {
+                growthProgress = 1;
+                OnCropMature();
+            }
             m_inputReader.OnBuildingClickedEvent += OnBuildingClicked;
             m_inputReader.OnNoBuildingClickedEvent += HideUI;
         }
@@ -84,7 +89,7 @@ namespace Dungeon
         // 显示资源UI
         private void ShowUI()
         {
-            if (farmUI != null)
+            if (farmUI != null && !isWaterNeeded)
             {
                 farmUI.transform.position = transform.position + uiOffset;
                 farmUI.ShowFarmUI();
@@ -93,7 +98,7 @@ namespace Dungeon
 
         private void HideUI()
         {
-            if (farmUI != null)
+            if (farmUI != null && !isWaterNeeded)
             {
                 farmUI.CloseCurrentUI();
             }

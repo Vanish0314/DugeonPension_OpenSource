@@ -24,10 +24,19 @@ namespace Dungeon.GOAP
 
     #region 技能要用到的WorldKey
     /// <summary>
-    /// 技能范围内低于70% HP的友方单位数量 ·
+    /// 勇者小队中血量低于70%的勇者数量
     /// </summary>
     public class GlobalHeroTeamHpBelow70PercentageFriendlyHeroCountKey : WorldKeyBase { }
 
+    /// <summary>
+    /// 勇者小队中正遭受攻击的勇者数量
+    /// </summary>
+    public class GolbalHeroTeamBeingAttackedHeroCountKey : WorldKeyBase { }
+
+    /// <summary>
+    /// 勇者小队中没有正面buff勇者数量
+    /// </summary>
+    public class GlobalHeroTeamDontHasPositiveBuffHeroCountKey : WorldKeyBase { }
     #endregion
 
     #region  技能,每个技能都有一个对应的接口

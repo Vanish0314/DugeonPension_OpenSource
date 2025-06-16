@@ -37,13 +37,11 @@ namespace Dungeon
         private void StartBuilding()
         {
             GameEntry.UI.OpenUIForm(EnumUIForm.BuildForm);
-            GameEntry.UI.GetUIForm(EnumUIForm.StartFightButtonForm).Close();
         }
         
         private void EndBuilding()
         {
             GameEntry.UI.GetUIForm(EnumUIForm.BuildForm).Close();
-            GameEntry.UI.OpenUIForm(EnumUIForm.StartFightButtonForm);
         }
         
         public void Pause()

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using Dungeon.Character;
 using GameFramework;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -42,7 +43,7 @@ namespace Dungeon
         public void MoveTo(Vector3 targetPosInWorldCoord)
         {
             m_Path.Clear();
-            m_Path = DungeonGameEntry.DungeonGameEntry.GridSystem.FindPath(transform.position, targetPosInWorldCoord);
+            m_Path = DungeonGameEntry.DungeonGameEntry.GridSystem.FindPath_IgnoreFromToDynamicObstacle(transform.position, targetPosInWorldCoord);
             m_Path.Pop(); // remove the first point, which is the current position
         }
         public void MoveTowards(Vector2 direction)
@@ -64,7 +65,7 @@ namespace Dungeon
             box.isTrigger = false;
         }
 
-        void Update()
+        void FixedUpdate()
         {
             if (m_Path.Count > 0)
             {
@@ -76,7 +77,7 @@ namespace Dungeon
 
                     if (m_Path.Count == 0)
                     {
-                        rb.velocity = Vector2.zero;
+                        rb.velocity = Vector2.zero;     
                     }
 
                     return;
@@ -87,11 +88,42 @@ namespace Dungeon
                 }
 
                 var nextMove = m_Path.Peek();
+
                 var dir = (nextMove - transform.position).normalized;
-                var v = speed * dir;
-                rb.velocity = new Vector2(v.x, v.y);
+
+                Vector2 targetVelocity = dir * speed;
+                Vector2 velocityDiff = new Vector2(targetVelocity.x, targetVelocity.y) - rb.velocity;
+
+                float closeEnough = 0.1f;
+                if ((rb.velocity - targetVelocity).magnitude < closeEnough)
+                {
+                    rb.velocity = targetVelocity;
+                }
+                else
+                {
+                    Vector3 force = velocityDiff * AgentLowLevelSystem.kP;
+                    rb.AddForce(force);
+                }
 
                 FlipSpriteTowards(dir.x > 0.1); // prevent flip when moving diagonally
+            }
+
+            if (rb.velocity.magnitude > speed)
+            {
+                rb.velocity *= AgentLowLevelSystem.damping;
+
+                if (rb.velocity.magnitude < speed)
+                {
+                    rb.velocity = rb.velocity.normalized * speed;
+                }
+            }
+            if (m_Path.Count == 0)
+            {
+                rb.velocity *= AgentLowLevelSystem.damping;
+            }
+            if (rb.velocity.magnitude < 0.01f)
+            {
+                rb.velocity = Vector2.zero;
             }
         }
 

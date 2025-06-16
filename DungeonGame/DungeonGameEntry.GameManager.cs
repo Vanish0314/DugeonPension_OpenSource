@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
+using Dungeon.Character;
 using GameFramework;
 using GameFramework.Event;
-using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -74,6 +72,9 @@ namespace Dungeon.DungeonGameEntry
         {
             foreach (GameObject go in scene.GetRootGameObjects())
             {
+                if (go.GetComponent<HeroEntityBase>() != null)
+                    continue;
+
                 go.SetActive(true);
             }
         }

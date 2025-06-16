@@ -6,7 +6,7 @@
 // using CrashKonijn.Agent.Core;
 // using CrashKonijn.Goap.Core;
 // using CrashKonijn.Goap.Runtime;
-// using Dungeon.AgentLowLevelSystem;
+// using Dungeon.Character;
 // using Dungeon.BlackBoardSystem;
 // using GameFramework;
 // using UnityEngine;
@@ -54,7 +54,7 @@
 
 //         private SenseValue SenseVisibleInVision(IActionReceiver agent, IComponentReference references)
 //         {
-//             var blackboard = agent.Transform.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>()?.GetBlackboard();
+//             var blackboard = agent.Transform.GetComponent<AgentLowLevelSystem>()?.GetBlackboard();
 
 //             return 0;
 //         }

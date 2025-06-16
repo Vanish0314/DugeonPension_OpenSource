@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Character;
+using GameFramework.Event;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Dungeon
 {
@@ -8,69 +11,71 @@ namespace Dungeon
     {
         public static HeroInfoModel Instance { get; private set; }
 
-        private Dictionary<HeroType, HeroInfoData> heroDataDict;
-        public HeroType CurrentHeroType { get; private set; } = HeroType.Warrior; // 默认战士
-        
-        // 资源加载路径配置
-        private const string HERO_DATA_PATH = "HeroDatas";
+        public List<HeroEntityBase> ActiveHeroes { get; private set; } = new List<HeroEntityBase>();
+        public List<HeroEntityBase> CapturedHeroes { get; private set; } = new List<HeroEntityBase>();
 
+        [SerializeField] private List<HeroVisualData> heroVisualDatas = new List<HeroVisualData>();
+        private Dictionary<string, HeroVisualData> heroVisualDict = new Dictionary<string, HeroVisualData>();
+        
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
-                InitializeData();
+                InitializeVisualData();
             }
         }
 
-        private void InitializeData()
+        private void InitializeVisualData()
         {
-            heroDataDict = new Dictionary<HeroType, HeroInfoData>();
-            
-            // 动态加载所有HeroInfoData资源
-            var loadedData = Resources.LoadAll<HeroInfoData>(HERO_DATA_PATH);
-            
-            if (loadedData == null || loadedData.Length == 0)
+            heroVisualDict.Clear();
+            foreach (var data in heroVisualDatas)
             {
-                Debug.LogError($"未在Resources/{HERO_DATA_PATH}目录下找到任何英雄数据！");
-                return;
-            }
-
-            foreach (var data in loadedData)
-            {
-                if (heroDataDict.ContainsKey(data.heroType))
+                if (!string.IsNullOrEmpty(data.heroName))
                 {
-                    Debug.LogError($"英雄类型重复: {data.heroType}");
-                    continue;
+                    heroVisualDict[data.heroName] = data;
                 }
-                heroDataDict.Add(data.heroType, data);
             }
         }
 
-        public HeroInfoData GetCurrentHeroData()
+        public HeroVisualData GetVisualData(string heroName)
         {
-            if (heroDataDict.TryGetValue(CurrentHeroType, out var data))
+            return heroVisualDict.GetValueOrDefault(heroName);
+        }
+        
+        private void Start()
+        {
+            DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnNewHeroTeamSpawnEvent.EventId, OnNewHeroTeamSpawn);
+            UpdateHeroData();
+        }
+
+        private void OnDestroy()
+        {
+            if (DungeonGameEntry.DungeonGameEntry.Event != null)
             {
-                return data;
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnNewHeroTeamSpawnEvent.EventId, OnNewHeroTeamSpawn);
             }
-            Debug.LogError($"未找到{CurrentHeroType}类型的英雄数据");
-            return null;
         }
 
-        public void SwitchHeroType(HeroType type)
+        private void OnNewHeroTeamSpawn(object sender, GameEventArgs e)
         {
-            if (!heroDataDict.ContainsKey(type))
-            {
-                Debug.LogError($"无效的英雄类型: {type}");
-                return;
-            }
-            CurrentHeroType = type;
+            UpdateHeroData();
         }
 
-        // 获取所有可用英雄类型（用于动态生成按钮）
-        public List<HeroType> GetAvailableHeroTypes()
+        public void UpdateHeroData()
         {
-            return new List<HeroType>(heroDataDict.Keys);
+            var guildSystem = DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem;
+            ActiveHeroes = new List<HeroEntityBase>(guildSystem.GetCurrentGameProgressingHeroTeam());
+            CapturedHeroes = new List<HeroEntityBase>(guildSystem.GetCurrentBeCapturedHeroInTeam());
         }
     }
+    
+    [System.Serializable]
+    public class HeroVisualData
+    {
+        public string heroName; // 使用英雄名称作为键
+        public Sprite portrait; // 英雄立绘
+        public Sprite buttonImage; // 按钮图片
+    }
+
 }

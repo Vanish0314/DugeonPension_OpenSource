@@ -1,18 +1,10 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using DG.Tweening;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.Character.Hero;
-using Dungeon.DungeonGameEntry;
-using Dungeon.Gal;
-using Dungeon.SkillSystem;
-using Dungeon.SkillSystem.SkillEffect;
+using Dungeon.Character;
 using GameFramework;
 using GameFramework.Event;
 using Sirenix.OdinInspector;
-using UnityEditor.EditorTools;
 using UnityEngine;
 
 namespace Dungeon.Overload
@@ -20,6 +12,7 @@ namespace Dungeon.Overload
     public class OverlordPower : MonoBehaviour
     {
         public List<OverloadCurse> CurseList => curseList;
+        public bool isRedeploy = false;
 
         public float MaxCursePower => maxCursePower;
         public float CurrentCursePower => currentCursePower;
@@ -33,17 +26,39 @@ namespace Dungeon.Overload
             currentCursePower = Mathf.Max(0f, currentCursePower - amount);
         }
 
+        public bool CanConsumeCursePower(CurseType curseType)
+        {
+            foreach (OverloadCurse curse in curseList)
+            {
+                if (curse.curseType == curseType)
+                {
+                    if (currentCursePower >= curse.curseConsume)
+                    {
+                        ConsumeCursePower(curse.curseConsume);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public void SpellCurse(HeroEntityBase hero,CurseType curseType)
         {
             switch (curseType)
             {
                 case CurseType.Convince:
+                    if (!CanConsumeCursePower(curseType))
+                        return;
+                    Audio.Instance.PlayAudio("使用魔咒");
                     PersuadeHero(hero);
                     break;
                 case CurseType.Capture:
                     CaptureHero(hero);
                     break;
                 case CurseType.Redeploy:
+                    if (!CanConsumeCursePower(curseType))
+                        return;
+                    Audio.Instance.PlayAudio("使用魔咒");
                     Redeploy();
                     break;
             }
@@ -77,7 +92,10 @@ namespace Dungeon.Overload
         {
             ResumeGame();
 
-            //TODO(xy) : close UI
+            GameEntry.UI.GetUIForm(EnumUIForm.PlaceArmyForm).Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.RoomLimitForm).Close();
+            
+            isRedeploy = false;
         }
 
         private void OnOneHeroEndBeingCaptured(object sender, GameEventArgs e)
@@ -88,8 +106,7 @@ namespace Dungeon.Overload
             {
                 if(capturedArgs.IsCaptured)
                 {
-                    MetropolisHeroTransverter.Instance.TransverseMetropolisHero(capturedArgs.HeroEntity);
-                    //TODO(xy): 把地牢勇者转换成工厂勇者
+                    MetropolisHeroManager.Instance.TransferHero(capturedArgs.HeroEntity);
                 }
                 else
                 {
@@ -104,17 +121,29 @@ namespace Dungeon.Overload
         }
         private void ResumeGame()
         {
-            DOTween.To((t)=>{
-                Time.timeScale = t;
-                //TODO cam
-            },0,1,0.3f);
+            Time.timeScale = 1.0f;
+
+            StartCoroutine(FuckingRecoveryGame(1.0f));
+        }
+
+        private IEnumerator FuckingRecoveryGame(float duration)
+        {
+            float timer = 0f;
+
+            while (timer < duration)
+            {
+                timer += Time.deltaTime;
+                Time.timeScale = 1.0f;
+                yield return null;
+            }
         }
 
         private void UnSubscribeEvents()
         {
-            GameEntry.Event.Unsubscribe(OnOneHeroEndBeingPersuadedEventArgs.EventId,OnOneHeroEndBeingCompiled);
-            GameEntry.Event.Unsubscribe(OnOneHeroEndBeingCapturedEventArgs.EventId,OnOneHeroEndBeingCaptured);
-            GameEntry.Event.Unsubscribe(OnOverlordEndRedeployedEventArgs.EventId,OnOverlordEndBeingRedeployed);
+            GameEntry.Event.Unsubscribe(OnOneHeroEndBeingPersuadedEventArgs.EventId, OnOneHeroEndBeingCompiled);
+            GameEntry.Event.Unsubscribe(OnOneHeroEndBeingCapturedEventArgs.EventId, OnOneHeroEndBeingCaptured);
+            GameEntry.Event.Unsubscribe(OnOverlordEndRedeployedEventArgs.EventId, OnOverlordEndBeingRedeployed);
+            GameEntry.Event.Unsubscribe(OnOneHeroReachedASubmissivenessLevel.EventId,OnOneHeroReachedASubmissivenessLevelHandler);
         }
 
         void OnDisable()
@@ -128,6 +157,7 @@ namespace Dungeon.Overload
         {
             if (currentCursePower < maxCursePower)
             {
+                ResourceModel.Instance.CursePower = currentCursePower;
                 currentCursePower += curseRegenPerSecond * deltaTime;
                 currentCursePower = Mathf.Min(currentCursePower, maxCursePower);
             }
@@ -179,6 +209,17 @@ namespace Dungeon.Overload
 
         private void Redeploy()
         {
+            // Pause Game
+            DOTween.To((t)=>{
+                Time.timeScale = t;
+            },1,0,0.3f);
+            
+            GameEntry.UI.GetUIForm(EnumUIForm.CurseForm).Close();
+            GameEntry.UI.OpenUIForm(EnumUIForm.PlaceArmyForm);
+            GameEntry.UI.OpenUIForm(EnumUIForm.RoomLimitForm);
+            
+            isRedeploy = true;
+            
             DungeonGameEntry.DungeonGameEntry.Event.Fire(
                 this, OnOverlordStartRedeployedEventArgs.Create()
             );
@@ -252,7 +293,6 @@ namespace Dungeon.Overload
         public override void Clear()
         {
         }
-
     }
 
     /// <summary>
@@ -271,13 +311,10 @@ namespace Dungeon.Overload
         }
 
         public HeroEntityBase HeroEntity { get; private set; }
-        public CompilationResult Result { get; private set; }
-
-        public static OnOneHeroEndBeingPersuadedEventArgs Create(HeroEntityBase hero,CompilationResult result)
+        public static OnOneHeroEndBeingPersuadedEventArgs Create(HeroEntityBase hero)
         {
             OnOneHeroEndBeingPersuadedEventArgs a = ReferencePool.Acquire<OnOneHeroEndBeingPersuadedEventArgs>();
             a.HeroEntity = hero;
-            a.Result = result;
             return a;
         }
 
@@ -369,7 +406,7 @@ namespace Dungeon.Overload
 
     public class OnOverlordEndRedeployedEventArgs : GameEventArgs
     {
-        public static readonly int EventId = typeof(OnOverlordStartRedeployedEventArgs).GetHashCode();
+        public static readonly int EventId = typeof(OnOverlordEndRedeployedEventArgs).GetHashCode();
 
         public override int Id
         {
@@ -379,9 +416,9 @@ namespace Dungeon.Overload
             }
         }
 
-        public static OnOverlordStartRedeployedEventArgs Create()
+        public static OnOverlordEndRedeployedEventArgs Create()
         {
-            OnOverlordStartRedeployedEventArgs a = ReferencePool.Acquire<OnOverlordStartRedeployedEventArgs>();
+            OnOverlordEndRedeployedEventArgs a = ReferencePool.Acquire<OnOverlordEndRedeployedEventArgs>();
             return a;
         }
 

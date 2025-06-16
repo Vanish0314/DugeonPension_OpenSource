@@ -1,7 +1,7 @@
 using CrashKonijn.Goap.Runtime;
 using Dungeon.BlackBoardSystem;
 using Dungeon.Common;
-using Dungeon.DUngeonCalculator;
+using Dungeon.DungeonCalculator;
 using Dungeon.Gal;
 using Dungeon.Overload;
 using GameFramework;

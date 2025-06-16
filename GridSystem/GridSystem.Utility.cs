@@ -12,5 +12,7 @@ namespace Dungeon.GridSystem
         public GridProperties GetGridProperties() => properties;
         public Vector3 SnapToGridCorner(Vector3 worldPosition) => m_LogicalGrid.SnapToGridCorner(worldPosition);
         public Vector3 SnapToGridCenter(Vector3 worldPosition) => m_LogicalGrid.SnapToGridCenter(worldPosition);
+        public int GetGridDistance(Vector3 worldPosition1, Vector3 worldPosition2) => m_LogicalGrid.GetGridDistance(worldPosition1, worldPosition2);
+        public int GetGridDistance(Vector2Int gridPosition1, Vector2Int gridPosition2) => m_LogicalGrid.GetGridDistance(gridPosition1, gridPosition2);
     }
 }

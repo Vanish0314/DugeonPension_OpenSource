@@ -1,17 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Codice.Client.BaseCommands;
-using Dungeon.Character.Hero;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Trap;
-using Dungeon.DungeonGameEntry;
+using Dungeon.DungeonEntity;
 using GameFramework;
 using UnityEngine;
 using static Dungeon.GridSystem.GridSystem;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour
     {
@@ -60,7 +53,7 @@ namespace Dungeon.AgentLowLevelSystem
         {
             HeroEntityBase result = GetComponent<HeroEntityBase>();
 
-            DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentGameProgressingHeroTeam.ForEach(
+            DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentGameProgressingHeroTeam().ForEach(
                 hero =>
                 {
                     if(hero == this)

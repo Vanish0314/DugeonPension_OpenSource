@@ -1,20 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.GOAP.Enums;
-using Dungeon.GOAP.Factories.CapabilityFactory;
-using UnityEngine;
-
-namespace Dungeon.GOAP.Factories.AgentFactory
+namespace Dungeon.GOAP
 {
     public class HeroAgentFactory : AgentTypeFactoryBase
     {
         public override IAgentTypeConfig Create()
         {
-            var builder = new AgentTypeBuilder(AgentTypeIDs.Hero);
+            var builder = new AgentTypeBuilder(AgentGoapType.SampleHero.ToString());
 
             builder.AddCapability<FinishDungeonCapabilityFactory>();
+            builder.AddCapability<HelpTeammatesCapabilityFactory>();
             builder.AddCapability<TripSlashCapabilityFactory>();
             builder.AddCapability<HolySlashCapabilityFactory>();
             builder.AddCapability<HealingSpellSkillFactory>();

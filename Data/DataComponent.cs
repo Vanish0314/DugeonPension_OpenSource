@@ -123,7 +123,9 @@ namespace UnityGameFramework.Runtime
 
         public void PreLoadAllData()
         {
+            GameFrameworkLog.Info($"[数据加载] 正在预加载所有数据...");
             m_DataManager.PreLoadAllData();
+            GameFrameworkLog.Info($"[数据加载] 所有数据均已预加载完成.");
         }
 
         public void LoadAllData()

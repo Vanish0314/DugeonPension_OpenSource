@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.GOAP.Goals;
-using Dungeon.GOAP.Sensor.Target;
+using Dungeon.GOAP;
+using Dungeon.GOAP;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Action
+namespace Dungeon.GOAP
 {
     public class FinishDungeonAction : GoapActionBase<ActionDataDungeonExit,FinishDungeonAction.Props>
     {

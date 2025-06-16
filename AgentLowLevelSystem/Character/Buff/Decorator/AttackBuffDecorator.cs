@@ -1,7 +1,7 @@
-using Dungeon.Character.Interfaces;
-using Dungeon.Character.Struct;
+using Dungeon.Character;
+using Dungeon.Character;
 
-namespace Dungeon.Character.Buff.Decorator
+namespace Dungeon.Character
 {
     public abstract class AttackBuffDecorator : IAttackable
     {

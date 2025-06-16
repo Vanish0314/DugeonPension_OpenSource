@@ -1,11 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
-using Dungeon.DungeonGameEntry;
 using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.DungeonEntity.InteractiveObject
+namespace Dungeon.DungeonEntity
 {
     public class StandardTorch : DungeonVisibleEntity
     {
@@ -79,7 +76,7 @@ namespace Dungeon.DungeonEntity.InteractiveObject
 
         protected override void OnDisable()
         {
-            
+
         }
     }
 }

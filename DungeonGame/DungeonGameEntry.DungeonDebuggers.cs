@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
 using Dungeon.Common;
 using Dungeon.Evnents;
 using Dungeon.Overload;
@@ -41,7 +41,7 @@ namespace Dungeon.DungeonGameEntry
         {
             foreach (var hero in AdvanturersGuildSystem.currentBehavouringHeroTeam)
             {
-                hero.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>().Hp = -1;
+                hero.GetComponent<AgentLowLevelSystem>().Hp = -1;
             }
         }
         [DungeonGridWindow("对某个勇者使用咒力-说服")]

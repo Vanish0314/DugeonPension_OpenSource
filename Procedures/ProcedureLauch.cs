@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Codice.Client.BaseCommands.Merge.IncomingChanges;
-using Dungeon.Character.Hero;
+using Dungeon.Character;
 using Dungeon.Data;
-using Dungeon.DungeonEntity;
 using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
 using DungoenProcedure;
@@ -11,9 +9,6 @@ using GameFramework;
 using GameFramework.Event;
 using GameFramework.Procedure;
 using GameFramework.Resource;
-using GluonGui.Dialog;
-using UnityEditor;
-using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityGameFramework.Runtime;
@@ -51,9 +46,13 @@ namespace Dungeon.Procedure
     /// </summary>
     public class ProcedureLauch : DungeonProcedure
     {
+        private bool m_IsInited = false;
+        private bool hasCalled = false;
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
+
+            GameFrameworkLog.Info("[游戏流程] 游戏开始,进入启动流程");
 
             // 声音配置：根据用户配置数据，设置即将使用的声音选项
             InitSoundSettings();
@@ -61,13 +60,34 @@ namespace Dungeon.Procedure
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
+#if !UNITY_EDITOR
+            if (!hasCalled)
+            {
+                if (DungeonGameEntry.DungeonGameEntry.Resource != null)
+                {
+                    DungeonGameEntry.DungeonGameEntry.Resource.InitResources(OnInitResourcesComplete);
+                    hasCalled = true;
+                }
+                else
+                {
+                    DungeonGameEntry.DungeonGameEntry.InitGameFramwork();
+                }
+            }
+
+            if (!m_IsInited)
+            {
+                GameFrameworkLog.Info("[游戏流程-启动] 正在初始化...");
+                return;
+            }
+#endif
 
             ChangeState<ProcedurePreload>(procedureOwner);
         }
 
         private void OnInitResourcesComplete()
         {
-            GameFrameworkLog.Info("初始化资源完成");
+            m_IsInited = true;
+            GameFrameworkLog.Info("[游戏流程-启动] 初始化资源完成");
         }
 
         private void InitSoundSettings()
@@ -87,7 +107,7 @@ namespace Dungeon.Procedure
     {
         private DataBase[] datas;
 
-        private Dictionary<string, bool> m_LoadedFlag = new Dictionary<string, bool>();
+        private Dictionary<string, bool> m_LoadedFlag = new();
 
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
@@ -98,10 +118,14 @@ namespace Dungeon.Procedure
         {
             base.OnEnter(procedureOwner);
 
+            GameFrameworkLog.Info("[游戏流程] 游戏启动成功,开始预加载资源...");
+
             GameEntry.Event.Subscribe(LoadConfigSuccessEventArgs.EventId, OnLoadConfigSuccess);
             GameEntry.Event.Subscribe(LoadConfigFailureEventArgs.EventId, OnLoadConfigFailure);
             GameEntry.Event.Subscribe(LoadDictionarySuccessEventArgs.EventId, OnLoadDictionarySuccess);
             GameEntry.Event.Subscribe(LoadDictionaryFailureEventArgs.EventId, OnLoadDictionaryFailure);
+            GameEntry.Event.Subscribe(LoadDataTableSuccessEventArgs.EventId, OnLoadDataTableSuccess);
+            GameEntry.Event.Subscribe(LoadDataTableFailureEventArgs.EventId, OnLoadDataTableFailure);
 
             GameFramework.Data.Data[] _datas = GameEntry.Data.GetAllData();
 
@@ -189,9 +213,13 @@ namespace Dungeon.Procedure
         }
         private void LoadConfig(string configName)
         {
+            GameFrameworkLog.Info("[游戏流程-预加载] 正在加载配置文件...");
+
             string configAssetName = AssetUtility.GetConfigAsset(configName, false);
             m_LoadedFlag.Add(configAssetName, false);
             GameEntry.Config.ReadData(configAssetName, this);
+
+            GameFrameworkLog.Info("[游戏流程-预加载] 加载配置文件完毕,配置文件路径: {0}.\n如果未能正确加载,请检查路径", configAssetName);
         }
         private void OnLoadConfigSuccess(object sender, GameEventArgs e)
         {
@@ -202,7 +230,7 @@ namespace Dungeon.Procedure
             }
 
             m_LoadedFlag[ne.ConfigAssetName] = true;
-            Log.Info("Load config '{0}' OK.", ne.ConfigAssetName);
+            GameFrameworkLog.Info("[游戏流程-预加载] 加载配置文件 '{0}' 成功.", ne.ConfigAssetName);
         }
 
         private void OnLoadConfigFailure(object sender, GameEventArgs e)
@@ -213,7 +241,7 @@ namespace Dungeon.Procedure
                 return;
             }
 
-            Log.Error("Can not load config '{0}' from '{1}' with error message '{2}'.", ne.ConfigAssetName, ne.ConfigAssetName, ne.ErrorMessage);
+            GameFrameworkLog.Error($"[游戏流程-预加载] 加载配置文件 '{ne.ConfigAssetName}' 失败.\n错误: {ne.ErrorMessage}");
         }
 
         private void OnLoadDictionarySuccess(object sender, GameEventArgs e)
@@ -225,7 +253,8 @@ namespace Dungeon.Procedure
             }
 
             m_LoadedFlag[ne.DictionaryAssetName] = true;
-            Log.Info("Load dictionary '{0}' OK.", ne.DictionaryAssetName);
+            GameFrameworkLog.Info("[游戏流程-预加载] 加载字典 '{0}' 成功.", ne.DictionaryAssetName);
+
         }
 
         private void OnLoadDictionaryFailure(object sender, GameEventArgs e)
@@ -236,9 +265,18 @@ namespace Dungeon.Procedure
                 return;
             }
 
-            Log.Error("Can not load dictionary '{0}' from '{1}' with error message '{2}'.", ne.DictionaryAssetName, ne.DictionaryAssetName, ne.ErrorMessage);
+            GameFrameworkLog.Error($"[游戏流程-预加载] 加载字典 '{ne.DictionaryAssetName}' 失败.\n错误: {ne.ErrorMessage}");
         }
 
+        private void OnLoadDataTableSuccess(object sender, GameEventArgs e)
+        {
+            GameFrameworkLog.Info($"[游戏流程-预加载] 加载数据表成功.");
+        }
+
+        private void OnLoadDataTableFailure(object sender, GameEventArgs e)
+        {
+            GameFrameworkLog.Info($"[游戏流程-预加载] 加载数据表失败.\n错误: {e.ToString()}");
+        }
     }
 
 
@@ -527,19 +565,29 @@ namespace Dungeon.Procedure
 
             m_MetropolisControl = MetropolisControl.Create(PlaceManager.Instance);
             m_MetropolisControl.OnEnter();
-            
-            GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
-            GameEntry.UI.OpenUIForm(EnumUIForm.StartFightButtonForm);
 
+            GameEntry.UI.OpenUIForm(EnumUIForm.ResourceFrom);
+            GameEntry.UI.OpenUIForm(EnumUIForm.TimelineForm);
+            GameEntry.UI.OpenUIForm(EnumUIForm.MetropolisHPForm);
+
+            Audio.Instance.PlayAudio("经营BGM", AudioLayer.BackgroundMusic);
+            
             SubscribeEvents();
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             m_MetropolisControl.OnLeave();
-            
-            GameEntry.UI.CloseAllLoadedUIForms();
 
+            GameEntry.Event.Fire(this, OnLeaveMetroplisProcedureEvent.Create());
+            
+            GameEntry.UI.GetUIForm(EnumUIForm.TimelineForm).Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.MetropolisHPForm).Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.StartPlaceArmyButtonForm).Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.BuildForm)?.Close();
+            
+            Audio.Instance.StopAudio("经营BGM");
+            
             UnsubscribeEvents();
 
             base.OnLeave(procedureOwner, isShutdown);
@@ -548,7 +596,19 @@ namespace Dungeon.Procedure
         private void SubscribeEvents()
         {
             GameEntry.Event.Subscribe(OnPlayerSwitchToDungeonEvent.EventId, OnPlayerSwitchToDungeonHandler);
+            GameEntry.Event.Subscribe(OnHeroReachEventArgs.EventId,OnHeroReachHandler);
             GameEntry.Event.Subscribe(OnHeroArrivedInDungeonEvent.EventId, OnHeroArrivedInDungeonHandler);
+            GameEntry.Event.Subscribe(OnMetropolisBeDestroyEventArgs.EventId, OnMetropolisBeDestroy);
+        }
+
+        private void OnMetropolisBeDestroy(object sender, GameEventArgs e)
+        {
+            ChangeState<ProcedureGameOverScene>(mOwner);
+        }
+
+        private void OnHeroReachHandler(object sender, GameEventArgs e)
+        {
+            GameEntry.UI.OpenUIForm(EnumUIForm.StartPlaceArmyButtonForm);
         }
 
         private void OnHeroArrivedInDungeonHandler(object sender, GameEventArgs e)
@@ -564,7 +624,9 @@ namespace Dungeon.Procedure
         private void UnsubscribeEvents()
         {
             GameEntry.Event.Unsubscribe(OnPlayerSwitchToDungeonEvent.EventId, OnPlayerSwitchToDungeonHandler);
+            GameEntry.Event.Unsubscribe(OnHeroReachEventArgs.EventId,OnHeroReachHandler);
             GameEntry.Event.Unsubscribe(OnHeroArrivedInDungeonEvent.EventId, OnHeroArrivedInDungeonHandler);
+            GameEntry.Event.Unsubscribe(OnMetropolisBeDestroyEventArgs.EventId, OnMetropolisBeDestroy);
         }
 
         private ProcedureOwner mOwner;
@@ -581,14 +643,20 @@ namespace Dungeon.Procedure
             base.OnEnter(procedureOwner);
 
             mOwner = procedureOwner;
-            
+
             m_PlaceArmyControl = PlaceArmyControl.Create(PlaceManager.Instance);
             m_PlaceArmyControl.OnEnter();
+                        
+            GameEntry.UI.OpenUIForm(EnumUIForm.HeroInfoForm);
+            GameEntry.UI.OpenUIForm(EnumUIForm.RoomLimitForm);
+            GameEntry.UI.OpenUIForm(EnumUIForm.StartFightButtonForm);
 
             GameEntry.Event.Fire(this, OnSwitchedToDungeonPlacingProcedureEvent.Create());
 
             DungeonGameEntry.DungeonGameEntry.Instance.DisableMetroplis();
             DungeonGameEntry.DungeonGameEntry.Instance.EnableDungeon();
+            
+            Audio.Instance.PlayAudio("战斗BGM", AudioLayer.BackgroundMusic);
 
             SubscribeEvents();
         }
@@ -596,8 +664,10 @@ namespace Dungeon.Procedure
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             m_PlaceArmyControl.OnLeave();
-            
-            GameEntry.UI.CloseAllLoadedUIForms();
+
+            GameEntry.UI.GetUIForm(EnumUIForm.RoomLimitForm).Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.StartFightButtonForm).Close();
+            GameEntry.UI.GetUIForm(EnumUIForm.PlaceArmyForm)?.Close();
             
             base.OnLeave(procedureOwner, isShutdown);
 
@@ -686,25 +756,31 @@ namespace Dungeon.Procedure
             base.OnEnter(procedureOwner);
 
             mOwner = procedureOwner;
+
+            MetropolisBuildingManager.Instance.procedureTime = 0;
             
             m_CurseUIControl = CurseUIControl.Create(CursesManager.Instance);
             m_CurseUIControl.OnEnter();
-
-            GameEntry.UI.OpenUIForm(EnumUIForm.HeroInfoForm);
-
+            
             GameEntry.Event.Fire(this, OnSwitchedToHeroExploringDungeonProcedureEvent.Create());
 
             SubscribeEvents();
         }
-
+        
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
-            
+
             GameEntry.UI.CloseAllLoadedUIForms();
 
-            m_CurseUIControl.OnLeave();
+            GameEntry.Event.Fire(this, OnLeaveHeroExploringDungeonProcedureEvent.Create());
             
+            MetropolisBuildingManager.Instance.procedureTime = (int)GameEntry.Procedure.CurrentProcedureTime;
+            
+            Audio.Instance.StopAudio("战斗BGM");
+            
+            m_CurseUIControl.OnLeave();
+
             UnsubscribeEvents();
         }
 
@@ -763,44 +839,108 @@ namespace Dungeon.Procedure
 
             GameEntry.Event.Fire(this, OnSwitchedToDungeonCalculationProcedureEvent.Create());
 
+            GameEntry.UI.OpenUIForm(EnumUIForm.FightSettlementForm);
+
             SubscribeEvents();
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
-
-            ChangeState<ProcedureMetropolisStage>(mOwner);
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
 
+            var currentGameProgressingHeroTeam = DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem
+                .GetCurrentGameProgressingHeroTeam();
+            var currentBeCapturedHeroInTeam =
+                DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentBeCapturedHeroInTeam();
+
+            bool allDied = true;
+            
+            if (currentGameProgressingHeroTeam.Count != 0 || currentBeCapturedHeroInTeam.Count != 0)
+            {   
+                foreach (var hero in currentGameProgressingHeroTeam)
+                {
+                    if (hero.IsAlive())
+                        allDied = false;
+                }
+                
+            }
+
+            if (allDied)
+            {
+                Time.timeScale = 1; // fucking code
+                DungeonGameEntry.DungeonGameEntry.Event.Fire(this, OnDungeonCalculationLeaveAndHeroTeamDiedEventArgs.Create());
+            }
+            
+            GameEntry.UI.CloseAllLoadedUIForms();
+            
             UnsubscribeEvents();
         }
 
         private void SubscribeEvents()
         {
             GameEntry.Event.Subscribe(OnDungeonCalculationFinishedEvent.EventId, OnDungeonCalculationFinishedEventHandler);
+            GameEntry.Event.Subscribe(OnMetropolisBeDestroyEventArgs.EventId, OnMetropolisBeDestroy);
         }
 
+        private void OnMetropolisBeDestroy(object sender, GameEventArgs e)
+        {
+            ChangeState<ProcedureGameOverScene>(mOwner);
+        }
+        
         private void OnDungeonCalculationFinishedEventHandler(object sender, GameEventArgs e)
         {
-
+            ChangeState<ProcedureMetropolisStage>(mOwner);
         }
 
         private void UnsubscribeEvents()
         {
             GameEntry.Event.Unsubscribe(OnDungeonCalculationFinishedEvent.EventId, OnDungeonCalculationFinishedEventHandler);
+            GameEntry.Event.Unsubscribe(OnMetropolisBeDestroyEventArgs.EventId, OnMetropolisBeDestroy);
         }
 
         private ProcedureOwner mOwner;
     }
+    
+    public class ProcedureGameOverScene : DungeonProcedure
+    {
+        private ProcedureOwner mOwner;
+        protected override void OnEnter(ProcedureOwner procedureOwner)
+        {
+            base.OnEnter(procedureOwner);
+
+            mOwner = procedureOwner;
+            
+            DungeonGameEntry.DungeonGameEntry.Instance.DisableDungeon();
+            DungeonGameEntry.DungeonGameEntry.Instance.DisableMetroplis();
+
+            SceneManager.LoadScene(4);
+
+            GameEntry.UI.CloseAllLoadedUIForms();
+            GameEntry.UI.OpenUIForm(EnumUIForm.GameOverForm);
+
+            GameEntry.Event.Subscribe(OnReturnGameStartButtonClickEvent.EventId, OnReturnGameStartHandler);
+        }
+        
+        protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
+        {
+            base.OnLeave(procedureOwner, isShutdown);
+
+            GameEntry.UI.GetComponent<UIComponent>().CloseAllLoadedUIForms();
+
+            GameEntry.Event.Unsubscribe(OnReturnGameStartButtonClickEvent.EventId, OnReturnGameStartHandler);
+        }
+        
+        private void OnReturnGameStartHandler(object sender, GameEventArgs e)
+        {
+            ChangeState<ProcedureChangeToStartScene>(mOwner);
+        }
+    }
 }
-
-
-
 
 #region Events
 namespace Dungeon.Evnents
@@ -967,6 +1107,32 @@ namespace Dungeon.Evnents
     }
 
     /// <summary>
+    /// 当离开ProcedureMetroplisStage时触发
+    /// </summary>
+    public sealed class OnLeaveMetroplisProcedureEvent : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnLeaveMetroplisProcedureEvent).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+
+        public static OnLeaveMetroplisProcedureEvent Create()
+        {
+            OnLeaveMetroplisProcedureEvent onLeaveMetroplisProcedureEvent = ReferencePool.Acquire<OnLeaveMetroplisProcedureEvent>();
+            return onLeaveMetroplisProcedureEvent;
+        }
+
+        public override void Clear()
+        {
+        }
+    }
+
+    /// <summary>
     /// 当切换到ProcedureDungeonPlacingStage时触发
     /// </summary>
     public sealed class OnSwitchedToDungeonPlacingProcedureEvent : GameEventArgs
@@ -1084,6 +1250,29 @@ namespace Dungeon.Evnents
         public static OnSwitchedToHeroExploringDungeonProcedureEvent Create()
         {
             OnSwitchedToHeroExploringDungeonProcedureEvent a = ReferencePool.Acquire<OnSwitchedToHeroExploringDungeonProcedureEvent>();
+            return a;
+        }
+
+        public override void Clear()
+        {
+        }
+    }
+    
+    public sealed class OnLeaveHeroExploringDungeonProcedureEvent : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnLeaveHeroExploringDungeonProcedureEvent).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+
+        public static OnLeaveHeroExploringDungeonProcedureEvent Create()
+        {
+            OnLeaveHeroExploringDungeonProcedureEvent a = ReferencePool.Acquire<OnLeaveHeroExploringDungeonProcedureEvent>();
             return a;
         }
 
@@ -1250,6 +1439,56 @@ namespace Dungeon.Evnents
         public static OnProcedureInitGameMainLeaveEvent Create()
         {
             OnProcedureInitGameMainLeaveEvent a = ReferencePool.Acquire<OnProcedureInitGameMainLeaveEvent>();
+            return a;
+        }
+
+        public override void Clear()
+        {
+        }
+    }
+    
+    /// <summary>
+    /// 当ProcedureDungeonCalculationStage结束时勇者team死光光时触发
+    /// </summary>
+    public sealed class OnDungeonCalculationLeaveAndHeroTeamDiedEventArgs : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnDungeonCalculationLeaveAndHeroTeamDiedEventArgs).GetHashCode();
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+        public static OnDungeonCalculationLeaveAndHeroTeamDiedEventArgs Create()
+        {
+            OnDungeonCalculationLeaveAndHeroTeamDiedEventArgs a = ReferencePool.Acquire<OnDungeonCalculationLeaveAndHeroTeamDiedEventArgs>();
+            return a;
+        }
+
+        public override void Clear()
+        {
+        }
+    }
+    
+    /// <summary>
+    /// 当玩家按下按钮时触发
+    /// </summary>
+    public sealed class OnReturnGameStartButtonClickEvent : GameEventArgs
+    {
+        public static readonly int EventId = typeof(OnReturnGameStartButtonClickEvent).GetHashCode();
+
+        public override int Id
+        {
+            get
+            {
+                return EventId;
+            }
+        }
+
+        public static OnReturnGameStartButtonClickEvent Create()
+        {
+            OnReturnGameStartButtonClickEvent a = ReferencePool.Acquire<OnReturnGameStartButtonClickEvent>();
             return a;
         }
 

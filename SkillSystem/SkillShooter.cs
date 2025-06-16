@@ -5,6 +5,10 @@ using Sirenix.OdinInspector;
 using GameFramework;
 using System.Threading.Tasks;
 using DG.Tweening;
+using System;
+using Dungeon.GameFeel;
+
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -14,7 +18,7 @@ namespace Dungeon.SkillSystem
 {
     public class SkillShooterLayer
     {
-        public SkillShooterLayer(string layer,string name = "unknown")
+        public SkillShooterLayer(string layer, string name = "unknown")
         {
             if (layer == "Hero")
             {
@@ -31,6 +35,22 @@ namespace Dungeon.SkillSystem
             else
             {
                 GameFrameworkLog.Error("[SkillShooterLayer] Invalid layer name: " + layer + " 名字: " + name);
+            }
+        }
+
+        public static SkillShooterLayer GetLayer(SkillShooterLayer layer)
+        {
+            if (layer.Layer == HeroTeamLayer)
+            {
+                return new SkillShooterLayer("Hero");
+            }
+            else if (layer.Layer == MonsterTeamLayer)
+            {
+                return new SkillShooterLayer("Monster");
+            }
+            else
+            {
+                throw new System.Exception("[SkillShooterLayer] Invalid layer name: " + layer.Layer);
             }
         }
 
@@ -60,7 +80,7 @@ namespace Dungeon.SkillSystem
         void Start()
         {
             var layer = LayerMask.LayerToName(gameObject.layer);
-            mSelfShooterLayer = new SkillShooterLayer(layer,gameObject.name);
+            mSelfShooterLayer = new SkillShooterLayer(layer, gameObject.name);
 
             owner = GetComponent<ICombatable>();
         }
@@ -80,28 +100,55 @@ namespace Dungeon.SkillSystem
             float post = skill.skillData.postCastTimeInSec;
 
             currentSequence = DOTween.Sequence();
+
+            // 1. play effect
+            currentSequence.AppendCallback(() =>
+            {
+                Audio.Instance.PlayAudio(skill.skillData.soundEffect);
+
+                if (skill.skillData.deployMethodDesc.shootType != SkillDeployDesc.SkillShootType.Bullet)
+                {
+                    var hitboxEffect = Instantiate(skill.skillData.effectPrefab, skill.skillDeployMethod.SkillPosition, Quaternion.identity);
+                    hitboxEffect.GetComponent<SpriteVisualEffectController>().Play();
+                }
+            });
+
+            // 2. pre cast
             currentSequence.AppendInterval(pre);
+
+            // 3. trigger skill entity
             currentSequence.AppendCallback(() =>
             {
                 GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能前摇结束, 开始施放技能: {skill.skillData.name}");
 
-                currentSkillEntity = Instantiate(skill.SkillGO).GetComponentInChildren<SkillEntity>();//FIXME()
+                currentSkillEntity = Instantiate(skill.SkillGO).GetComponentInChildren<SkillEntity>();
+#if UNITY_EDITOR
+                if (currentSkillEntity == null)
+                {
+                    GameFrameworkLog.Error($"[SkillShooter] {owner.GetGameObject().name} 技能实体为空, 无法施放技能: {skill.skillData.name}");
+                }
+#endif
                 currentSkillEntity.InitAndFire(skill);
             });
 
+            // 4. mid cast
             currentSequence.AppendInterval(mid);
+
+            // 5. return skill entity
             currentSequence.AppendCallback(() =>
             {
                 GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能中摇结束, 进入技能后摇: {skill.skillData.name}");
 
-                if (currentSkillEntity != null)
+                if (currentSkillEntity != null && skill.skillData.deployMethodDesc.shootType != SkillDeployDesc.SkillShootType.Bullet)
                 {
                     currentSkillEntity.ReturnToPool();
                     currentSkillEntity = null;
                 }
             });
 
+            // 6. post cast
             currentSequence.AppendInterval(post);
+
             currentSequence.OnComplete(() =>
             {
                 isReadyToFire = true;
@@ -111,11 +158,13 @@ namespace Dungeon.SkillSystem
                 SequenceIsEndedByKillFlag = false;
 
                 GameFrameworkLog.Info($"[SkillShooter] {owner.GetGameObject().name} 技能后摇结束, 技能: {skill.skillData.name} 释放完毕.");
+
+                OnSkillEnded?.Invoke();
             });
 
             currentSequence.OnKill(() =>
             {
-                if(!SequenceIsEndedByKillFlag) //TODO(vanish): 必须保证OnComplete先于OnKill执行
+                if (!SequenceIsEndedByKillFlag) //TODO(vanish): 必须保证OnComplete先于OnKill执行
                     return;
 
                 if (currentSkillEntity != null)
@@ -156,6 +205,7 @@ namespace Dungeon.SkillSystem
             var skill = new Skill(skillData, method, owner);
             Fire(skill);
         }
+        public event Action OnSkillEnded;
         public void OnStunned()
         {
             isStunned = true;

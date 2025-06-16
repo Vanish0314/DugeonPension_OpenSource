@@ -9,11 +9,19 @@ namespace Dungeon
     {
        private TimelineForm m_TimelineForm;
 
-       private void Start()
+       private void Awake()
        {
            m_TimelineForm = GetComponent<TimelineForm>();
+       }
 
+       private void OnEnable()
+       {
            TimelineModel.Instance.OnTimelineChanged += UpdateTimeline;
+       }
+
+       private void OnDisable()
+       {
+           TimelineModel.Instance.OnTimelineChanged -= UpdateTimeline;
        }
 
        private void UpdateTimeline()

@@ -5,7 +5,7 @@ using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensor.Key
+namespace Dungeon.GOAP
 {
     public class HeroCoinCountSensor : LocalWorldSensorBase
     {

@@ -1,16 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using CrashKonijn.Agent.Runtime;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.Character.Hero;
+using Dungeon.DungeonEntity;
+using Dungeon.GOAP;
 using Dungeon.Vision2D;
 using GameFramework;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Dungeon.Character.Hero
+namespace Dungeon.Character
 {
-    [RequireComponent(typeof(AgentLowLevelSystem.AgentLowLevelSystem))]
+    [RequireComponent(typeof(AgentLowLevelSystem))]
     [RequireComponent(typeof(AgentHighLevelSystem))]
     [RequireComponent(typeof(GoapActionProvider))]
     [RequireComponent(typeof(AgentBehaviour))]
@@ -23,7 +22,7 @@ namespace Dungeon.Character.Hero
                 if(m_LowLevelSystem!= null)
                     return m_LowLevelSystem.HeroName;
 
-                m_LowLevelSystem = GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+                m_LowLevelSystem = GetComponent<AgentLowLevelSystem>();
                 return m_LowLevelSystem.HeroName;
             }
         }
@@ -46,11 +45,11 @@ namespace Dungeon.Character.Hero
         private void InitHighLevelSystem()
         {
             m_HighLevelSystem = GetComponent<AgentHighLevelSystem>();
-            m_HighLevelSystem.OnSpawn();
+            m_HighLevelSystem.OnSpawn(agentGoapType);
         }
         private void InitLowLevelSystem()
         {
-            m_LowLevelSystem = GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            m_LowLevelSystem = GetComponent<AgentLowLevelSystem>();
             m_LowLevelSystem.OnSpawn();
         }
 
@@ -82,13 +81,19 @@ namespace Dungeon.Character.Hero
             }
         }
 
+        public Sprite GetSprite()
+        {
+            return GetComponentInChildren<SpriteRenderer>().sprite;
+        }
+
         public override void Reset()
         {
             GameFrameworkLog.Warning("[HeroEntityBase.Reset] Not well implemented");
         }
 
+        [LabelText("Goap的ai类型")] public AgentGoapType agentGoapType;
         private AgentHighLevelSystem m_HighLevelSystem;
-        private AgentLowLevelSystem.AgentLowLevelSystem m_LowLevelSystem;
+        private AgentLowLevelSystem m_LowLevelSystem;
     }
 
     public partial class HeroEntityBase : DungeonVisitorEntity

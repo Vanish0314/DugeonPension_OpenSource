@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Common.MonoPool;
+using Dungeon.Common;
 using GameFramework;
 using GameFramework.Event;
 using GameFramework.Fsm;
@@ -20,6 +20,9 @@ namespace Dungeon
         LoggingCamp,
         Farm,  
         Canteen,
+        Castle,
+        MonsterLair,
+        TrapFactory
     }
     
     // 建筑当前状态
@@ -42,8 +45,10 @@ namespace Dungeon
         public float constructionProgress;
         [SerializeField] private float constructionDuration = 2;
         [SerializeField] private float constructionSpeed;
-        
-        [Header("工作设置")]
+
+        [Header("工作设置")] 
+        [SerializeField] private int constructionWorkers = 3;
+        [SerializeField] private int completedWorkers = 1;
         public WorkplaceType workplaceType;
         public int maxWorkers = 3;
         [SerializeField] private WorkplaceType completeworkplaceType;
@@ -201,14 +206,8 @@ namespace Dungeon
         {
             if (workingHeroes.Remove(hero))
             {
-                hero.EndWorking();
                 UpdateEfficiency();
-                
-                if (workingHeroes.Count == 0 && m_CurrentCoroutine != null)
-                {
-                    StopCoroutine(m_CurrentCoroutine);
-                    m_CurrentCoroutine = null;
-                }
+                hero.EndWorking(); // 可能的循环引用
             }
         }
 
@@ -218,10 +217,8 @@ namespace Dungeon
             currentEfficiency = 0f;
             foreach (var hero in workingHeroes)
             {
-                currentEfficiency += hero.Efficiency; // 累加工人效率
+                currentEfficiency += hero.Efficiency * hero.CorruptLevel; // 累加工人效率
             }
-            
-            Debug.Log($"{gameObject.name} 当前效率: {currentEfficiency:P0}");
         }
         
         #endregion
@@ -234,21 +231,34 @@ namespace Dungeon
                 return;
 
             m_CurrentCoroutine = StartCoroutine(ConstructionProcess());
+            Audio.Instance.PlayAudio("建造");
         }
         
         private IEnumerator ConstructionProcess()
         {
-            while (constructionProgress < 1f)
+            while (constructionProgress < 1f && workingHeroes.Count > 0)
             {
                 // 根据在场工人数量计算实际施工速度
                 float effectiveSpeed = constructionSpeed * workingHeroes.Count;
                 constructionProgress = Mathf.Clamp01(constructionProgress + effectiveSpeed * Time.deltaTime / constructionDuration);
                 yield return null;
             }
-            
-            constructionProgress = 1f;
-            GameEntry.Event.Fire(this, OnConstructionCompletedEvent.Create(this));// 要判断一下是否是自身
+
+            if (constructionProgress >= 1f)
+            {
+                constructionProgress = 1f;
+                GameEntry.Event.Fire(this, OnConstructionCompletedEvent.Create(this));// 要判断一下是否是自身
+            }
+           
             StopCurrentCoroutine();
+        }
+
+        public void ForceCompleteConstructionProcess()
+        {
+            StopCurrentCoroutine();
+            FireAllWorkers();
+            StartCompletedBehavior();
+            constructionProgress = 2f;
         }
         
         #endregion
@@ -257,7 +267,9 @@ namespace Dungeon
 
         public virtual void StartCompletedBehavior()
         {
+            GetComponent<SpriteRenderer>().sprite = completedSprite;
             workplaceType = completeworkplaceType;
+            maxWorkers = completedWorkers;
         }
 
         public virtual void UpdateCompletedBehavior()
@@ -268,9 +280,22 @@ namespace Dungeon
         #endregion
         
         #region Override
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            if (MetropolisBuildingManager.Instance != null)
+                MetropolisBuildingManager.Instance.RegisterBuilding(this);
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+        }
         public override void OnSpawn(object data) 
         {
             InitFsm();
+            maxWorkers = constructionWorkers;
             constructionProgress = 0;
             currentEfficiency = 0f;
             m_CurrentCoroutine = null;
@@ -296,6 +321,7 @@ namespace Dungeon
             if (m_CurrentCoroutine != null)
                 StopCoroutine(m_CurrentCoroutine);
             m_CurrentCoroutine = null;
+            Audio.Instance.StopAudio("建造");
         }
         
     }

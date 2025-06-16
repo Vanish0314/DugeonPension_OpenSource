@@ -1,11 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Common.MonoPool;
+using Dungeon.Common;
 using GameFramework;
 using GameFramework.ObjectPool;
 using UnityEngine;
 
-namespace Dungeon.Common.MonoPool
+namespace Dungeon.Common
 {
     public class MonoPoolObject : ObjectBase
 	{

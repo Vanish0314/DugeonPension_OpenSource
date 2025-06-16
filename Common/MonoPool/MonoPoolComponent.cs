@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Common.MonoPool;
+using Dungeon.Common;
 using Dungeon.DungeonGameEntry;
 using GameFramework.ObjectPool;
 using UnityEngine;
@@ -36,6 +36,11 @@ namespace Dungeon
 			m_ItemObjectPool.Unspawn(item);
 		}
 
+		public void ClearPool()
+		{
+			m_ItemObjectPool.Release();
+		}
+
 		private MonoPoolItem GenItem(object data)
 		{
 			MonoPoolItem cellItem;
@@ -54,6 +59,7 @@ namespace Dungeon
 				m_ItemObjectPool.Register(MonoPoolObject.Create(cellItem), true);
 			}
 			cellItem.gameObject.SetActive(true);
+			cellItem.isInPool = false;
 			return cellItem;
 		}
 	}

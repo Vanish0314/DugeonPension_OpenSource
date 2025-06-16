@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DungoenProcedure;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,67 +11,105 @@ namespace Dungeon
     {
         public static ResourceModel Instance { get; private set; }
         
-        public event Action OnGoldChanged;
-        public event Action OnStoneChanged;
-        public event Action OnWoodChanged;
-        public event Action OnMagicPowerChanged;
-        public event Action OnMaterialChanged;
+        public event Action<float> OnGoldChanged;
+        public event Action CannotAffordGold; 
+        public event Action<float> OnExpBallChanged;
+        public event Action CannotAffordExpBall;
+        public event Action<float> OnStoneChanged;
+        public event Action CannotAffordStone; 
+        public event Action<float> OnWoodChanged;
+        public event Action CannotAffordWood;
+        public event Action<float> OnMagicPowerChanged;
+        public event Action CannotAffordMagicPower; 
+        public event Action<float> OnMaterialChanged;
+        public event Action CannotAffordMaterial;
+        public event Action<float> OnCursePowerChanged;
+        public event Action CannotAffordCursePower;
 
-        private int gold = 0;
+        [SerializeField] private int gold = 0;
         public int Gold
         {
             get => gold;
             set
             {
+                float change = value - gold;
                 gold = value;
-                OnGoldChanged?.Invoke();
+                OnGoldChanged?.Invoke(change);    
+            }
+        }
+        
+        [SerializeField] private int expBall = 10;
+        public int ExpBall
+        {
+            get => expBall;
+            set
+            {
+                float change = value - expBall;
+                expBall = value;
+                OnExpBallChanged?.Invoke(change);
             }
         }
 
-        private int stone = 0;
+        [SerializeField] private int stone = 0;
         public int Stone
         {
             get => stone;
             set
             {
+                float change = value - stone;
                 stone = value;
-                OnStoneChanged?.Invoke();
+                OnStoneChanged?.Invoke(change);
             }
         }
         
-        private int wood = 0;
-
+        [SerializeField] private int wood = 0;
         public int Wood
         {
             get => wood;
             set
             {
+                float change = value - wood;
                 wood = value;
-                OnWoodChanged?.Invoke();
+                OnWoodChanged?.Invoke(change);
             }
         }
 
-        private int magicPower = 0;
+        [SerializeField] private int magicPower = 0;
         public int MagicPower
         {
             get => magicPower;
             set
             {
+                float change = value - magicPower;
                 magicPower = value;
-                OnMagicPowerChanged?.Invoke();
+                OnMagicPowerChanged?.Invoke(change);
             }
         }
 
-        private int material = 0;
+        [SerializeField] private int material = 0;
         public int Material
         {
             get => material;
             set
             {
+                float change = value - material;
                 material = value;
-                OnMaterialChanged?.Invoke();
+                OnMaterialChanged?.Invoke(change);
             }
         }
+        
+        [SerializeField] private float cursePower = 0;
+        public float CursePower
+        {
+            get => DungeonGameEntry.DungeonGameEntry.OverloadPower.CurrentCursePower;
+            set
+            {
+                float change = value - cursePower;
+                cursePower = value;
+                OnCursePowerChanged?.Invoke(change);
+            }
+        }
+
         private void Awake() {
             if (Instance == null) Instance = this;
 
@@ -80,10 +119,50 @@ namespace Dungeon
         // 新增方法：检查是否有足够资源
         public bool HasEnoughResources(Cost cost)
         {
-            return gold >= cost.gold && 
-                   stone >= cost.stone && 
-                   magicPower >= cost.magicPower && 
-                   material >= cost.trapMaterial;
+            bool hasEnoughResources = true;
+            if (gold < cost.gold)
+            {
+                hasEnoughResources = false;
+                CannotAffordGold?.Invoke();
+            }
+
+            if (expBall < cost.expBall)
+            {
+                hasEnoughResources = false;
+                CannotAffordExpBall?.Invoke();
+            }
+
+            if (stone < cost.stone)
+            {
+                hasEnoughResources = false;
+                CannotAffordStone?.Invoke();
+            }
+
+            if (wood < cost.wood)
+            {
+                hasEnoughResources = false;
+                CannotAffordWood?.Invoke();
+            }
+
+            if (magicPower < cost.magicPower)
+            {
+                hasEnoughResources = false;
+                CannotAffordMagicPower?.Invoke();
+            }
+
+            if (material < cost.trapMaterial)
+            {
+                hasEnoughResources = false;
+                CannotAffordMaterial?.Invoke();
+            }
+
+            if (cursePower < cost.conjuration)
+            {
+                hasEnoughResources = false;
+                CannotAffordCursePower?.Invoke();
+            }
+            
+            return hasEnoughResources;
         }
 
         // 新增方法：安全消费资源
@@ -94,8 +173,11 @@ namespace Dungeon
 
             Gold -= cost.gold;
             Stone -= cost.stone;
+            Wood -= cost.wood;
+            ExpBall -= cost.expBall;
             MagicPower -= cost.magicPower;
             Material -= cost.trapMaterial;
+            cursePower -= cost.conjuration;
             return true;
         }
 
@@ -116,8 +198,13 @@ namespace Dungeon
                 case ResourceType.MagicPower:
                     MagicPower += amount;
                     break;
-                case ResourceType.TrapMaterial:
+                case ResourceType.Material:
                     Material += amount;
+                    break;
+                case ResourceType.ExpBall:
+                    ExpBall += amount;
+                    break;
+                default:
                     break;
             }
         }
@@ -199,6 +286,68 @@ namespace Dungeon
             return crops.TryGetValue(type, out int count) ? count : 0;
         }
         #endregion
+        
+        [Serializable]
+        public class ResourceIcon
+        {
+            public ResourceType resourceType;
+            public Sprite icon;
+            public RectTransform iconTransform;
+        }
+        [Serializable]
+        public class CropIcon
+        {
+            public CropType cropType;
+            public Sprite icon;
+            public RectTransform iconTransform;
+        }
+        
+        [Header("资源图标")]
+        [SerializeField] private ResourceIcon[] resourceIcons;
+        [Header("种子图标")]
+        [SerializeField] private CropIcon[] cropIcons;
+
+        public Sprite GetResourceSprite(string resourceName)
+        {
+            foreach (var icon in resourceIcons)
+            {
+                if (icon.resourceType.ToString() == resourceName)
+                    return icon.icon;
+            }
+            return null;
+        }
+
+        public Sprite GetCropSprite(string cropName)
+        {
+            foreach (var icon in cropIcons)
+            {
+                if (icon.cropType.ToString() == cropName)
+                    return icon.icon;
+            }
+            return null;
+        }
+
+        public Vector2 GetResourceTransform(string resourceName)
+        {
+            foreach (var icon in resourceIcons)
+            {
+                if (icon.resourceType.ToString() == resourceName)
+                    // 获取UI元素在屏幕空间中的位置
+                    return RectTransformUtility.WorldToScreenPoint(
+                        GatherEffectHelper.Instance.mainCanvas.worldCamera,
+                        icon.iconTransform.position);
+            }
+            return Vector2.zero;
+        }
+
+        public void SetRectTransform(ResourceType type,RectTransform rectTransform)
+        {
+            foreach (var icon in resourceIcons)
+            {
+                if(icon.resourceType == type)
+                    icon.iconTransform = rectTransform;
+            }
+        }
     }
     
     public enum ResourceType
@@ -206,11 +355,9 @@ namespace Dungeon
         Gold,
         Stone,
         Wood,
-        ResearchPoints,
         ExpBall,
         MagicPower,
-        TrapMaterial,
-        Conjuration,
+        Material,
         None
     }
 }

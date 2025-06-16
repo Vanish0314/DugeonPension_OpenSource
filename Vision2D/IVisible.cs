@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using Dungeon.DungeonEntity;
+using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 
-namespace Dungeon.Vision2D
+namespace Dungeon.DungeonEntity
 {
     /// <summary>
     /// 继承VisibleEntity而非此接口
@@ -17,7 +18,7 @@ namespace Dungeon.Vision2D
     }
 
     [RequireComponent(typeof(Collider2D))]
-    public abstract class DungeonVisibleEntity : DungeonEntity.DungeonEntity, IVisible
+    public abstract class DungeonVisibleEntity : DungeonEntity, IVisible
     {
         /// <summary>
         /// Should be called by visitor entity.
@@ -35,7 +36,7 @@ namespace Dungeon.Vision2D
     }
 
     [RequireComponent(typeof(Viewer))]
-    public abstract class DungeonVisitorEntity : DungeonEntity.DungeonEntity, IVisible
+    public abstract class DungeonVisitorEntity : DungeonEntity, IVisible
     {
         /// <summary>
         /// Init mViewer and mVision.

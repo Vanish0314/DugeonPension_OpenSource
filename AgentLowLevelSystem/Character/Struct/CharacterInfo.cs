@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Dungeon.Character.Struct
+namespace Dungeon.Character
 {
     public struct CharacterInfo
     {

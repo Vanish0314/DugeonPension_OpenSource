@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.GOAP.Target;
+using Dungeon.Character;
+using Dungeon.GOAP;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensor.Target
+namespace Dungeon.GOAP
 {
     public class NearestTorchTargetSensor : LocalTargetSensorBase
     {
@@ -17,7 +18,7 @@ namespace Dungeon.GOAP.Sensor.Target
 
         public override ITarget Sense(IActionReceiver agent, IComponentReference references, ITarget existingTarget)
         {
-            var low = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var low = references.GetCachedComponent<AgentLowLevelSystem>();
 
             var torch = low.GetNearestTorchInVision();
             var torchTransf = torch?.transform;

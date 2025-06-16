@@ -10,7 +10,7 @@ namespace Dungeon
 
         public bool CanAcceptResident()
         {
-            return currentResidents < maxResidents;
+            return currentResidents < maxResidents && CurrentState == BuildingState.Completed;
         }
 
         public void CheckIn(MetropolisHeroBase hero)

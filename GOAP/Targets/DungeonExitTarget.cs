@@ -6,7 +6,7 @@ using Dungeon.DungeonGameEntry;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Targets
+namespace Dungeon.GOAP
 {
     public class DungeonExitTarget : ITarget
     {

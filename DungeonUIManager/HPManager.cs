@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Dungeon.Common.MonoPool;
-using Dungeon.DungeonEntity.Trap;
+using Dungeon.Common;
+using Dungeon.DungeonEntity;
 
 namespace Dungeon
 {
@@ -12,7 +12,7 @@ namespace Dungeon
         [SerializeField] private int m_InitialPoolSize = 20;
         
         private MonoPoolComponent m_HPPool;
-        private List<HPBar> m_ActiveHPBars = new List<HPBar>();
+        private Dictionary<ICombatable, HPBar> m_ActiveHPBars = new Dictionary<ICombatable, HPBar>();
         
         public static HPManager Instance { get; private set; }
 
@@ -36,41 +36,55 @@ namespace Dungeon
 
         private void Update()
         {
-            //  回收所有当前血条
-            ReturnAllHPBars();
-            
-            //  为所有活跃的战斗对象创建新血条
-            CreateHPBarsForActiveCombatables();
-        }
-
-        private void ReturnAllHPBars()
-        {
-            foreach (var hpBar in m_ActiveHPBars)
-            {
-                hpBar.ReturnToPool();
-            }
-            m_ActiveHPBars.Clear();
-        }
-
-        private void CreateHPBarsForActiveCombatables()
-        {
-            // 获取场景中所有活跃且非陷阱的战斗对象
-            var combatables = FindObjectsOfType<MonoBehaviour>(false)
+            // 获取当前所有需要显示血条的战斗单位
+            var activeCombatables = FindObjectsOfType<MonoBehaviour>(false)
                 .OfType<ICombatable>()
                 .Where(c => 
                 {
                     var mono = c as MonoBehaviour;
                     return mono != null 
                            && mono.gameObject.activeInHierarchy 
-                           && !(mono is DungeonTrapBase); // 排除 TrapBase 及其子类
-                });
-    
-            foreach (var combatable in combatables)
+                           && !(mono is DungeonTrapBase);
+                }).ToList();
+
+            // 清理已失效的血条（战斗单位已死亡或禁用）
+            CleanUpInactiveHPBars(activeCombatables);
+
+            // 为活跃战斗单位创建或更新血条
+            foreach (var combatable in activeCombatables)
             {
-                CreateHPBar(combatable);
+                if (m_ActiveHPBars.TryGetValue(combatable, out var existingBar))
+                {
+                    // 已有血条，只需更新位置
+                    UpdateHPBarPosition(combatable, existingBar);
+                }
+                else
+                {
+                    // 新战斗单位，创建血条
+                    CreateHPBar(combatable);
+                }
+            }
+        }
+        
+        // 清理无效血条（战斗单位已不存在或禁用）
+        private void CleanUpInactiveHPBars(List<ICombatable> activeCombatables)
+        {
+            var toRemove = new List<ICombatable>();
+            foreach (var kvp in m_ActiveHPBars)
+            {
+                if (!activeCombatables.Contains(kvp.Key))
+                {
+                    kvp.Value.ReturnToPool();
+                    toRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var key in toRemove)
+            {
+                m_ActiveHPBars.Remove(key);
             }
         }
 
+        // 创建新血条并绑定到战斗单位
         private void CreateHPBar(ICombatable combatable)
         {
             var hpBar = m_HPPool.GetItem(combatable) as HPBar;
@@ -82,14 +96,14 @@ namespace Dungeon
             
             hpBar.Initialize(combatable);
             UpdateHPBarPosition(combatable, hpBar);
-            m_ActiveHPBars.Add(hpBar);
+            m_ActiveHPBars.Add(combatable, hpBar);
         }
-
+        
         private void UpdateHPBarPosition(ICombatable combatable, HPBar hpBar)
         {
             if (combatable is MonoBehaviour monoBehaviour)
             {
-                Vector3 worldPosition = monoBehaviour.transform.position + Vector3.up * 2.5f;
+                Vector3 worldPosition = monoBehaviour.transform.position + combatable.StatusBarSetting.offset;
                 hpBar.transform.position = worldPosition;
             }
         }

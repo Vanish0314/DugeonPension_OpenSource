@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Hero;
+using Dungeon.Character;
 using GameFramework;
 using GameFramework.Event;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour
     {
@@ -14,6 +14,15 @@ namespace Dungeon.AgentLowLevelSystem
 
         public void ModifySubmissiveness(int value)
         {
+#if UNITY_EDITOR
+            if (Hp <= 0)
+            {
+                GameFrameworkLog.Warning($"屈服度修改失败，因为勇者已经死亡:{gameObject.name}");
+            }
+#endif
+            if (Hp <= 0)
+                return;
+
             int oldValue = m_Properties.Submissiveness;
 
             if (value > 0)
@@ -26,7 +35,7 @@ namespace Dungeon.AgentLowLevelSystem
                 else if (hpRatio > 0.3f)
                     multiplier = 1f;
                 else
-                    multiplier = 2f;
+                    multiplier = 1f;
 
                 int charismaAdjusted = value - m_Properties.dndSkillData.CharismaModifyValue;
                 int finalDelta = Mathf.RoundToInt(charismaAdjusted * multiplier);
@@ -45,6 +54,25 @@ namespace Dungeon.AgentLowLevelSystem
                 m_Properties.Submissiveness = newValue;
             }
         }
+
+        public void ModifySubmissiveness_Directly(int value)
+        {
+#if UNITY_EDITOR
+            if (Hp <= 0)
+            {
+                GameFrameworkLog.Warning($"屈服度修改失败，因为勇者已经死亡:{gameObject.name}");
+            }
+#endif
+
+            if (Hp <= 0)
+                return;
+
+            var oldValue = m_Properties.Submissiveness;
+            var newValue = Mathf.Clamp(oldValue + value, 0, 100);
+
+            m_Properties.Submissiveness = newValue;
+            CheckAndFireSubmissivenessEvent(newValue, oldValue);
+         }
 
         private void CheckAndFireSubmissivenessEvent(int newValue, int oldValue)
         {

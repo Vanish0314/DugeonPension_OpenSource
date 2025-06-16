@@ -1,15 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using Dungeon.BlackBoardSystem;
-using Dungeon.Common.MonoPool;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Trap;
+using Dungeon.Common;
+using Dungeon.DungeonEntity;
 using GameFramework;
 using GameFramework.Event;
-using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 
@@ -17,11 +11,21 @@ namespace Dungeon.GridSystem
 {
     public partial class GridSystem : MonoBehaviour, IBlackBoardWriter
     {
-        public void Load(string GridDataPath)
+        public bool Load(string GridDataPath)
         {
             m_GridDataPath = GridDataPath;
-            var data = JsonUtility.FromJson<GridData>(File.ReadAllText(GridDataPath));
-            Load(data);
+            try
+            {
+                var data = JsonUtility.FromJson<GridData>(File.ReadAllText(GridDataPath));
+                Load(data);
+
+            }
+            catch (System.Exception e)
+            {
+                return false;
+            }
+
+            return true;
         }
         public void Load(GridData data)
         {
@@ -65,7 +69,7 @@ namespace Dungeon.GridSystem
 
             DungeonMonsterBase monster = monsterItem.GetComponent<DungeonMonsterBase>();
 
-            if (PlaceDungeonMonster(monster, gridPos, worldCenterPos))
+            if (PlaceDungeonMonster(monster, gridPos, worldCenterPos,args.MonsterData.cost))
             {
                 GameEntry.Event.GetComponent<EventComponent>().Fire(this,OnMonsterPlacedEventArgs.Create(args.MonsterData));
             }
@@ -74,12 +78,22 @@ namespace Dungeon.GridSystem
                 monsterItem.ReturnToPool();
             }
         }
-        public bool PlaceDungeonMonster(DungeonMonsterBase monsterInstiated, Vector2Int gridPos, Vector3 worldCenterPos)
+        
+        public bool PlaceDungeonMonster(DungeonMonsterBase monsterInstiated, Vector2Int gridPos, Vector3 worldCenterPos, Cost cost)
         {
-            if(!CouldPlaceMonster(gridPos))
+            if (!CouldPlaceMonster(gridPos,cost))
                 return false;
+
+            Vector3 yOffset = new Vector3(0, -0.5f, 0);
             
-            monsterInstiated.transform.position = worldCenterPos;
+            monsterInstiated.transform.position = worldCenterPos + yOffset;
+            m_LogicalGrid.AddMonster(gridPos, monsterInstiated);
+
+            GetMonoRoomAt(gridPos, out var room);
+            room.AddEntity(monsterInstiated, cost);
+            
+            Audio.Instance.PlayAudio("放置魔物");
+
             return true;
         }
         
@@ -92,11 +106,11 @@ namespace Dungeon.GridSystem
 
             Vector3 worldCenterPos = SnapToGridCenter(worldPos);
             Vector3 worldCornerPos = SnapToGridCorner(worldPos);
-            Vector2Int gridPos = WorldToGridPosition(worldCornerPos);
+            Vector2Int gridPos = WorldToGridPosition(worldCenterPos);
 
             DungeonTrapBase trap = trapItem.GetComponent<DungeonTrapBase>();
             
-            if (PlaceDungeonTrap(trap, gridPos, worldCenterPos))
+            if (PlaceDungeonTrap(trap, gridPos, worldCenterPos,args.TrapData.cost))
             {
                 GameEntry.Event.GetComponent<EventComponent>().Fire(this,OnTrapPlacedEventArgs.Create(args.TrapData));
             }
@@ -105,14 +119,19 @@ namespace Dungeon.GridSystem
                 trapItem.ReturnToPool();
             }
         }
-        public bool PlaceDungeonTrap(DungeonTrapBase trapInstiated, Vector2Int gridPos, Vector3 worldCenterPos)
+        public bool PlaceDungeonTrap(DungeonTrapBase trapInstiated, Vector2Int gridPos, Vector3 worldCenterPos, Cost cost)
         {
-            if(!CouldPlaceTrap(gridPos))
+            if(!CouldPlaceTrap(gridPos,trapInstiated,cost))
                 return false;
 
-            Debug.Log(gridPos);
             trapInstiated.transform.position = worldCenterPos;
             m_LogicalGrid.AddTrap(gridPos, trapInstiated);
+
+            GetMonoRoomAt(gridPos, out var room);
+            room.AddEntity(trapInstiated, cost);
+
+            Audio.Instance.PlayAudio("陷阱布署");
+            
             return true;
         }
         public void PlaceDungeonInteractiveObject(DungeonInteractiveObjectBase interactiveObjectInstiated, Vector2Int gridPos)
@@ -139,7 +158,7 @@ namespace Dungeon.GridSystem
             m_VisualGrid.SetTile(gridPos, tile);
             m_LogicalGrid.SetTile(gridPos, tile);
         }
-        public bool CouldPlaceMonster(Vector2Int gridPos)
+        public bool CouldPlaceMonster(Vector2Int gridPos,Cost cost)
         {
             if(!IsValidGridPosition(gridPos))
                 return false;
@@ -151,33 +170,37 @@ namespace Dungeon.GridSystem
                 return false;
 
             if(HasMonsterOnCell(gridPos))
+                return false;
+
+            if(!HasReachedRoomCapacity(gridPos,cost))
                 return false;
             
             return true;
         }
-        public bool CouldPlaceTrap(Vector2Int gridPos)
+        public bool CouldPlaceTrap(Vector2Int gridPos,DungeonTrapBase trap, Cost cost)
         {
-            Debug.Log(IsValidGridPosition(gridPos));
             if(!IsValidGridPosition(gridPos))
                 return false;
             
-            Debug.Log(GridIsSpare(gridPos));
-            if(!GridIsSpare(gridPos))
+            if (!GridIsSpare(gridPos,trap))
                 return false;
-            
-            Debug.Log(!GetReachablilty(gridPos));
+
             if(!GetReachablilty(gridPos))
                 return false;
 
-            Debug.Log(HasMonsterOnCell(gridPos));
             if(HasMonsterOnCell(gridPos))
+                return false;
+
+            if(!HasReachedRoomCapacity(gridPos,cost))
                 return false;
 
             return true;
         }
         public bool CouldPlaceInteractiveObject(Vector2Int gridPos)
         {
-            return CouldPlaceTrap(gridPos);
+            GameFrameworkLog.Warning($"[GridSystem] 不能放置互动物品");
+            return false;
+            // return CouldPlaceTrap(gridPos);
         }
         public bool CouldPlaceTile(Vector2Int gridPos, DungeonRuleTile tile)
         {
@@ -203,9 +226,34 @@ namespace Dungeon.GridSystem
             return true;
         }
 
+        public bool HasReachedRoomCapacity(Vector2Int gridPos, Cost cost)
+        {
+            GetMonoRoomAt(gridPos, out var room);
+            if (room == null)
+            {
+                GameFrameworkLog.Info($"[GridSystem] 无法放置,因为没有房间");
+                return false;
+            }
+
+            var res = room.CouldHold(cost);
+
+            if (!res)
+            {
+                GameFrameworkLog.Info($"[GridSystem] 房间{room.name}容量不足,无法放置");
+            }
+
+            return res;
+        }
+
         public bool IsValidGridPosition(Vector2Int gridPos)
         {
-            return m_LogicalGrid.IsValidGridPosition(gridPos);
+            var res = m_LogicalGrid.IsValidGridPosition(gridPos);
+            if (!res)
+            {
+                GameFrameworkLog.Info($"[GridSystem] 位置{gridPos}不在逻辑网格内,无法放置");
+            }
+
+            return res;
         }
         /// <summary>
         /// 返回位置上是否没有DungeonEntity
@@ -214,12 +262,62 @@ namespace Dungeon.GridSystem
         /// <returns></returns>
         public bool GridIsSpare(Vector2Int gridPos)
         {
-            return m_LogicalGrid.GetStaticEntity(gridPos) == null;
+            var res = m_LogicalGrid.GetStaticEntity(gridPos) == null;
+            if (!res)
+            {
+                GameFrameworkLog.Info($"[GridSystem] 位置{gridPos}上已经有实体,无法放置");
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// 返回位置上是否没有DungeonEntity
+        /// </summary>
+        /// <param name="gridPos"></param>
+        /// <param name="trap"></param>
+        /// <returns></returns>
+        public bool GridIsSpare(Vector2Int gridPos, DungeonTrapBase trap)
+        {
+            bool res = true;
+
+            for (int x = 0; x < trap.size.x; x++)
+            {
+                for (int y = 0; y < trap.size.y; y++)
+                {
+                    if (!GridIsSpare(new Vector2Int(gridPos.x + x, gridPos.y + y)))
+                        res = false;
+                }
+            }
+
+            if (!res)
+            {
+                GameFrameworkLog.Info($"[GridSystem] 位置{gridPos}上已经有陷阱,无法放置");
+            }
+
+            return res;
         }
 
         public bool GetReachablilty(Vector2Int gridPos)
         {
-            return !m_LogicalGrid.IsUnReachable(gridPos);
+            var res = !m_LogicalGrid.IsUnReachable(gridPos);
+
+            if (!res)
+            {
+                GameFrameworkLog.Info($"[GridSystem] 位置{gridPos}不可达,无法放置");
+            }
+
+            GetMonoRoomAt(gridPos, out var room);
+            if (room != null && !room.IsExit())
+            {
+                res &= true;
+            }
+            else
+            {
+                GameFrameworkLog.Info($"[GridSystem] 位置{gridPos}不在可放置房间内,无法放置");
+            }
+
+            return res;
         }
         public bool HasMonsterOnCell(Vector2Int gridPos)
         {

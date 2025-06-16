@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Common.MonoPool;
+using Dungeon.Common;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Dungeon
 {
@@ -126,6 +124,20 @@ namespace Dungeon
             var obj = child != null ? child.gameObject : new GameObject(name);
             obj.transform.SetParent(transform);
             return obj.GetOrAddComponent<MonoPoolComponent>();
+        }
+        
+        public MonoPoolItem GetMonsterTemplateByType(MonsterType monsterType)
+        {
+            foreach (var config in monsterPools)
+            {
+                if (config.monsterType == monsterType)
+                {
+                    return config.poolItem;
+                }
+            }
+    
+            Debug.LogError($"No monster template found for type: {monsterType}");
+            return null;
         }
     }
 }

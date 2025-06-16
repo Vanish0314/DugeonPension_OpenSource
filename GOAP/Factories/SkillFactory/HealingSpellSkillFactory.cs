@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.Goap;
-using Dungeon.GOAP.Action;
-using Dungeon.GOAP.Keys.WorldKey.Local;
-using PlasticGui.Help.Actions;
-using UnityEngine;
+using Dungeon.Character;
 
 namespace Dungeon.GOAP
 {
@@ -36,7 +32,7 @@ namespace Dungeon.GOAP
             // TODO
             builder.AddTargetSensor<NearestHpBelow70PercentageFriendlyHeroTargetKeySensor>()
                 .SetTargetKey<NearestHpBelow70PercentageFriendlyHeroTargetKey>();
-            builder.AddWorldSensor<WorldHeroTeamHpBelow70PercentageFriendlyHeroCountKeySensor>()
+            builder.AddWorldSensor<GlobalHeroTeamHpBelow70PercentageFriendlyHeroCountKeySensor>()
                 .SetKey<GlobalHeroTeamHpBelow70PercentageFriendlyHeroCountKey>();
             #endregion
 
@@ -60,8 +56,8 @@ namespace Dungeon.GOAP
         {
             var baseCost = base.GetCost(agent, references, target); // · 获取基础Cost ·
 
-            var trait = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().CharacterTrait;
-            var dnd = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().DndSkillData;
+            var trait = references.GetCachedComponent<AgentLowLevelSystem>().CharacterTrait;
+            var dnd = references.GetCachedComponent<AgentLowLevelSystem>().DndSkillData;
 
             return baseCost + trait.Sympathy - dnd.Wisdom; // · Cost=12 + 同理 - 感知 ·
         }

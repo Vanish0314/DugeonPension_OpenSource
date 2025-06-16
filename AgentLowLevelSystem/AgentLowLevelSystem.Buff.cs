@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour
     {
@@ -16,6 +16,11 @@ namespace Dungeon.AgentLowLevelSystem
 
             buffs.Add(buff);
             buff.OnApplied(m_Properties);
+
+            if (buff.IsPoisitiveBuff)
+            {
+                GetComponent<HeroEntityBase>().GoapStatus.AddPositiveBuff(buff);
+            }
         }
         private void UpdateBuffs()
         {
@@ -26,6 +31,11 @@ namespace Dungeon.AgentLowLevelSystem
                 {
                     buffs.Remove(buff);
                     buff.OnRemoved(m_Properties);
+
+                    if (buff.IsPoisitiveBuff)
+                    {
+                        GetComponent<HeroEntityBase>().GoapStatus.RemovePositiveBuff(buff);
+                    }
                 }
             }
         }
@@ -42,7 +52,10 @@ namespace Dungeon.AgentLowLevelSystem
         {
             remainingDuration -= deltaTime;
         }
-        public abstract void OnApplied(HeroProperties propertiesToApply); public abstract void OnRemoved(HeroProperties propertiesToRemove);
+        public abstract void OnApplied(HeroProperties propertiesToApply);
+        public abstract void OnRemoved(HeroProperties propertiesToRemove);
+
+        public bool IsPoisitiveBuff { get; protected set; }
         public float remainingDuration;
         // private int remainingTimesToUse;
     }
@@ -52,6 +65,9 @@ namespace Dungeon.AgentLowLevelSystem
         public Buff_Charming(float duration, int amount) : base(duration)
         {
             this.amount = amount;
+
+            if (amount > 0)
+                IsPoisitiveBuff = true;
         }
 
         public override void OnApplied(HeroProperties propertiesToApply)

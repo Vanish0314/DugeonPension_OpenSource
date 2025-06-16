@@ -44,14 +44,16 @@ namespace Dungeon.GridSystem
     {
         Ground,
         Wall,
-        corridor
+        corridor,
+        DynamicObstacle,
     }
     public enum TileFunctionType
     {
-        Default,     
-        Trap,        
-        Treasure,    
+        Default,
+        Trap,
+        Treasure,
         Door,
+        Decorator
     }
     public struct TileDesc
     {
@@ -61,6 +63,7 @@ namespace Dungeon.GridSystem
     public struct GridPath
     {
         public Stack<Vector2Int> path;
+
     }
 
     public enum GridCellReachableType

@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
 using Dungeon.BlackBoardSystem;
 using GameFramework;
 using UnityEngine;
+using Dungeon.DungeonEntity;
 
 namespace Dungeon.Vision2D
 {
@@ -44,24 +45,24 @@ namespace Dungeon.Vision2D
             polyCollider.SetPath(0, vertices2D);
         }
 
-        public void Init(AgentLowLevelSystem.AgentLowLevelSystem low)
+        public void Init(AgentLowLevelSystem low)
         {
             mOwner = low;
         }
         private void OnTriggerEnter2D(Collider2D other)
         {
-            GameFrameworkLog.Info($"[Vision] 视野与{other.name}物体相交,请考虑是否应该相交");
+            GameFrameworkLog.Info($"[Vision] {transform.parent.name}的视野与{other.name}物体相交,请考虑是否应该相交");
 
             var visible = other.GetComponent<IVisible>();
             if (visible == null)
                 return;
 
-            GameFrameworkLog.Info($"[Vision] {other.gameObject.name} 进入了 {gameObject.name}的视野.");
+            GameFrameworkLog.Info($"[Vision] {other.gameObject.name} 进入了 {transform.parent.name}的视野.[仅进入视野范围]");
 
             var visitInfo = visible.OnVisited(new VisitInformation(transform.parent.gameObject, null));
             if (visitInfo.visited != null)
             {
-                GameFrameworkLog.Info($"[Vision] {gameObject.name} 看到了 {other.gameObject.name}");
+                GameFrameworkLog.Info($"[Vision] {transform.parent.name} 看到了 {other.gameObject.name}[通过了察觉鉴定]");
 
                 mOwner.OnSee(other.gameObject);
                 {
@@ -80,7 +81,7 @@ namespace Dungeon.Vision2D
             if (visible == null)
                 return;
 
-            GameFrameworkLog.Info($"[Vision] {other.gameObject.name} out of the {gameObject.name}'s Vision.");
+            GameFrameworkLog.Info($"[Vision] {other.gameObject.name}离开了 {transform.parent.name} 的视野范围.[仅离开视野范围]");
 
             mOwner.OnUnSee(other.gameObject);
             {
@@ -93,7 +94,7 @@ namespace Dungeon.Vision2D
 #if UNITY_EDITOR
                 if (count < 0)
                 {
-                    GameFrameworkLog.Error($"[Vision] Count of {visible.GetType().Name} in Vision is less than 0.");
+                    GameFrameworkLog.Error($"[Vision] {visible.GetType().Name} 再视野中的数量<0, 请检查代码逻辑.");
                     m_Blackboard.SetValue(key, 0);
                 }
 #endif
@@ -105,7 +106,7 @@ namespace Dungeon.Vision2D
         public event Action<GameObject> OnLoseVisionOf;
 
         private Blackboard m_Blackboard;
-        private AgentLowLevelSystem.AgentLowLevelSystem mOwner;
+        private AgentLowLevelSystem mOwner;
         [HideInInspector] public MeshFilter meshFilter;
         [HideInInspector] public PolygonCollider2D polyCollider;
     }

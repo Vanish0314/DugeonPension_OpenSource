@@ -1,10 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Interfaces;
-using Dungeon.Character.Struct;
+using Dungeon.Character;
+using Dungeon.Character;
 using UnityEngine;
 
-namespace Dungeon.Character.Buff.Decorator
+namespace Dungeon.Character
 {
     public abstract class DefenceBuffDecorator : IDefensible
     {

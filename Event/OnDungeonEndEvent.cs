@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Hero;
+using Dungeon.Character;
 using GameFramework;
 using GameFramework.Event;
 using UnityEngine;

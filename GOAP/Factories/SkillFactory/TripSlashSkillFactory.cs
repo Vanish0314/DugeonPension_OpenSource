@@ -1,14 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.GOAP.Action;
-using Dungeon.GOAP.Goals;
-using Dungeon.GOAP.Keys.TargetKey;
-using Dungeon.GOAP.Keys.WorldKey.Local;
-using UnityEngine;
+using Dungeon.Character;
+using Dungeon.DungeonEntity;
 
 namespace Dungeon.GOAP
 {
@@ -51,8 +45,8 @@ namespace Dungeon.GOAP
         {
             var baseCost = base.GetCost(agent, references, target);
 
-            var characterTrait = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().CharacterTrait;
-            var dndSkill = references.GetCachedComponent<AgentLowLevelSystem.AgentLowLevelSystem>().DndSkillData;
+            var characterTrait = references.GetCachedComponent<AgentLowLevelSystem>().CharacterTrait;
+            var dndSkill = references.GetCachedComponent<AgentLowLevelSystem>().DndSkillData;
 
             return baseCost + characterTrait.Aggressive - dndSkill.StrengthModifyValue; // 12 - 激进 - 战斗
         }

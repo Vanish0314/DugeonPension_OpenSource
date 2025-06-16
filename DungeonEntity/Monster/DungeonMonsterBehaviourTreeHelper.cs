@@ -6,7 +6,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Dungeon.DungeonEntity.Monster
+namespace Dungeon.DungeonEntity
 {
     public enum MonsterAIState
     {

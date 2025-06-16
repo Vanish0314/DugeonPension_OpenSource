@@ -1,11 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using GameFramework;
-using PlasticGui.WorkspaceWindow;
 using UnityEngine;
-using UnityEngine.Pool;
 
-namespace Dungeon.Common.MonoPool
+namespace Dungeon.Common
 {
 	/// <summary>
 	/// 1. 初始化尽量使用OnEnable
@@ -31,10 +27,16 @@ namespace Dungeon.Common.MonoPool
 		}
 		public void ReturnToPool()
 		{
-			if(m_Owner == null)
+			if (m_Owner == null)
 			{
 				GameFrameworkLog.Warning($"[MonoPoolItem] 物体{name}不是从对象池中取出,无法回收,直接销毁");
 				Destroy(this.gameObject);
+				return;
+			}
+
+			if (isInPool)
+			{
+				GameFrameworkLog.Warning($"[MonoPoolItem] 物体{name}已经回收过了,不需要再回收");
 				return;
 			}
 

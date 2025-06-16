@@ -1,17 +1,17 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Reflection;
-using Codice.Client.Commands;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.SkillSystem;
-using log4net.Filter;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Dungeon
 {
+    public class CombataEvent
+    {
+        public Action OnAttact;
+        public Action OnDie;
+        public Action OnStun;
+        public Action<Skill> OnBeAttacked;
+        public Action<ICombatable> OnKillSomebody;
+     }
     public interface ICombatable
     {
         public int Hp { get; set; }
@@ -20,6 +20,7 @@ namespace Dungeon
         public int MaxMp { get; set; }
         public float AttackSpeed { get; set; }
         public CombatorData BasicInfo { get; set; }
+        public CombataEvent CombatEvents { get; set; }
         public StatusBarSetting StatusBarSetting { get; set; }
 
         public GameObject GetGameObject();

@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
 using Sirenix.OdinInspector;
 using UnityEngine;
 

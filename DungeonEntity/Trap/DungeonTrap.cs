@@ -1,28 +1,19 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Security.Cryptography;
 using System.Text;
-using Codice.Client.Common;
 using DG.Tweening;
-using Dungeon.AgentLowLevelSystem;
-using Dungeon.DungeonEntity;
-using Dungeon.DungeonGameEntry;
+using Dungeon.Character;
 using Dungeon.SkillSystem;
-using Dungeon.Vision2D;
 using GameFramework;
-using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.Callbacks;
 
 
 #endif
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Dungeon.DungeonEntity.Trap
+namespace Dungeon.DungeonEntity
 {
     [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
     public class DungeonTrapBuildingCollier : MonoBehaviour
@@ -75,7 +66,7 @@ namespace Dungeon.DungeonEntity.Trap
 
         void OnCollisionEnter2D(Collision2D collision)
         {
-            var low = collision.gameObject.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var low = collision.gameObject.GetComponent<AgentLowLevelSystem>();
 #if UNITY_EDITOR
             if (low == null)
             {
@@ -91,7 +82,7 @@ namespace Dungeon.DungeonEntity.Trap
 
         void OnTriggerEnter2D(Collider2D collision)
         {
-            var low = collision.gameObject.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var low = collision.gameObject.GetComponent<AgentLowLevelSystem>();
 #if UNITY_EDITOR
             if (low == null)
             {
@@ -106,8 +97,8 @@ namespace Dungeon.DungeonEntity.Trap
         }
     }
 
-    [RequireComponent(typeof(SkillShooter),typeof(BoxCollider2D),typeof(Rigidbody2D))]
-    public abstract class DungeonTrapBase : DungeonVisibleEntity,ICombatable
+    [RequireComponent(typeof(SkillShooter), typeof(BoxCollider2D), typeof(Rigidbody2D))]
+    public abstract class DungeonTrapBase : DungeonVisibleEntity, ICombatable
     {
         public static readonly Dictionary<TrapDirection, float> DirectionToElurRotation = new Dictionary<TrapDirection, float>
         {
@@ -129,7 +120,7 @@ namespace Dungeon.DungeonEntity.Trap
             {
                 transform.rotation = Quaternion.Euler(0, 0, Mathf.Lerp(oriRot, DirectionToElurRotation[direction], t));
                 transform.position = Vector3.Lerp(oriPos, fourCorners[(int)direction], t);
-            },0,1,timeToRotate);
+            }, 0, 1, timeToRotate);
         }
         protected override void OnEnable()
         {
@@ -139,7 +130,7 @@ namespace Dungeon.DungeonEntity.Trap
             var rb = GetComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Static;
             var box = GetComponent<BoxCollider2D>();
-            box.isTrigger = false;
+            box.isTrigger = true;
 
             m_SkillShooter = GetComponent<SkillShooter>();
 
@@ -207,12 +198,25 @@ namespace Dungeon.DungeonEntity.Trap
             collider.Init(area, this);
         }
 
-        public virtual void OnEffectEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)
+        public virtual void OnEffectEnter(AgentLowLevelSystem agent)
         {
-            m_SkillShooter.Fire(skill, transform.position, agent.transform.position - transform.position);
+            if (IsOnceTrap)
+                m_SkillShooter.OnSkillEnded += OnSkikilEndedHandle;
+
+            var offset2 = (Vector2)(size - Vector2Int.one) * 0.5f;
+            var offset3 = new Vector3(offset2.x, offset2.y, 0);
+
+            m_SkillShooter.Fire(skill, transform.position + offset3, agent.transform.position - transform.position);
         }
 
-        public virtual void OnBuildingEnter(AgentLowLevelSystem.AgentLowLevelSystem agent)
+        protected virtual void OnSkikilEndedHandle()
+        {
+            m_SkillShooter.OnSkillEnded -= OnSkikilEndedHandle;
+
+            this.ReturnToPool();
+        }
+
+        public virtual void OnBuildingEnter(AgentLowLevelSystem agent)
         {
             return;
         }
@@ -225,7 +229,7 @@ namespace Dungeon.DungeonEntity.Trap
         public override VisitInformation OnVisited(VisitInformation visitInfo)
         {
             var visiter = visitInfo.visiter;
-            var low = visiter.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var low = visiter.GetComponent<AgentLowLevelSystem>();
 
             if (low == null)
                 return visitInfo;
@@ -249,7 +253,7 @@ namespace Dungeon.DungeonEntity.Trap
 
         public enum TrapDirection
         {
-            Up =0, // (0,0,) is up-left
+            Up = 0, // (0,0,) is up-left
             Down = 1, // (0,0,) is down-right
             Left = 2, // (0,0,) is down-left
             Right = 3 // (0,0,) is up-right
@@ -262,8 +266,10 @@ namespace Dungeon.DungeonEntity.Trap
         [SerializeField, LabelText("陷阱精灵")] protected Sprite sprite;
 
         [Space]
+        [InfoBox("建议: 陷阱的技能配置不要有前摇后摇,作用类型不要选择单体")]
         [Header("功能设置")]
-        [SerializeField, LabelText("陷阱效果")] protected SkillData skill;
+        [LabelText("是不是一次性陷阱")] public bool IsOnceTrap;
+        [LabelText("陷阱效果")] public SkillData skill;
         private SkillShooter m_SkillShooter;
 
         [Space]
@@ -282,6 +288,7 @@ namespace Dungeon.DungeonEntity.Trap
         public abstract float AttackSpeed { get; set; }
         public abstract CombatorData BasicInfo { get; set; }
         public abstract StatusBarSetting StatusBarSetting { get; set; }
+        public CombataEvent CombatEvents { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
     }
 
 

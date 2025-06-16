@@ -7,7 +7,7 @@ using DG.Tweening.Core;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {

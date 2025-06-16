@@ -20,7 +20,7 @@ namespace Dungeon
         private void StartFight()
         {
             // 发送事件
-            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnPlayerSwitchToDungeonEvent.Create());
+            GameEntry.Event.GetComponent<EventComponent>().Fire(this, OnHeroArrivedInDungeonEvent.Create(DungeonGameEntry.DungeonGameEntry.AdvanturersGuildSystem.GetCurrentMainHero()));
         }
     }
 }

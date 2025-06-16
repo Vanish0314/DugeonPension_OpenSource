@@ -13,6 +13,9 @@ namespace Dungeon
         public int CorruptLevel = 0;
         public int MaxCorruptLevel = 0;
         
+        // 绝对堕落等级
+        public int AbsoluteCorruptLevel = 0;
+        
         // 饱食度
         public int HungerLevel = 0;
         public int MaxHungerLevel = 0;
@@ -27,6 +30,5 @@ namespace Dungeon
         
         // 工作效率
         public int Efficiency = 0;
-        public int MaxEfficiency = 0;
     }
 }

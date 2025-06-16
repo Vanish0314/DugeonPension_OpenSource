@@ -41,6 +41,7 @@ namespace Dungeon
     {
         [SerializeField] private GameObject mTrapPanel;
         [SerializeField] private GameObject mMonsterPanel;
+        [SerializeField] private GameObject mCloseButton;
         
         [SerializeField]private List<TrapUI> trapUIs = new List<TrapUI>();
         [SerializeField]private List<MonsterUI> monsterUIs = new List<MonsterUI>();
@@ -84,7 +85,7 @@ namespace Dungeon
                 return;
             }
 
-            trapUI.countText.text = $"X {count}";
+            trapUI.countText.text = "∞";
             trapUI.button.gameObject.SetActive(count > 0);
         }
 
@@ -96,7 +97,7 @@ namespace Dungeon
                 return;
             }
             
-            monsterUI.countText.text = $"X {count}";
+            monsterUI.countText.text = "∞";
             monsterUI.button.gameObject.SetActive(count > 0);
         }
 
@@ -110,6 +111,11 @@ namespace Dungeon
         {
             mMonsterPanel.SetActive(true);
             mTrapPanel.SetActive(false);
+        }
+
+        public void ShowCloseButton()
+        {
+            mCloseButton.SetActive(true);
         }
     }
 }

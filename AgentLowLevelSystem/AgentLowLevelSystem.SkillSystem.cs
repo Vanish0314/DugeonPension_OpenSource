@@ -2,14 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using DG.Tweening;
-using Dungeon.Character.Hero;
+using Dungeon.Character;
 using Dungeon.DungeonGameEntry;
 using Dungeon.SkillSystem;
 using GameFramework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
@@ -27,8 +27,8 @@ namespace Dungeon.AgentLowLevelSystem
 
         public bool TakeSkill(Skill skill)
         {
-            // skill.FuckMe()
             skill.FuckMe(this);
+            CombatEvents.OnBeAttacked?.Invoke(skill);
 
             return Hp < 0;
         }
@@ -76,6 +76,9 @@ namespace Dungeon.AgentLowLevelSystem
             }
             set
             {
+                if (Hp <= 0)
+                    return;
+
                 value = Mathf.Clamp(value, 0, MaxHp);
                 CombatorData.hp = value;
                 UpdateCombatorData();
@@ -149,17 +152,21 @@ namespace Dungeon.AgentLowLevelSystem
 
         public StatusBarSetting StatusBarSetting
         {
-            get =>  m_Properties.statusBarSetting;
-            set{}
+            get => m_Properties.statusBarSetting;
+            set { }
         }
 
-
+        public CombataEvent CombatEvents
+        {
+            get;
+            set;
+        } = new ();
 
         public void Stun(float duration)
         {
             StunTween?.Kill();
             m_IsStunned = true;
-            this.SendMessage("OnStunned",SendMessageOptions.RequireReceiver);
+            this.SendMessage("OnStunned", SendMessageOptions.RequireReceiver);
 
             currentTween?.Kill();
             foreach (var tween in WipTweens)
@@ -172,7 +179,7 @@ namespace Dungeon.AgentLowLevelSystem
             StunTween = DOVirtual.DelayedCall(duration, () =>
             {
                 m_IsStunned = false;
-                this.SendMessage("OnStunnedEnd",SendMessageOptions.RequireReceiver);
+                this.SendMessage("OnStunnedEnd", SendMessageOptions.RequireReceiver);
             });
         }
 
@@ -194,7 +201,8 @@ namespace Dungeon.AgentLowLevelSystem
             {
                 IsFainted = false;
                 m_Properties.Submissiveness = 50;
-                this.SendMessage("OnStunnedEnd",SendMessageOptions.RequireReceiver);
+                this.SendMessage("OnStunnedEnd", SendMessageOptions.RequireReceiver);
+                SetAnimatorState(ANIMATOR_BOOL_IDLE, 1);
             });
         }
 
@@ -235,6 +243,7 @@ namespace Dungeon.AgentLowLevelSystem
         [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("魔法")] private int odin_mp => m_Properties.combatorData.mp;
         [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("魔法最大值")] private int odin_mpMax => m_Properties.combatorData.maxMp;
         [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("当前屈服度")] private int odin_submissiveness => m_Properties.Submissiveness;
+        [BoxGroup("状态显示"), ShowInInspector, ReadOnly,LabelText("当前等级")] private int odin_level => m_Properties.combatorData.currentLevel;
         
         #endif
     }

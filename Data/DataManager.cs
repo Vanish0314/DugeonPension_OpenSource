@@ -2,6 +2,7 @@
 using GameFramework.Data;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Text;
 
 namespace GameFramework.Data
 {
@@ -92,7 +93,7 @@ namespace GameFramework.Data
 
             if (current != null)
             {
-                m_linkedListDataInfos.AddBefore(current, dataInfo);
+                m_linkedListDataInfos.AddBefore(current, dataInfo);                                                                                                
             }
             else
             {
@@ -203,7 +204,7 @@ namespace GameFramework.Data
         {
             if (string.IsNullOrEmpty(null))
             {
-                throw new GameFrameworkException(Utility.Text.Format("Param data name invaild."));
+                throw new GameFrameworkException("Param data name invaild.");
             }
 
             Data data = null;
@@ -220,7 +221,7 @@ namespace GameFramework.Data
         {
             if (string.IsNullOrEmpty(null))
             {
-                throw new GameFrameworkException(Utility.Text.Format("Param data name invaild."));
+                throw new GameFrameworkException("Param data name invaild.");
             }
 
             Type type = typeof(T);
@@ -263,6 +264,20 @@ namespace GameFramework.Data
 
         public void PreLoadAllData()
         {
+            var sb = new StringBuilder();
+            sb.AppendLine("[预加载数据]");
+            sb.AppendLine("加载数据列表:");
+            if (m_linkedListDataInfos.Count != 0)
+            {
+                foreach (var item in m_linkedListDataInfos)
+                    sb.AppendLine(item.Data.Name);
+            }
+            else
+            {
+                sb.AppendLine("无数据");
+            }
+            GameFrameworkLog.Info(sb.ToString());
+
             if (m_linkedListDataInfos != null)
             {
                 LinkedListNode<DataInfo> current = m_linkedListDataInfos.First;

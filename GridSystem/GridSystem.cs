@@ -1,16 +1,8 @@
 using UnityEngine;
-using UnityEngine.Tilemaps;
-using Dungeon.Common;
 using UnityGameFramework.Runtime;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using Dungeon.DungeonGameEntry;
 using Dungeon.BlackBoardSystem;
 using GameFramework;
-using System.ComponentModel;
-using CrashKonijn.Goap.Runtime;
-
 
 namespace Dungeon.GridSystem
 {
@@ -32,15 +24,14 @@ namespace Dungeon.GridSystem
         }
         private void InitGridSystem()
         {
-            if (gridData != null)
+            if (!string.IsNullOrEmpty(m_GridDataPath)&&Load(m_GridDataPath))
             {
-                Load(gridData);
                 return;
             }
 
-            if (!string.IsNullOrEmpty(m_GridDataPath))
+            if (gridData != null)
             {
-                Load(m_GridDataPath);
+                Load(gridData);
                 return;
             }
 
@@ -73,9 +64,9 @@ namespace Dungeon.GridSystem
             UnSubscribEvents();
         }
 
+        public Material m_TileMapMaterial;
         [SerializeField] private GridData gridData;
         [SerializeField] private string m_GridDataPath;
-
 
         [SerializeField] private VisualGrid m_VisualGrid;
         [SerializeField] private LogicalGrid m_LogicalGrid;

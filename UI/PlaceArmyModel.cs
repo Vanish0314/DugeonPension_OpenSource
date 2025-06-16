@@ -1,15 +1,31 @@
 using System;
 using System.Collections.Generic;
+using GameFramework;
 using UnityEngine;
+using UnityGameFramework.Runtime;
 
 namespace Dungeon
 {
+    [Serializable]
+    public class TrapCountSetting
+    {
+        public TrapType trapType;
+        public int count;
+    }
+    
+    [Serializable]
+    public class MonsterCountSetting
+    {
+        public MonsterType monsterType;
+        public int count;
+    }
+
     public class PlaceArmyModel : MonoBehaviour
     {
         public static PlaceArmyModel Instance { get; private set; }
         
-        [SerializeField] private TrapType[] trapTypes;
-        [SerializeField] private MonsterType[] monsterTypes;
+        [SerializeField] private TrapCountSetting[] trapCountSettings;
+        [SerializeField] private MonsterCountSetting[] monsterCountSettings;
 
         public event Action<TrapType, int> OnTrapCountChanged;
         public event Action<MonsterType, int> OnMonsterCountChanged;
@@ -20,21 +36,35 @@ namespace Dungeon
         private void Awake() 
         {
             if (Instance == null) Instance = this;
-            
-            foreach (TrapType type in trapTypes)
+
+            foreach (var trapType in trapCountSettings)
             {
-                m_TrapCounts[type] = 0;
+                m_TrapCounts[trapType.trapType] = trapType.count;
             }
 
-            foreach (MonsterType type in monsterTypes)
+            foreach (var monsterType in monsterCountSettings)
             {
-                m_MonsterCounts[type] = 0;
+                m_MonsterCounts[monsterType.monsterType] = monsterType.count;
             }
         }
-
+        
         public int GetTrapCount(TrapType type) => m_TrapCounts[type];
         public int GetMonsterCount(MonsterType type) => m_MonsterCounts[type];
 
+        [DebuggerComponent.DungeonGridWindow("重置陷阱和魔物数量")]
+        private static void ResetCount()
+        {
+            foreach (var trapType in Instance.trapCountSettings)
+            {
+                Instance.SetTrapCount(trapType.trapType, trapType.count);
+            }
+
+            foreach (var monsterType in Instance.monsterCountSettings)
+            {
+                Instance.SetMonsterCount(monsterType.monsterType, monsterType.count);
+            }
+        }
+        
         public void SetTrapCount(TrapType type, int value)
         {
             if (m_TrapCounts[type] == value) return;
@@ -49,16 +79,6 @@ namespace Dungeon
             
             m_MonsterCounts[type] = value;
             OnMonsterCountChanged?.Invoke(type, value);
-        }
-
-        public void ModifyTrapCount(TrapType type, int delta)
-        {
-            SetTrapCount(type, m_TrapCounts[type] + delta);
-        }
-
-        public void ModifyMonsterCount(MonsterType type, int delta)
-        {
-            SetMonsterCount(type, m_MonsterCounts[type] + delta);
         }
     }
 }

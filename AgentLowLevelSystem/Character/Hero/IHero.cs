@@ -1,8 +1,8 @@
-using Dungeon.Character.Interfaces;
-using Dungeon.Character.Struct;
-using CharacterInfo = Dungeon.Character.Struct.CharacterInfo;
+using Dungeon.Character;
+using Dungeon.Character;
+using CharacterInfo = Dungeon.Character.CharacterInfo;
 
-namespace Dungeon.Character.Hero
+namespace Dungeon.Character
 {
     public interface IHero : ICharacter,IAttackable, IDefensible
     {

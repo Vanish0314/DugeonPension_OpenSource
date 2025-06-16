@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.DungeonEntity.Monster;
+using Dungeon.DungeonEntity;
 using Dungeon.GOAP;
-using Dungeon.GOAP.Keys.TargetKey;
-using Dungeon.GOAP.Sensor.Target;
-using Dungeon.GOAP.Sensors.Multi;
+using Dungeon.GOAP;
+using Dungeon.GOAP;
+using Dungeon.GOAP;
 using UnityEngine;
 
 namespace Dungeon

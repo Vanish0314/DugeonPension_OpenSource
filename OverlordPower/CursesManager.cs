@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Dungeon.Character.Hero;
+using Dungeon.Character;
 using Dungeon.Overload;
 using GameFramework;
 using UnityEngine;
@@ -31,7 +31,6 @@ namespace Dungeon
         public void Initialize()
         {
             inputReader = Resources.Load<InputReader>("InputReader");
-            inputReader.Subscribe();
         }
 
         #region PublicAPI

@@ -6,7 +6,7 @@ using Dungeon.Vision2D;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.DungeonEntity.InteractiveObject
+namespace Dungeon.DungeonEntity
 {
     public class StandardDungeonTreasureChest : DungeonVisibleEntity
     {

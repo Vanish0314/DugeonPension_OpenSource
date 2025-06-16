@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using CrashKonijn.Goap.Core;
 using CrashKonijn.Goap.Runtime;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
 using Dungeon.BlackBoardSystem;
 using GameFramework;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Sensor.Key
+namespace Dungeon.GOAP
 {
     public class MonstersInDungeonSensor : LocalWorldSensorBase
     {

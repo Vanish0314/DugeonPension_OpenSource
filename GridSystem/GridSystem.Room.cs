@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-using Dungeon.AgentLowLevelSystem;
+using Dungeon.Character;
 using Dungeon.BlackBoardSystem;
-using Dungeon.Character.Hero;
-using Dungeon.DungeonGameEntry;
 using Dungeon.Evnents;
 using GameFramework;
 using UnityEngine;
@@ -26,6 +23,23 @@ namespace Dungeon.GridSystem
             Vector2Int gridPos = m_LogicalGrid.WorldToGridPosition(worldPos);
             m_LogicalGrid.GetRoomAt(gridPos, out room);
         }
+        public void GetMonoRoomAt(Vector2Int gridPos, out DungeonRoom room)
+        {
+            GetRoomAt(gridPos, out var r);
+            if (r == null)
+            {
+                room = null;
+                return;
+            }
+            m_DungeonRoomDict.TryGetValue(r, out var result);
+            room = result;
+        }
+        public void GetMonoRoomAt(Vector3 worldPos, out DungeonRoom room)
+        {
+            Vector2Int gridPos = m_LogicalGrid.WorldToGridPosition(worldPos);
+            GetMonoRoomAt(gridPos, out var r);
+            room = r;
+        }
         private void InitRooms()
         {
             var roomGo = GameObject.Find("Rooms");
@@ -41,9 +55,9 @@ namespace Dungeon.GridSystem
         private void BuildRooms()
         {
             GetRoomAt(GetExitGridPosition(), out var exitRoom);
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (exitRoom == null) GameFrameworkLog.Error("[GridSystem] 设置的出口位置没有对应的房间");
-            #endif
+#endif
 
             var root = new GameObject("Rooms");
             root.transform.SetParent(transform);
@@ -54,15 +68,18 @@ namespace Dungeon.GridSystem
                 go.AddComponent<DungeonRoom>();
                 go.GetComponent<DungeonRoom>().Init(room);
 
-                if(room == exitRoom)
+                if (room == exitRoom)
                 {
                     go.GetComponent<DungeonRoom>().SetAsDungeonExitRoom();
                 }
+
+                m_DungeonRoomDict.Add(room, go.GetComponent<DungeonRoom>());
             }
 
         }
 
-        private List<Room> m_DungeonRooms;
+        private List<Room> m_DungeonRooms = new();
+        private Dictionary<Room, DungeonRoom> m_DungeonRoomDict = new();
 
         public class Room
         {
@@ -86,13 +103,48 @@ namespace Dungeon.GridSystem
     [RequireComponent(typeof(PolygonCollider2D), typeof(Rigidbody2D))]
     public class DungeonRoom : MonoBehaviour
     {
+        /// <summary>
+        /// 第一个int是房间格数大小
+        /// 如5*5为小房间,则为25
+        /// 元组为(最大魔法值,最大材料值)
+        /// </summary>
+        public static readonly Dictionary<int, (int maxMagic, int maxMaterial)> roomCapacityDict
+            = new Dictionary<int, (int, int)>
+            {
+                [0] = (50, 30),
+                [25] = (150, 100),
+                [100] = (300, 250)
+            };
+
         public struct RoomCapacity
         {
             public int currentMagic;
             public int currentMaterial;
-            public int maxMagic; 
+            public int maxMagic;
             public int maxMaterial;
         }
+
+        public bool CouldHold(Cost cost)
+        {
+            return capacity.currentMagic + cost.magicPower <= capacity.maxMagic &&
+                   capacity.currentMaterial + cost.trapMaterial <= capacity.maxMaterial;
+        }
+
+        public void AddEntity(DungeonEntity.DungeonEntity entity, Cost cost)
+        {
+#if UNITY_EDITOR
+            if (!CouldHold(cost))
+                GameFrameworkLog.Error($"[DungeonRoom] 房间容量不足,无法容纳实体\n实体:{entity.name},房间:{gameObject.name}");
+#endif
+
+            capacity.currentMagic += cost.magicPower;
+            capacity.currentMaterial += cost.trapMaterial;
+
+            entitiesInRoom.Add(entity);
+        }
+
+        
+        
         public void Init(GridSystem.Room room)
         {
             this.room = room;
@@ -100,6 +152,7 @@ namespace Dungeon.GridSystem
             InitTransform(room);
             InitCollider(room);
             InitRigidbody();
+            InitCapacity();
         }
 
         public void SetAsDungeonExitRoom()
@@ -107,6 +160,23 @@ namespace Dungeon.GridSystem
             isDungeonExit = true;
         }
 
+        public RoomCapacity GetCapacity() => capacity;
+        public bool IsExit() => isDungeonExit;
+
+        private void InitCapacity()
+        {
+            var roomSize = room.cells.Count;
+            capacity.currentMagic = 0;
+            capacity.currentMaterial = 0;
+
+            var validKey = roomCapacityDict.Keys
+                .Where(k => k <= roomSize)
+                .OrderByDescending(k => k)
+                .FirstOrDefault();
+
+            capacity.maxMagic = roomCapacityDict[validKey].maxMagic;
+            capacity.maxMaterial = roomCapacityDict[validKey].maxMaterial;
+        }
         private void InitTransform(GridSystem.Room room)
         {
             transform.position = DungeonGameEntry.DungeonGameEntry.GridSystem.GridToWorldPosition(room.centerPos);
@@ -203,10 +273,10 @@ namespace Dungeon.GridSystem
         void OnTriggerEnter2D(Collider2D collision)
         {
 #if UNITY_EDITOR
-            if (collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>() == null)
+            if (collision.GetComponent<AgentLowLevelSystem>() == null)
                 GameFrameworkLog.Warning("[DungeonRoom] An object that is not hero is able to collide with trapTrigger,Object name: " + collision.gameObject.name);
 #endif
-            var hero = collision.GetComponent<AgentLowLevelSystem.AgentLowLevelSystem>();
+            var hero = collision.GetComponent<AgentLowLevelSystem>();
             if (hero == null)
                 return;//TODO(vanish): 检测房间内怪物有多少
 
@@ -222,11 +292,39 @@ namespace Dungeon.GridSystem
             else
             {
                 hero.OnVisitedRoom(room);
-                hero.GetExperience(DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator.ExperienceGetByRoomRule.experiencePerRoom);
+                if (DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator.ExperienceGetByRoomRule != null)
+                    hero.GetExperience(DungeonGameEntry.DungeonGameEntry.DungeonResultCalculator.ExperienceGetByRoomRule
+                        .experiencePerRoom);
             }
         }
+#if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            if (room == null) return;
+
+            Vector3 drawPos = transform.position + Vector3.up * 1.5f;
+
+            // 魔法容量条
+            float magicRatio = capacity.maxMagic > 0 ? (float)capacity.currentMagic / capacity.maxMagic : 0;
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawCube(drawPos + Vector3.left * 0.6f, new Vector3(1.0f * magicRatio, 0.2f, 0));
+
+            // 材料容量条
+            float materialRatio = capacity.maxMaterial > 0 ? (float)capacity.currentMaterial / capacity.maxMaterial : 0;
+            Gizmos.color = Color.green;
+            Gizmos.DrawCube(drawPos + Vector3.right * 0.6f, new Vector3(1.0f * materialRatio, 0.2f, 0));
+
+            // 显示文字信息
+            UnityEditor.Handles.color = Color.white;
+            UnityEditor.Handles.Label(drawPos + Vector3.up * 0.3f,
+                $"魔力值: {capacity.currentMagic}/{capacity.maxMagic}\n 材料值: {capacity.currentMaterial}/{capacity.maxMaterial}");
+        }
+
+#endif
+
         private GridSystem.Room room;
         private bool isDungeonExit;
-        private RoomCapacity capacity;
+        public RoomCapacity capacity;
+        private List<DungeonEntity.DungeonEntity> entitiesInRoom = new List<DungeonEntity.DungeonEntity>();
     }
 }

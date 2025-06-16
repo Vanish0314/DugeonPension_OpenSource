@@ -1,11 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Dungeon.GOAP.Enums
+namespace Dungeon.GOAP
 {
-    public static class AgentTypeIDs 
+    public enum AgentGoapType
     {
-        public const string Hero = "Hero";
+        [LabelText("测试用勇者")] SampleHero,
+        [LabelText("骑士")] Knight,
+        [LabelText("杂鱼01")] Zako01,
+        [LabelText("杂鱼02")] Zako02,
+        [LabelText("杂鱼03")] Zako03
     }
 }

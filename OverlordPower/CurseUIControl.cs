@@ -32,24 +32,17 @@ namespace Dungeon
             m_CurseManager.inputReader.OnCloseTargetUIEvent -= EndCurse;
         }
 
+        
         private void StartCurse()
         {
-            GameEntry.UI.OpenUIForm(EnumUIForm.CurseForm);
+            if (!DungeonGameEntry.DungeonGameEntry.OverloadPower.isRedeploy)
+                GameEntry.UI.OpenUIForm(EnumUIForm.CurseForm);
         }
         
         private void EndCurse()
         {
-            GameEntry.UI.GetUIForm(EnumUIForm.CurseForm).Close();
-        }
-        
-        public void Pause()
-        {
-            TimeManager.Instance.SetPaused(true);
-        }
-
-        public void Resume()
-        {
-            TimeManager.Instance.SetPaused(false);
+            if (!DungeonGameEntry.DungeonGameEntry.OverloadPower.isRedeploy)
+                GameEntry.UI.GetUIForm(EnumUIForm.CurseForm).Close();
         }
         
         public static CurseUIControl Create(CursesManager curseManager)

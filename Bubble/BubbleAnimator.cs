@@ -6,6 +6,8 @@ namespace Dungeon
 {
     public class BubbleAnimator : MonoBehaviour
     {
+        public Transform target;
+        public BubbleID bubbleID;
         public IEnumerator FloatingFade(GameObject obj, BubbleProfile profile, Transform target)
         {
             RectTransform rt = obj.GetComponent<RectTransform>();

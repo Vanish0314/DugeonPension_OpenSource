@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Dungeon.Common.MonoPool;
-using Dungeon.DungeonEntity.Trap;
+using Dungeon.Common;
+using Dungeon.DungeonEntity;
+using Dungeon.Evnents;
 using Dungeon.GridSystem;
 using GameFramework;
 using GameFramework.Event;
@@ -18,9 +19,7 @@ namespace Dungeon
         [SerializeField] private PreviewHelper previewHelper;
 
         // 字典存储对应 放置物 信息
-        private Dictionary<BuildingType, BuildingData>
-            m_BuildingDataDict = new Dictionary<BuildingType, BuildingData>();
-
+        private Dictionary<BuildingType, BuildingData> m_BuildingDataDict = new Dictionary<BuildingType, BuildingData>();
         private Dictionary<TrapType, TrapData> m_TrapDataDict = new Dictionary<TrapType, TrapData>();
         private Dictionary<MonsterType, MonsterData> m_MonsterDataDict = new Dictionary<MonsterType, MonsterData>();
 
@@ -98,6 +97,7 @@ namespace Dungeon
                 DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
                 DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
                 DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+                DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnLeaveMetroplisProcedureEvent.EventId, FinalizePlacement);
 
                 m_hasSubscribed = true;
             }
@@ -109,10 +109,9 @@ namespace Dungeon
             {
                 DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnSceneLoadedEventArgs.EventId, OnSceneLoaded);
                 DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnTrapPlacedEventArgs.EventId, FinalizePlacement);
-                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId,
-                    FinalizePlacement);
-                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId,
-                    FinalizePlacement);
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnMonsterPlacedEventArgs.EventId, FinalizePlacement);
+                DungeonGameEntry.DungeonGameEntry.Event.Unsubscribe(OnBuildingPlacedEventArgs.EventId, FinalizePlacement);
+                DungeonGameEntry.DungeonGameEntry.Event.Subscribe(OnLeaveMetroplisProcedureEvent.EventId, FinalizePlacement);
             }
         }
 
@@ -139,9 +138,13 @@ namespace Dungeon
                 var previewPos = DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCenter(m_CurrentMouseWorldPos);
                 var gridPos = DungeonGameEntry.DungeonGameEntry.GridSystem.WorldToGridPosition(
                     DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCorner(m_CurrentMouseWorldPos));
-                var isValid = DungeonGameEntry.DungeonGameEntry.GridSystem.CouldPlaceTrap(gridPos);
+                var isValid = false;
+                if (m_Pools.TryGetValue(m_SelectedTrapMonoPoolComponent, out var trap))
+                {
+                    isValid = DungeonGameEntry.DungeonGameEntry.GridSystem.CouldPlaceTrap(gridPos,trap as DungeonTrapBase,m_SelectedTrapData.cost);
+                }
 
-                previewHelper.UpdatePreview(previewPos, isValid);
+                previewHelper.UpdateTrapPreview(previewPos, isValid, m_SelectedTrapData.size);
             }
 
             if (m_SelectedMonsterMonoPoolComponent != null)
@@ -149,9 +152,9 @@ namespace Dungeon
                 var previewPos = DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCenter(m_CurrentMouseWorldPos);
                 var gridPos = DungeonGameEntry.DungeonGameEntry.GridSystem.WorldToGridPosition(
                     DungeonGameEntry.DungeonGameEntry.GridSystem.SnapToGridCorner(m_CurrentMouseWorldPos));
-                var isValid = DungeonGameEntry.DungeonGameEntry.GridSystem.CouldPlaceMonster(gridPos);
+                var isValid = DungeonGameEntry.DungeonGameEntry.GridSystem.CouldPlaceMonster(gridPos,m_SelectedMonsterData.cost);
 
-                previewHelper.UpdatePreview(previewPos, isValid);
+                previewHelper.UpdateMonsterPreview(previewPos, isValid);
             }
         }
 
@@ -265,6 +268,11 @@ namespace Dungeon
         #region Public API
 
         // 通过ID获取BuildingData
+
+        public BuildingData GetBuildingData(BuildingType buildingType)
+        {
+            return m_BuildingDataDict.GetValueOrDefault(buildingType);
+        }
         public void SelectBuildingData(BuildingType type)
         {
             if (m_BuildingDataDict.TryGetValue(type, out var data))
@@ -276,6 +284,10 @@ namespace Dungeon
             GameFrameworkLog.Error($"BuildingData not found: {type}");
         }
 
+        public TrapData GetTrapData(TrapType trapType)
+        {
+            return m_TrapDataDict.GetValueOrDefault(trapType);
+        }
         public void SelectTrapData(TrapType type)
         {
             if (m_TrapDataDict.TryGetValue(type, out var data))
@@ -287,6 +299,10 @@ namespace Dungeon
             GameFrameworkLog.Error($"TrapData not found: {type}");
         }
 
+        public MonsterData GetMonsterData(MonsterType monsterType)
+        {
+            return m_MonsterDataDict.GetValueOrDefault(monsterType);
+        }
         public void SelectMonsterData(MonsterType monsterType)
         {
             if (m_MonsterDataDict.TryGetValue(monsterType, out var data))
@@ -505,10 +521,14 @@ namespace Dungeon
         {
             if (m_Pools.TryGetValue(selectedPoolComponent, out MonoPoolItem selectedPoolItem))
             {
-                if (selectedPoolItem is DungeonTrapBase)
+                if (selectedPoolItem is DungeonTrapBase trap)
                 {
-                    var trap = selectedPoolItem as DungeonTrapBase;
                     return trap.GetSprite();
+                }
+
+                if (selectedPoolItem is DungeonMonsterBase monster)
+                {
+                    return monster.GetComponentInChildren<SpriteRenderer>().sprite;
                 }
 
                 return selectedPoolItem.GetComponent<SpriteRenderer>().sprite;

@@ -12,7 +12,6 @@ namespace Dungeon
         public int gold;
         public int stone;
         public int wood;
-        public int researchPoints;
         public int expBall;
         [Header("战斗")]
         public int magicPower;

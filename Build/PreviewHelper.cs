@@ -33,6 +33,28 @@ namespace Dungeon
             previewRenderer.enabled = true;
         }
 
+        public void UpdateTrapPreview(Vector3 worldPos, bool isValid, Vector2Int size)
+        {
+            float offsetX = (float)(size.x - 1) / 2;
+            float offsetY = (float)(size.y - 1) / 2;
+            Vector3 offset = new Vector3(offsetX, offsetY, 0);
+
+            previewRenderer.transform.position = worldPos + offset;
+            
+            previewRenderer.color = isValid ? m_ValidColor : m_InvalidColor;
+            previewRenderer.enabled = true;
+        }
+        
+        public void UpdateMonsterPreview(Vector3 worldPos, bool isValid)
+        {
+            Vector3 offset = new Vector3(0, -0.5f, 0);
+
+            previewRenderer.transform.position = worldPos + offset;
+            
+            previewRenderer.color = isValid ? m_ValidColor : m_InvalidColor;
+            previewRenderer.enabled = true;
+        }
+        
         public void HidePreview()
         {
             previewRenderer.enabled = false;

@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using Dungeon.Character;
+using Dungeon.SkillSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,15 +20,17 @@ namespace Dungeon
         [SerializeField] private Image heroImage;
         
         [Header("基础属性")]
+        public Text levelText;
         public Text hpText;
         public Text atkText;
         public Text defText;
         public Text mpText;
         public Text moveSpeedText;
-        public Text attackSpeedText;
-        public Text recoverMpSpeedText;
-        public Text pressureText;
-        public Text missText;
+        public Text physicsText;
+        public Text poisonText;
+        public Text lightText;
+        public Text fireText;
+        public Text iceText;
         
         [Header("六维属性")] 
         public Text strengthText;
@@ -36,37 +40,60 @@ namespace Dungeon
         public Text constitutionText;
         public Text charismaText;
         
-        [Header("技能")] 
-        public Text skill1Text;
-        public Text skill2Text;
+        [Header("六维属性")] 
+        [SerializeField] private Slider qufuduBar;
+        
+        [Header("技能显示")]
+        [SerializeField] private Transform skillsParent; // 技能图标的父物体
+        [SerializeField] private GameObject skillIconPrefab; // 技能图标预制体
+        
+        [Header("背包资源显示")]
+        [SerializeField] private Transform resourcesParent; // 资源图标的父物体
+        [SerializeField] private GameObject resourceItemPrefab; // 资源项预制体
+        
 
-        public void UpdateHeroInfo(HeroInfoData data)
+        public void UpdateHeroInfo(HeroEntityBase hero)
         {
+            var heroLowSys = hero.GetComponent<AgentLowLevelSystem>();
+            
             // 更新基础属性
-            hpText.text = $"血量: {data.baseAttribute.HP}";
-            atkText.text = $"攻击力: {data.baseAttribute.ATK}";
-            defText.text = $"防御力: {data.baseAttribute.DEF}";
-            mpText.text = $"蓝量: {data.baseAttribute.MP}";
-            moveSpeedText.text = $"移速: {data.baseAttribute.MoveSpeed}";
-            attackSpeedText.text = $"攻速: {data.baseAttribute.AttackSpeed}/次";
-            recoverMpSpeedText.text = $"回蓝效率：{data.baseAttribute.RecoverMPSpeed}";
-            pressureText.text = $"压力: {data.baseAttribute.Pressure}";
-            missText.text = $"闪避: {data.baseAttribute.Miss}%";
-
+            levelText.text = $"LV.{heroLowSys.m_Properties.combatorData.currentLevel}";
+            hpText.text = $"{hero.GetHp()}";
+            mpText.text = $"{hero.GetMp()}";
+            atkText.text = $"{heroLowSys.DndSkillData.StrengthModifyValue}";
+            defText.text = $"{heroLowSys.DndSkillData.DexterityModifyValue}";
+            moveSpeedText.text = $"{heroLowSys.m_MoveMaxSpeed}";
+            physicsText.text =
+                $"{GetResistanceLevelText(heroLowSys.m_Properties.combatorData.physicalResistance)}";
+            poisonText.text =
+                $"{GetResistanceLevelText(heroLowSys.m_Properties.combatorData.posionResistance)}";
+            lightText.text =
+                $"{GetResistanceLevelText(heroLowSys.m_Properties.combatorData.holyResistance)}";
+            fireText.text =
+                $"{GetResistanceLevelText(heroLowSys.m_Properties.combatorData.fireResistance)}";
+            iceText.text =
+                $"{GetResistanceLevelText(heroLowSys.m_Properties.combatorData.iceResistance)}";
+            
             // 更新六维属性
-            strengthText.text = $"力量：{data.sixDimensionalAttribute.Strength}";
-            intelligenceText.text = $"智力：{data.sixDimensionalAttribute.Intelligence}";
-            sensorText.text = $"感知：{data.sixDimensionalAttribute.Sensor}";
-            agilityText.text = $"敏捷：{data.sixDimensionalAttribute.Agility}";
-            constitutionText.text = $"体质：{data.sixDimensionalAttribute.Constitution}";
-            charismaText.text = $"魅力：{data.sixDimensionalAttribute.Charisma}";
+            strengthText.text = $"力量：{heroLowSys.DndSkillData.Strength}";
+            intelligenceText.text = $"智力：{heroLowSys.DndSkillData.Intelligence}";
+            sensorText.text = $"感知：{heroLowSys.DndSkillData.Wisdom}";
+            agilityText.text = $"敏捷：{heroLowSys.DndSkillData.Dexterity}";
+            constitutionText.text = $"体质：{heroLowSys.DndSkillData.Constitution}";
+            charismaText.text = $"魅力：{heroLowSys.DndSkillData.Charisma}";
+            
+            // 更新屈服度
+            qufuduBar.value = heroLowSys.GetSubmissiveness() / 100f;
 
             // 更新技能
-            skill1Text.text = data.skill.Skill1;
-            skill2Text.text = data.skill.Skill2;
+            UpdateHeroSkills(heroLowSys.CurrentOwnedSkills());
+            
+            // 更新背包资源
+            UpdateHeroResources(heroLowSys.m_Backpack);
 
-            // 更新图片
-            heroImage.sprite = data.heroSprite;
+            // 更新立绘
+            var heroVisualData = HeroInfoModel.Instance.GetVisualData(hero.HeroName);
+            heroImage.sprite = heroVisualData.portrait;
         }
 
         public void SetUIVisibility(bool isOpen)
@@ -74,6 +101,101 @@ namespace Dungeon
             openButton.SetActive(!isOpen);
             heroInfoPanel.SetActive(isOpen);
         }
+
+        private string GetResistanceLevelText(ResistanceLevel level)
+        {
+            switch (level)
+            {
+                case ResistanceLevel.Weak
+                    : return "弱点";
+                case ResistanceLevel.Normal
+                    : return "普通";
+                case ResistanceLevel.Strong
+                    : return "抵抗";
+                case ResistanceLevel.Immunity
+                    : return "免疫";
+                default:
+                    return "无";
+            }
+        }
         
+        private void UpdateHeroSkills(List<SkillData> skills)
+        {
+            // 清除现有技能图标
+            foreach (Transform child in skillsParent)
+            {
+                Destroy(child.gameObject);
+            }
+
+            // 创建新的技能图标
+            foreach (var skill in skills)
+            {
+                var skillIcon = Instantiate(skillIconPrefab, skillsParent);
+                var image = skillIcon.GetComponent<Image>();
+                var text = skillIcon.GetComponentInChildren<Text>();
+            
+                if (image != null && skill.skillIcon != null)
+                {
+                    image.sprite = skill.skillIcon;
+                }
+            
+                if (text != null)
+                {
+                    text.text = skill.skillName;
+                }
+                
+                skillIcon.gameObject.SetActive(true);
+            }
+        }
+
+        public void UpdateHeroResources(HeroBackpack backpack)
+        {
+            // 清除现有资源显示
+            foreach (Transform child in resourcesParent)
+            {
+                Destroy(child.gameObject);
+            }
+
+            // 显示金币
+            CreateResourceItem("Gold", backpack.Gold);
+        
+            // 显示经验球
+            CreateResourceItem("ExpBall", backpack.ExpOrb);
+
+            // 显示特殊资源
+            foreach (var resource in backpack.SpecialResources)
+            {
+                CreateResourceItem(resource.Key.ToString(), resource.Value);
+            }
+
+            // 显示种子
+            foreach (var seed in backpack.CropSeeds)
+            {
+                CreateResourceItem(seed.Key.ToString(), seed.Value);
+            }
+        }
+
+        private void CreateResourceItem(string resourceName, int amount)
+        {
+            var item = Instantiate(resourceItemPrefab, resourcesParent);
+            var image = item.GetComponentInChildren<Image>();
+            var text = item.GetComponentInChildren<Text>();
+        
+            // 获取资源图标
+            var sprite = ResourceModel.Instance.GetResourceSprite(resourceName) ?? 
+                         ResourceModel.Instance.GetCropSprite(resourceName);
+        
+            if (image != null && sprite != null)
+            {
+                image.sprite = sprite;
+            }
+        
+            if (text != null)
+            {
+                text.text = "X" + amount;
+            }
+            
+            item.gameObject.SetActive(true);
+        }
     }
 }

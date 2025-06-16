@@ -1,6 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
-using Dungeon.Common.MonoPool;
+using Dungeon.Common;
 using UnityEngine;
 
 namespace Dungeon

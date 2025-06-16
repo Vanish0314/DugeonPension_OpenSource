@@ -6,7 +6,7 @@ using GameFramework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem,ICombatable
     {
@@ -18,7 +18,7 @@ namespace Dungeon.AgentLowLevelSystem
         public DndCheckResult DndCheck(DndCheckTarget target)
         {
             var result = m_DndSystem.DNDCheck(this, target, out string checkResult);
-            BumpDiceCheckBubbule(checkResult);
+            // BumpDiceCheckBubbule(checkResult);
             return result;
         }
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Dungeon.BlackBoardSystem;
 using UnityEngine;
 
@@ -17,37 +18,40 @@ namespace Dungeon.GridSystem
         {
             var path = m_LogicalGrid.FindPath_AStar(fromPosInGridCoord, toPosInGridCoord);
 
-            // TODO(vanish): This is so stupid
-            var temp = new Stack<Vector3>();
-            var offset = m_LogicalGrid.GridDownLeftOriginPoint;
-            foreach (var wayPoint in path.path)
-                temp.Push(new Vector3(wayPoint.x, wayPoint.y, 0) + offset);
-
             var result = new Stack<Vector3>();
-            foreach (var wayPoint in temp)
-                result.Push(wayPoint);
+            var offset = m_LogicalGrid.GridDownLeftOriginPoint;
+            var list = path.path.ToList();
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                var p = list[i];
+                result.Push(new Vector3(p.x, p.y, 0) + offset);
+            }
 
             return result;
         }
         public Stack<Vector3> FindPath(Vector3 fromPosInWorldCoord, Vector3 toPosInWorldCoord)
         {
-            return FindPath(new Vector2(
-                fromPosInWorldCoord.x,
-                fromPosInWorldCoord.y
-            ), new Vector2(
-                toPosInWorldCoord.x,
-                toPosInWorldCoord.y
-            ));
+            return FindPath(WorldToGridPosition(fromPosInWorldCoord), WorldToGridPosition(toPosInWorldCoord));
         }
-        public Stack<Vector3> FindPath(Vector2 fromPosInWorldCoord, Vector2 toPosInWorldCoord)
+
+        public Stack<Vector3> FindPath_IgnoreFromToDynamicObstacle(Vector2Int fromPosInGridCoord, Vector2Int toPosInGridCoord)
         {
-            return FindPath(new Vector2Int(
-                m_LogicalGrid.WorldToGridPosition(fromPosInWorldCoord).x,
-                m_LogicalGrid.WorldToGridPosition(fromPosInWorldCoord).y
-            ), new Vector2Int(
-                m_LogicalGrid.WorldToGridPosition(toPosInWorldCoord).x,
-                m_LogicalGrid.WorldToGridPosition(toPosInWorldCoord).y
-            ));
+            var path = m_LogicalGrid.FindPath_AStar_IgnoreFromToDynamicObstacle(fromPosInGridCoord, toPosInGridCoord);
+
+            var result = new Stack<Vector3>();
+            var offset = m_LogicalGrid.GridDownLeftOriginPoint;
+            var list = path.path.ToList();
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                var p = list[i];
+                result.Push(new Vector3(p.x, p.y, 0) + offset);
+            }
+
+            return result;
+        }
+        public Stack<Vector3> FindPath_IgnoreFromToDynamicObstacle(Vector3 fromPosInWorldCoord, Vector3 toPosInWorldCoord)
+        {
+            return FindPath_IgnoreFromToDynamicObstacle(WorldToGridPosition(fromPosInWorldCoord), WorldToGridPosition(toPosInWorldCoord));
         }
 
         public Vector3 FindNearestWallInDirection(Vector2Int fromPosInGridCoord, Vector2Int toPosInGridCoord)

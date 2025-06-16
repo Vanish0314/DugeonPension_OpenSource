@@ -1,19 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
 using DG.Tweening;
 using Dungeon.BlackBoardSystem;
 using Dungeon.Vision2D;
-using GameFramework;
-using UnityEditor.Callbacks;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
-using UnityGameFramework.Runtime;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
     [RequireComponent(typeof(Rigidbody2D))]
-    [RequireComponent(typeof(BoxCollider2D))]
+    [RequireComponent(typeof(CircleCollider2D))]
     [RequireComponent(typeof(Viewer))]
     [RequireComponent(typeof(BlackboardController))]
     public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
@@ -45,6 +39,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void InitSystem()
         {
+            InitRigidBody();
             InitMoveSystem();
             InitVisionSystem();
             InitDNDSystem();
@@ -63,7 +58,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void UpdateSystem()
         {
-            if (m_IsStunned)
+            if (m_IsStunned || IsFainted)
                 return;
 
             UpdateVisionSystem();
@@ -73,7 +68,7 @@ namespace Dungeon.AgentLowLevelSystem
 
         private void FixedUpdateSystem()
         {
-            if (m_IsStunned || Hp <= 0 || (SkillTween != null && SkillTween.IsActive()))
+            if (m_IsStunned || Hp <= 0 || (SkillTween != null && SkillTween.IsActive())|| IsFainted)
             {
                 m_MoveWayPoints.Clear();
                 m_AgentRigdbody.velocity = Vector2.zero;
@@ -84,7 +79,7 @@ namespace Dungeon.AgentLowLevelSystem
         }
 
         private Rigidbody2D m_AgentRigdbody;
-        private BoxCollider2D m_AgentCollider;
+        private CircleCollider2D m_AgentCollider;
         private Animator m_AgentAnimator;
         private BlackboardController m_BlackboardController;
         private Blackboard blackboard => m_BlackboardController.GetBlackboard();

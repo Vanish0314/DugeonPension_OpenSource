@@ -1,25 +1,26 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using CrashKonijn.Agent.Core;
-using Dungeon.Character.Hero;
-using Dungeon.DungeonEntity.InteractiveObject;
-using Dungeon.DungeonEntity.Monster;
-using Dungeon.DungeonEntity.Trap;
-using Dungeon.Vision2D;
 using GameFramework;
-using PlasticPipe.Tube;
 using UnityEngine;
 
-namespace Dungeon.AgentLowLevelSystem
+namespace Dungeon.Character
 {
-    public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem,ICombatable
+    public partial class AgentLowLevelSystem : MonoBehaviour, IAgentLowLevelSystem, ICombatable
     {
         private void OnDied()
         {
-            SetAnimatorState(ANIMATOR_BOOL_DIE,99999);
+            GameFrameworkLog.Info($"[Hero] 悲报,勇者{HeroName}被曹氏啦TAT");
+
+            SetAnimatorState(ANIMATOR_BOOL_DIE, 99999);
             m_Vision.gameObject.SetActive(false);
             this.GetComponent<HeroEntityBase>().OnDie();
         }
+
+        public void RevivalMe()
+        {
+            SetAnimatorState(ANIMATOR_BOOL_IDLE, 1);
+            m_Vision.gameObject.SetActive(true);
+            
+            this.GetComponent<HeroEntityBase>().OnRevival();
+         }
     }
 }
