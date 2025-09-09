@@ -3,7 +3,7 @@
  * //  Copyright (c) 2025 Vanishing Games. All Rights Reserved.
  * @Author: VanishXiao
  * @Date: 2025-09-09 17:50:35
- * @LastEditTime: 2025-09-09 18:17:32
+ * @LastEditTime: 2025-09-09 18:21:59
  * // -----------------------------------------------------------------------------
 -->
 # 本文档使用 AI 生成
@@ -170,34 +170,6 @@ DugeonPension_OpenSource/
 └── GOAP/                   # GOAP行为规划
 ```
 
-## 🤝 贡献指南
-
-我们欢迎社区贡献！如果您想为项目做出贡献，请：
-
-1. Fork 项目
-2. 创建您的功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开一个 Pull Request
-
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
-## 📞 联系方式
-
-- 作者: VanishXiao
-- 项目链接: [https://github.com/your-repo/DugeonPension_OpenSource](https://github.com/your-repo/DugeonPension_OpenSource)
-
-## 🙏 致谢
-
-感谢以下开源项目和工具的支持：
-- Unity Technologies
-- GameFramework 团队
-- CrashKonijn GOAP 系统
-- NodeCanvas 可视化脚本系统
-- Sirenix Odin Inspector
-
----
-
-**注意**: 这是一个开源项目，仅供学习和研究使用。商业使用请联系作者获得授权。
