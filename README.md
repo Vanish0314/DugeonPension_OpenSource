@@ -3,7 +3,7 @@
  * //  Copyright (c) 2025 Vanishing Games. All Rights Reserved.
  * @Author: VanishXiao
  * @Date: 2025-09-09 17:50:35
- * @LastEditTime: 2025-09-09 18:23:41
+ * @LastEditTime: 2025-09-09 18:27:10
  * // -----------------------------------------------------------------------------
 -->
 # 本文档使用 AI 生成
@@ -55,7 +55,7 @@
 ### 核心框架
 - **Unity Engine**: 游戏引擎
 - **GameFramework**: 基础游戏框架，提供完整的游戏开发架构
-- **GOAP System**: 目标导向行动规划系统 (CrashKonijn.Goap)
+- **GOAP System**: 目标导向行动规划系统
 - **NodeCanvas**: 可视化行为树和对话树系统
 
 ### 主要系统组件
